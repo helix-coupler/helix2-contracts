@@ -75,11 +75,11 @@ contract Resolver is ResolverBase {
     mapping(bytes32 => mapping(uint256 => bytes)) internal _addrs;
     mapping(bytes32 => PublicKey) public pubkey;
 
-    event NewTextRecord(bytes32 indexed link, string indexed key, string value);
-    event NewAddr(bytes32 indexed link, address addr);
-    event NewAddr2(bytes32 indexed link, uint256 coinType, bytes newAddress);
-    event NewContenthash(bytes32 indexed link, bytes _contenthash);
-    event NewPubkey(bytes32 indexed link, bytes32 x, bytes32 y);
+    event NewTextRecord(bytes32 indexed bond, string indexed key, string value);
+    event NewAddr(bytes32 indexed bond, address addr);
+    event NewAddr2(bytes32 indexed bond, uint256 coinType, bytes newAddress);
+    event NewContenthash(bytes32 indexed bond, bytes _contenthash);
+    event NewPubkey(bytes32 indexed bond, bytes32 x, bytes32 y);
 
     /// @notice : encoder: https://gist.github.com/sshmatrix/6ed02d73e439a5773c5a2aa7bd0f90f9
     /// @dev : default contenthash (encoded from IPNS hash)
@@ -88,8 +88,8 @@ contract Resolver is ResolverBase {
         return _contenthash[bytes32(0)];
     }
 
-    constructor(address _woolball) {
-        HELIX2 = iHELIX2(_woolball);
+    constructor(address _helix2) {
+        HELIX2 = iHELIX2(_helix2);
         supportsInterface[iResolver.addr.selector] = true;
         supportsInterface[iResolver.addr2.selector] = true;
         supportsInterface[iResolver.contenthash.selector] = true;
@@ -100,11 +100,11 @@ contract Resolver is ResolverBase {
     }
 
     /**
-     * @dev : verify ownership of link
-     * @param link : link
+     * @dev : verify ownership of bond
+     * @param bond : bond
      */
-    modifier onlyOwner(bytes32 link) {
-        require(msg.sender == HELIX2.owner(link), "NOT_AUTHORISED");
+    modifier onlyOwner(bytes32 bond) {
+        require(msg.sender == HELIX2.owner(bond), "NOT_AUTHORISED");
         _;
     }
 
@@ -118,10 +118,10 @@ contract Resolver is ResolverBase {
 
     /**
      * @dev : return default contenhash if no contenthash set
-     * @param link : link
+     * @param bond : bond
      */
-    function contenthash(bytes32 link) public view returns (bytes memory _hash) {
-        _hash = _contenthash[link];
+    function contenthash(bytes32 bond) public view returns (bytes memory _hash) {
+        _hash = _contenthash[bond];
         if (_hash.length == 0) {
             _hash = _contenthash[bytes32(0)];
         }
@@ -129,70 +129,70 @@ contract Resolver is ResolverBase {
 
     /**
      * @dev : change contenthash
-     * @param link: link
+     * @param bond: bond
      * @param _hash: new contenthash
      */
-    function setContenthash(bytes32 link, bytes memory _hash) external onlyOwner(link) {
-        _contenthash[link] = _hash;
-        emit NewContenthash(link, _hash);
+    function setContenthash(bytes32 bond, bytes memory _hash) external onlyOwner(bond) {
+        _contenthash[bond] = _hash;
+        emit NewContenthash(bond, _hash);
     }
 
     /**
      * @dev : change address
-     * @param link : link
+     * @param bond : bond
      * @param _addr : new address
      */
-    function setAddress(bytes32 link, address _addr) external onlyOwner(link) {
-        _addrs[link][60] = abi.encodePacked(_addr);
-        emit NewAddr(link, _addr);
+    function setAddress(bytes32 bond, address _addr) external onlyOwner(bond) {
+        _addrs[bond][60] = abi.encodePacked(_addr);
+        emit NewAddr(bond, _addr);
     }
     
     /**
      * @dev : change address for <coin>
-     * @param link : link
+     * @param bond : bond
      * @param coinType : <coin>
      */
-    function setAddressCoin(bytes32 link, uint256 coinType, bytes memory _addr) external onlyOwner(link) {
-        _addrs[link][coinType] = _addr;
-        emit NewAddr2(link, coinType, _addr);
+    function setAddressCoin(bytes32 bond, uint256 coinType, bytes memory _addr) external onlyOwner(bond) {
+        _addrs[bond][coinType] = _addr;
+        emit NewAddr2(bond, coinType, _addr);
     }
 
     /**
      * @dev : default to owner if no address is set for Ethereum [60]
-     * @param link : link
+     * @param bond : bond
      * @return : resolved address
      */
-    function addr(bytes32 link) external view returns (address payable) {
-        bytes memory _addr = _addrs[link][60];
+    function addr(bytes32 bond) external view returns (address payable) {
+        bytes memory _addr = _addrs[bond][60];
         if (_addr.length == 0) {
-            return payable(HELIX2.owner(link));
+            return payable(HELIX2.owner(bond));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
      * @dev : resolve address for <coin>; if no ethereum address [60] is set, resolve to owner
-     * @param link : link
+     * @param bond : bond
      * @param coinType : <coin>
      * @return _addr : resolved address
      */
-    function addr2(bytes32 link, uint256 coinType) external view returns (address payable) {
-        bytes memory _addr = _addrs[link][coinType];
+    function addr2(bytes32 bond, uint256 coinType) external view returns (address payable) {
+        bytes memory _addr = _addrs[bond][coinType];
         if (_addr.length == 0 && coinType == 60) {
-            _addr = abi.encodePacked(HELIX2.owner(link));
+            _addr = abi.encodePacked(HELIX2.owner(bond));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
      * @dev : change public key record
-     * @param link : link
+     * @param bond : bond
      * @param x : x-coordinate on elliptic curve
      * @param y : y-coordinate on elliptic curve
      */
-    function setPubkey(bytes32 link, bytes32 x, bytes32 y) external onlyOwner(link) {
-        pubkey[link] = PublicKey(x, y);
-        emit NewPubkey(link, x, y);
+    function setPubkey(bytes32 bond, bytes32 x, bytes32 y) external onlyOwner(bond) {
+        pubkey[bond] = PublicKey(x, y);
+        emit NewPubkey(bond, x, y);
     }
 
     /**
@@ -207,22 +207,22 @@ contract Resolver is ResolverBase {
 
     /**
      * @dev : change text record
-     * @param link : link
+     * @param bond : bond
      * @param key : key to change
      * @param value : value to set
      */
-    function setText(bytes32 link, string calldata key, string calldata value) external onlyOwner(link) {
-        _text[link][key] = value;
-        emit NewTextRecord(link, key, value);
+    function setText(bytes32 bond, string calldata key, string calldata value) external onlyOwner(bond) {
+        _text[bond][key] = value;
+        emit NewTextRecord(bond, key, value);
     }
 
     /**
      * @dev : get text records
-     * @param link : link
+     * @param bond : bond
      * @param key : key to query
      * @return value : value
      */
-    function text(bytes32 link, string calldata key) external view returns (string memory value) {
-        return _text[link][key];
+    function text(bytes32 bond, string calldata key) external view returns (string memory value) {
+        return _text[bond][key];
     }
 }

@@ -8,7 +8,6 @@ import "src/interface/iERC721.sol";
  * @dev : Helix2 ERC721 Base
  */
 abstract contract ERC721 is Base {
-    mapping(address => uint256) public balanceOf;
     mapping(uint256 => address) internal _ownerOf;
     mapping(uint256 => address) public _approved;
     mapping(address => mapping(address => bool)) public isApprovedForAll;
@@ -101,10 +100,6 @@ abstract contract ERC721 is Base {
         }
 
         delete _approved[tokenID]; // reset approved
-        unchecked {
-            --balanceOf[from];     // subtract from owner
-            ++(balanceOf[to]);     // add to receiver
-        }
         _ownerOf[tokenID] = to;    // change ownership
         emit Transfer(from, to, tokenID);
         if (to.code.length > 0) {

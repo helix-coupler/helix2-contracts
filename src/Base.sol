@@ -14,8 +14,11 @@ abstract contract Base {
     /// @dev : Default resolver used by this contract
     address public DefaultResolver;
 
+    /// @dev : ENS Registry
+    address public ensRegistry = 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e;
+
     /// @dev Pause/Resume contract
-    bool public active = true; // TESTNET
+    bool public active = true;
     
     string public constant name = "Helix2 Link Service";
     string public constant symbol = "HELIX2";
@@ -26,6 +29,7 @@ abstract contract Base {
         supportsInterface[type(iERC165).interfaceId] = true;
         supportsInterface[type(iERC721).interfaceId] = true;
         supportsInterface[type(iERC721Metadata).interfaceId] = true;
+
     }
 
     /// @dev : Modifier to allow only dev

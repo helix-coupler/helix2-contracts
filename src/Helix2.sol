@@ -2,13 +2,16 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/ERC721.sol";
+import "src/Bond.sol";
+import "src/Molecule.sol";
+import "src/Polycule.sol";
 
 interface iResolver {
-    function contenthash(bytes32 link) external view returns(bytes memory);
-    function addr(bytes32 link) external view returns(address payable);
-    function addr2(bytes32 link, uint256 coinType) external view returns(bytes memory);
-    function pubkey(bytes32 link) external view returns(bytes32 x, bytes32 y);
-    function text(bytes32 link, string calldata key) external view returns(string memory);
+    function contenthash(bytes32 bond) external view returns(bytes memory);
+    function addr(bytes32 bond) external view returns(address payable);
+    function addr2(bytes32 bond, uint256 coinType) external view returns(bytes memory);
+    function pubkey(bytes32 bond) external view returns(bytes32 x, bytes32 y);
+    function text(bytes32 bond, string calldata key) external view returns(string memory);
 }
 
 /**
@@ -16,25 +19,8 @@ interface iResolver {
  * @title Helix2 Registrar
  */
 contract HELIX2 is ERC721 {
-    /// @dev : Helix2 Link struct
-    struct LINKS {
-        mapping(bytes32 => address) _hooks;
-        address _from;
-        address _to;
-        bytes32 _alias;
-        address _resolver;
-        address _controller;
-    }
-    mapping(uint => LINKS) public LINK;
-    
-    /**
-     * @dev : register a new Link
-     */
-    function register() external {
-        unchecked {
-            ++balanceOf[msg.sender];
-        }
-    }
+
+    ENS = iENS(ensRegistry);
 
     modifier onlyDev() {
         require(msg.sender == Dev, "ONLY_DEV");
@@ -48,6 +34,15 @@ contract HELIX2 is ERC721 {
     function changeDev(address newDev) external onlyDev {
         emit NewDev(Dev, newDev);
         Dev = newDev;
+    }
+
+    /**
+     * @dev : migrate ENS Registry
+     * @param newReg : new Registry
+     */
+    function setEnsRegistry(address newReg) external onlyDev {
+        emit NewENSRegistry(newReg);
+        ens = newReg;
     }
 
     /**
