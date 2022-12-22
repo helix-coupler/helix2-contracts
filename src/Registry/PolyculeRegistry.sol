@@ -7,7 +7,9 @@ import "src/Interface/iPolycule.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Polycule Base
  */
-contract PolyculeRegistry is POLYCULE {
+contract PolyculeRegistry is POLYCULES {
+    /// Dev
+    address public Dev;
 
     /// @dev : Polycule roothash
     bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("#")));
@@ -15,34 +17,53 @@ contract PolyculeRegistry is POLYCULE {
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
         mapping(bytes32 => address[]) _hooks;
-        address _from;
-        address[] _to;
-        bytes32 _alias;
-        address _resolver;
-        address _operator;
-        bool[] _secure
+        address from;
+        address[] to;
+        bytes32 alias;
+        address resolver;
+        address controller;
+        bool[] secure;
+        uint expiry;
     }
     mapping(uint => Polycule) public Polycules;
     mapping (address => mapping(address => bool)) Operators;
-
-    /// @dev : expiry records
-    mapping (bytes32 => uint) public Expiry;
-    /// @dev : controller records
-    mapping (bytes32 => mapping(address => bool)) Controllers;
 
     /**
     * @dev Initialise a new HELIX2 Polycules Registry
     * @notice : grants ownership of '0x0' to contract
     */
     constructor() public {
-        /// give ownership of '0x0' and <roothash> to contract
+        /// give ownership of '0x0' and <roothash> to Dev
         Polycules[0x0].owner = msg.sender;
         Polycules[roothash].owner = msg.sender;
+        Dev = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        require(msg.sender == Dev, "NOT_DEV");
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
     }
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 polyculehash) {
-        require(Controllers[polyculehash][msg.sender], 'NOT_CONTROLLER');
+        require(Polycules[polyculehash].controller, 'NOT_CONTROLLER');
+        _;
+    }
+
+    /// @dev : Modifier to allow Owner or Controller
+    modifier isOwnerOrController(bytes32 polyculehash) {
+        address owner = Polycules[polyculehash].owner;
+        require(owner == msg.sender || Operators[owner][msg.sender] || Polycules[polyculehash].controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -77,13 +98,43 @@ contract PolyculeRegistry is POLYCULE {
     }
 
     /**
+     * @dev : set controller of a polycule
+     * @param polyculehash : hash of polycule
+     * @param controller : new controller
+     */
+    function setController(bytes32 polyculehash, address controller) external isOwnerOrController(polyculehash) {
+        Polycules[polyculehash].controller = controller;
+        emit NewController(polyculehash, controller);
+    }
+
+    /**
      * @dev : set resolver for a polycule
      * @param polyculehash : hash of polycule
      * @param resolver : new resolver
      */
-    function setResolver(bytes32 polyculehash, address resolver) external onlyOwner(polyculehash) {
+    function setResolver(bytes32 polyculehash, address resolver) external isOwnerOrController(polyculehash) {
         Polycules[polyculehash].resolver = resolver;
         emit NewResolver(polyculehash, resolver);
+    }
+
+    /**
+     * @dev : set resolver for a polycule
+     * @param polyculehash : hash of polycule
+     * @param expiry : new expiry
+     */
+    function setExpiry(bytes32 polyculehash, uint expiry) external isOwnerOrController(polyculehash) {
+        Polycules[polyculehash].expiry = expiry;
+        emit NewExpiry(polyculehash, expiry);
+    }
+
+    /**
+     * @dev : set record for a polycule
+     * @param polyculehash : hash of polycule
+     * @param expiry : new expiry
+     */
+    function setRecord(bytes32 polyculehash, address resolver) external isOwnerOrController(polyculehash) {
+        Polycules[polyculehash].resolver = resolver;
+        emit NewRecord(polyculehash, resolver);
     }
 
     /**

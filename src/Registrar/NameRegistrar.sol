@@ -8,17 +8,33 @@ import "src/Interface/iName.sol";
  * @title Helix2 Name Base
  */
 contract NameRegistrar is NameRegistrar {
+    /// Dev
+    address public Dev;
+
+    /// Name Registry
+    iNAME public NAMES;
 
     /// @dev : Name roothash
     bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256(".")));
 
-    /// @dev : expiry records
-    mapping (bytes32 => uint) public Expiry;
-    /// @dev : controller records
-    mapping (bytes32 => mapping(address => bool)) Controllers;
+    constructor(address _NameRegistry) public {
+        NAMES = iNAME(_NameRegistry);
+        Dev = msg.sender;
+    }
 
-    constructor() public {
-        
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        require(msg.sender == Dev, "NOT_DEV");
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
     }
 
     /// @dev : Modifier to allow only Controller

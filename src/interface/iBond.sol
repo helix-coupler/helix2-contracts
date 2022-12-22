@@ -5,10 +5,15 @@ pragma solidity >0.8.0 <0.9.0;
  * @dev Helix2 Bonds Interface
  */
 interface iBOND {
+    /// REGISTRAR
 
+    /// REGISTRY
     /// @dev : HELIX2 Bonds events
     event NewBond(bytes32 indexed bondhash, address owner);
     event NewOwner(bytes32 indexed bondhash, address owner);
+    event NewController(bytes32 indexed namehash, address controller);
+    event NewExpiry(bytes32 indexed namehash, uint expiry);
+    event NewRecord(bytes32 indexed namehash, address resolver);
     event NewResolver(bytes32 indexed bondhash, address resolver);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     
@@ -18,6 +23,7 @@ interface iBOND {
     function setOwner(bytes32 bondhash, address owner) external;
     function setResolver(bytes32 bondhash, address resolver) external;
     function setApprovalForAll(address controller, bool approved) external;
+    function changeDev(address newDev) external;
 
     // view functions
     function owner(bytes32 bondhash) external view returns(address);

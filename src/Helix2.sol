@@ -30,19 +30,19 @@ contract HELIX2 is ERC721 {
 
     /// @dev : initialise interfaces
     iENS public ENS;
-    iNAME public NAME;
-    iBOND public BOND;
-    iMOLECULE public MOLECULE;
-    iPOLYCULE public POLYCULE;
+    iNAME public NAMES;
+    iBOND public BONDS;
+    iMOLECULE public MOLECULES;
+    iPOLYCULE public POLYCULES;
 
     mapping(bytes4 => bool) public supportsInterface;
 
     /// @dev : initialise registers
     ENS = iENS(ensRegistry);
-    NAME = iNAME(helix2Registry[0]);
-    BOND = iBOND(helix2Registry[1]);
-    MOLECULE = iMOLECULE(helix2Registry[2]);
-    POLYCULE = iPOLYCULE(helix2Registry[3]);
+    NAMES = iNAME(helix2Registry[0]);
+    BONDS = iBOND(helix2Registry[1]);
+    MOLECULES = iMOLECULE(helix2Registry[2]);
+    POLYCULES = iPOLYCULE(helix2Registry[3]);
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {

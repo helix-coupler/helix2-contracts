@@ -7,7 +7,9 @@ import "src/Interface/iName.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-contract NameRegistry is NAME {
+contract NameRegistry is NAMES {
+    /// Dev
+    address public Dev;
 
     /// @dev : Name roothash
     bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256(".")));
@@ -16,28 +18,48 @@ contract NameRegistry is NAME {
     struct Name {
         address owner;
         address resolver;
+        address controller;
+        uint expiry;
     }
     mapping(uint => Name) public Names;
     mapping (address => mapping(address => bool)) Operators;
-
-    /// @dev : expiry records
-    mapping (bytes32 => uint) public Expiry;
-    /// @dev : controller records
-    mapping (bytes32 => mapping(address => bool)) Controllers;
 
     /**
     * @dev : Initialise a new HELIX2 Names Registry
     * @notice : grants ownership of '0x0' to contract
     */
     constructor() public {
-        /// give ownership of '0x0' and <roothash> to contract
+        /// give ownership of '0x0' and <roothash> to Dev
         Names[0x0].owner = msg.sender;
         Names[roothash].owner = msg.sender;
+        Dev = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        require(msg.sender == Dev, "NOT_DEV");
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
     }
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 namehash) {
-        require(Controllers[namehash][msg.sender], 'NOT_CONTROLLER');
+        require(Names[namehash].controller, 'NOT_CONTROLLER');
+        _;
+    }
+
+    /// @dev : Modifier to allow Owner or Controller
+    modifier isOwnerOrController(bytes32 namehash) {
+        address owner = Names[namehash].owner;
+        require(owner == msg.sender || Operators[owner][msg.sender] || Names[namehash].controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -72,13 +94,43 @@ contract NameRegistry is NAME {
     }
 
     /**
+     * @dev : set controller of a name
+     * @param namehash : hash of name
+     * @param controller : new controller
+     */
+    function setController(bytes32 namehash, address controller) external isOwnerOrController(namehash) {
+        Names[namehash].controller = controller;
+        emit NewController(namehash, controller);
+    }
+
+    /**
      * @dev : set resolver for a name
      * @param namehash : hash of name
      * @param resolver : new resolver
      */
-    function setResolver(bytes32 namehash, address resolver) external onlyOwner(namehash) {
+    function setResolver(bytes32 namehash, address resolver) external isOwnerOrController(namehash) {
         Names[namehash].resolver = resolver;
         emit NewResolver(namehash, resolver);
+    }
+
+    /**
+     * @dev : set resolver for a name
+     * @param namehash : hash of name
+     * @param expiry : new expiry
+     */
+    function setExpiry(bytes32 namehash, uint expiry) external isOwnerOrController(namehash) {
+        Names[namehash].expiry = expiry;
+        emit NewExpiry(namehash, expiry);
+    }
+
+    /**
+     * @dev : set record for a name
+     * @param namehash : hash of name
+     * @param expiry : new expiry
+     */
+    function setRecord(bytes32 namehash, address resolver) external isOwnerOrController(namehash) {
+        Names[namehash].resolver = resolver;
+        emit NewRecord(namehash, resolver);
     }
 
     /**

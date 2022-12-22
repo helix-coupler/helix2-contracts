@@ -7,7 +7,9 @@ import "src/Interface/iMolecule.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-contract MoleculeRegistry is MOLECULE {
+contract MoleculeRegistry is MOLECULES {
+    /// Dev
+    address public Dev;
 
     /// @dev : Molecule roothash
     bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("!")));
@@ -15,34 +17,53 @@ contract MoleculeRegistry is MOLECULE {
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
         mapping(bytes32 => address) _hooks;
-        address _from;
-        address[] _to;
-        bytes32 _alias;
-        address _resolver;
-        address _operator;
-        bool _secure
+        address from;
+        address[] to;
+        bytes32 alias;
+        address resolver;
+        address controller;
+        bool secure;
+        uint expiry;
     }
     mapping(uint => Molecule) public Molecules;
     mapping (address => mapping(address => bool)) Operators;
-
-    /// @dev : expiry records
-    mapping (bytes32 => uint) public Expiry;
-    /// @dev : controller records
-    mapping (bytes32 => mapping(address => bool)) Controllers;
 
     /**
     * @dev Initialise a new HELIX2 Molecules Registry
     * @notice : grants ownership of '0x0' to contract
     */
     constructor() public {
-        /// give ownership of '0x0' and <roothash> to contract
+        /// give ownership of '0x0' and <roothash> to Dev
         Molecules[0x0].owner = msg.sender;
         Molecules[roothash].owner = msg.sender;
+        Dev = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        require(msg.sender == Dev, "NOT_DEV");
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
     }
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 moleculehash) {
-        require(Controllers[moleculehash][msg.sender], 'NOT_CONTROLLER');
+        require(Molecules[moleculehash].controller, 'NOT_CONTROLLER');
+        _;
+    }
+
+    /// @dev : Modifier to allow Owner or Controller
+    modifier isOwnerOrController(bytes32 moleculehash) {
+        address owner = Molecules[moleculehash].owner;
+        require(owner == msg.sender || Operators[owner][msg.sender] || Molecules[moleculehash].controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -77,13 +98,43 @@ contract MoleculeRegistry is MOLECULE {
     }
 
     /**
+     * @dev : set controller of a molecule
+     * @param moleculehash : hash of molecule
+     * @param controller : new controller
+     */
+    function setController(bytes32 moleculehash, address controller) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash].controller = controller;
+        emit NewController(moleculehash, controller);
+    }
+
+    /**
      * @dev : set resolver for a molecule
      * @param moleculehash : hash of molecule
      * @param resolver : new resolver
      */
-    function setResolver(bytes32 moleculehash, address resolver) external onlyOwner(moleculehash) {
+    function setResolver(bytes32 moleculehash, address resolver) external isOwnerOrController(moleculehash) {
         Molecules[moleculehash].resolver = resolver;
         emit NewResolver(moleculehash, resolver);
+    }
+
+    /**
+     * @dev : set resolver for a molecule
+     * @param moleculehash : hash of molecule
+     * @param expiry : new expiry
+     */
+    function setExpiry(bytes32 moleculehash, uint expiry) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash].expiry = expiry;
+        emit NewExpiry(moleculehash, expiry);
+    }
+
+    /**
+     * @dev : set record for a molecule
+     * @param moleculehash : hash of molecule
+     * @param expiry : new expiry
+     */
+    function setRecord(bytes32 moleculehash, address resolver) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash].resolver = resolver;
+        emit NewRecord(moleculehash, resolver);
     }
 
     /**
