@@ -1,30 +1,44 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/interface/iName.sol";
+import "src/Interface/iName.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-abstract contract Name is HELIX2 {
+contract NameRegistry is NAME {
 
-    /// Helix2 Name struct
+    /// @dev : Name roothash
+    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256(".")));
+
+    /// @dev : Helix2 Name struct
     struct Name {
         address owner;
         address resolver;
     }
     mapping(uint => Name) public Names;
-    mapping (address => mapping(address => bool)) Controllers;
+    mapping (address => mapping(address => bool)) Operators;
 
-     /**
-     * @dev : Initialise a new HELIX2 Names Registry
-     * @notice : grants ownership of '0x0' to contract
-     */
+    /// @dev : expiry records
+    mapping (bytes32 => uint) public Expiry;
+    /// @dev : controller records
+    mapping (bytes32 => mapping(address => bool)) Controllers;
+
+    /**
+    * @dev : Initialise a new HELIX2 Names Registry
+    * @notice : grants ownership of '0x0' to contract
+    */
     constructor() public {
         /// give ownership of '0x0' and <roothash> to contract
         Names[0x0].owner = msg.sender;
         Names[roothash].owner = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only Controller
+    modifier onlyController(bytes32 namehash) {
+        require(Controllers[namehash][msg.sender], 'NOT_CONTROLLER');
+        _;
     }
 
     /**
@@ -43,7 +57,7 @@ abstract contract Name is HELIX2 {
      */
     modifier onlyOwner(bytes32 namehash) {
         address owner = Names[namehash].owner;
-        require(owner == msg.sender || Controllers[owner][msg.sender], "NOT_OWNER");
+        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }
 
@@ -68,13 +82,13 @@ abstract contract Name is HELIX2 {
     }
 
     /**
-     * @dev : set controller for a name
-     * @param controller : new controller
+     * @dev : set operator for a name
+     * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address controller, bool approved) external onlyOwner(namehash) {
-        Controllers[msg.sender][controller] = approved;
-        emit ApprovalForAll(msg.sender, controller, approved);
+    function setApprovalForAll(address operator, bool approved) external onlyOwner(namehash) {
+        Operators[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -110,25 +124,13 @@ abstract contract Name is HELIX2 {
     }
 
     /**
-     * @dev check if an address is set as controller
+     * @dev check if an address is set as operator
      * @param owner owner of name to query
-     * @param controller controller to check
+     * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address controller) external view returns (bool) {
-        return Controllers[owner][controller];
+    function isApprovedForAll(address owner, address operator) external view returns (bool) {
+        return Operators[owner][operator];
     }
 
-    /**
-     * @dev registers a new name
-     * @param labelhash label of name without suffix
-     * @param owner owner to set for new name
-     * @return hash of new name
-     */
-    function newName(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
-        bytes32 namehash = keccak256(abi.encodePacked(roothash, labelhash));
-        Names[namehash].owner = owner;
-        emit NewName(namehash, owner);
-        return namehash;
-    }
 }

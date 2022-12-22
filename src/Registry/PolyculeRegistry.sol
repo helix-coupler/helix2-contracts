@@ -1,34 +1,49 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/interface/iPolycule.sol";
+import "src/Interface/iPolycule.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Polycule Base
  */
-abstract contract Polycule is HELIX2 {
-    /// Helix2 POLYCULE struct
+contract PolyculeRegistry is POLYCULE {
+
+    /// @dev : Polycule roothash
+    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("#")));
+
+    /// @dev : Helix2 POLYCULE struct
     struct Polycule {
         mapping(bytes32 => address[]) _hooks;
         address _from;
         address[] _to;
         bytes32 _alias;
         address _resolver;
-        address _controller;
+        address _operator;
         bool[] _secure
     }
     mapping(uint => Polycule) public Polycules;
-    mapping (address => mapping(address => bool)) Controllers;
+    mapping (address => mapping(address => bool)) Operators;
 
-     /**
-     * @dev Initialise a new HELIX2 Polycules Registry
-     * @notice : grants ownership of '0x0' to contract
-     */
+    /// @dev : expiry records
+    mapping (bytes32 => uint) public Expiry;
+    /// @dev : controller records
+    mapping (bytes32 => mapping(address => bool)) Controllers;
+
+    /**
+    * @dev Initialise a new HELIX2 Polycules Registry
+    * @notice : grants ownership of '0x0' to contract
+    */
     constructor() public {
         /// give ownership of '0x0' and <roothash> to contract
         Polycules[0x0].owner = msg.sender;
         Polycules[roothash].owner = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only Controller
+    modifier onlyController(bytes32 polyculehash) {
+        require(Controllers[polyculehash][msg.sender], 'NOT_CONTROLLER');
+        _;
     }
 
     /**
@@ -47,7 +62,7 @@ abstract contract Polycule is HELIX2 {
      */
     modifier onlyOwner(bytes32 polyculehash) {
         address owner = Polycules[polyculehash].owner;
-        require(owner == msg.sender || Controllers[owner][msg.sender], "NOT_OWNER");
+        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }
 
@@ -72,13 +87,13 @@ abstract contract Polycule is HELIX2 {
     }
 
     /**
-     * @dev : set controller for a polycule
-     * @param controller : new controller
+     * @dev : set operator for a polycule
+     * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address controller, bool approved) external onlyOwner(polyculehash) {
-        Controllers[msg.sender][controller] = approved;
-        emit ApprovalForAll(msg.sender, controller, approved);
+    function setApprovalForAll(address operator, bool approved) external onlyOwner(polyculehash) {
+        Operators[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -114,26 +129,14 @@ abstract contract Polycule is HELIX2 {
     }
 
     /**
-     * @dev check if an address is set as controller
+     * @dev check if an address is set as operator
      * @param owner owner of polycule to query
-     * @param controller controller to check
+     * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address controller) external view returns (bool) {
-        return Controllers[owner][controller];
+    function isApprovedForAll(address owner, address operator) external view returns (bool) {
+        return Operators[owner][operator];
     }
 
-    /**
-     * @dev registers a new polycule
-     * @param labelhash label of polycule without suffix
-     * @param owner owner to set for new polycule
-     * @return hash of new polycule
-     */
-    function newPolycule(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
-        bytes32 polyculehash = keccak256(abi.encodePacked(roothash, labelhash));
-        Molecules[polyculehash].owner = owner;
-        emit NewMolecule(polyculehash, owner);
-        return polyculehash;
-    }
 }
-}
+

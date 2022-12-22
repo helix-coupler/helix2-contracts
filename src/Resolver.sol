@@ -1,16 +1,18 @@
 //SPDX-License-Identifier: WTFPL v6.9
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/interface/iResolver.sol";
-import "src/interface/iENS.sol";
-import "src/interface/iHelix2.sol";
-import "src/interface/iERC721.sol";
+import "src/Interface/iResolver.sol";
+import "src/Interface/iENS.sol";
+import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @notice : Helix2 Resolver Base
  * @author: sshmatrix (BeenSick Labs)
  */
 abstract contract ResolverBase {
+
+    /// Events
     error OnlyDev(address _dev, address _you);
 
     /// @dev : Modifier to allow only dev
@@ -75,11 +77,11 @@ contract Resolver is ResolverBase {
     mapping(bytes32 => mapping(uint256 => bytes)) internal _addrs;
     mapping(bytes32 => PublicKey) public pubkey;
 
-    event NewTextRecord(bytes32 indexed bond, string indexed key, string value);
-    event NewAddr(bytes32 indexed bond, address addr);
-    event NewAddr2(bytes32 indexed bond, uint256 coinType, bytes newAddress);
-    event NewContenthash(bytes32 indexed bond, bytes _contenthash);
-    event NewPubkey(bytes32 indexed bond, bytes32 x, bytes32 y);
+    event NewTextRecord(bytes32 indexed namehash, string indexed key, string value);
+    event NewAddr(bytes32 indexed namehash, address addr);
+    event NewAddr2(bytes32 indexed namehash, uint256 coinType, bytes newAddress);
+    event NewContenthash(bytes32 indexed namehash, bytes _contenthash);
+    event NewPubkey(bytes32 indexed namehash, bytes32 x, bytes32 y);
 
     /// @notice : encoder: https://gist.github.com/sshmatrix/6ed02d73e439a5773c5a2aa7bd0f90f9
     /// @dev : default contenthash (encoded from IPNS hash)
@@ -100,11 +102,11 @@ contract Resolver is ResolverBase {
     }
 
     /**
-     * @dev : verify ownership of bond
-     * @param bond : bond
+     * @dev : verifies ownership of namehash
+     * @param namehash : hash of name
      */
-    modifier onlyOwner(bytes32 bond) {
-        require(msg.sender == HELIX2.owner(bond), "NOT_AUTHORISED");
+    modifier onlyOwner(bytes32 namehash) {
+        require(msg.sender == HELIX2.owner(namehash), "NOT_AUTHORISED");
         _;
     }
 
@@ -117,86 +119,86 @@ contract Resolver is ResolverBase {
     }
 
     /**
-     * @dev : return default contenhash if no contenthash set
-     * @param bond : bond
+     * @dev : returns default contenhash if no contenthash set
+     * @param namehash : hash of name
      */
-    function contenthash(bytes32 bond) public view returns (bytes memory _hash) {
-        _hash = _contenthash[bond];
+    function contenthash(bytes32 namehash) public view returns (bytes memory _hash) {
+        _hash = _contenthash[namehash];
         if (_hash.length == 0) {
             _hash = _contenthash[bytes32(0)];
         }
     }
 
     /**
-     * @dev : change contenthash
-     * @param bond: bond
+     * @dev : changes contenthash
+     * @param namehash: namehash
      * @param _hash: new contenthash
      */
-    function setContenthash(bytes32 bond, bytes memory _hash) external onlyOwner(bond) {
-        _contenthash[bond] = _hash;
-        emit NewContenthash(bond, _hash);
+    function setContenthash(bytes32 namehash, bytes memory _hash) external onlyOwner(namehash) {
+        _contenthash[namehash] = _hash;
+        emit NewContenthash(namehash, _hash);
     }
 
     /**
-     * @dev : change address
-     * @param bond : bond
+     * @dev : changes address
+     * @param namehash : hash of name
      * @param _addr : new address
      */
-    function setAddress(bytes32 bond, address _addr) external onlyOwner(bond) {
-        _addrs[bond][60] = abi.encodePacked(_addr);
-        emit NewAddr(bond, _addr);
+    function setAddress(bytes32 namehash, address _addr) external onlyOwner(namehash) {
+        _addrs[namehash][60] = abi.encodePacked(_addr);
+        emit NewAddr(namehash, _addr);
     }
     
     /**
-     * @dev : change address for <coin>
-     * @param bond : bond
+     * @dev : changes address for <coin>
+     * @param namehash : hash of name
      * @param coinType : <coin>
      */
-    function setAddressCoin(bytes32 bond, uint256 coinType, bytes memory _addr) external onlyOwner(bond) {
-        _addrs[bond][coinType] = _addr;
-        emit NewAddr2(bond, coinType, _addr);
+    function setAddressCoin(bytes32 namehash, uint256 coinType, bytes memory _addr) external onlyOwner(namehash) {
+        _addrs[namehash][coinType] = _addr;
+        emit NewAddr2(namehash, coinType, _addr);
     }
 
     /**
-     * @dev : default to owner if no address is set for Ethereum [60]
-     * @param bond : bond
+     * @dev : defaults to owner if no address is set for Ethereum [60]
+     * @param namehash : hash of name
      * @return : resolved address
      */
-    function addr(bytes32 bond) external view returns (address payable) {
-        bytes memory _addr = _addrs[bond][60];
+    function addr(bytes32 namehash) external view returns (address payable) {
+        bytes memory _addr = _addrs[namehash][60];
         if (_addr.length == 0) {
-            return payable(HELIX2.owner(bond));
+            return payable(HELIX2.owner(namehash));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
-     * @dev : resolve address for <coin>; if no ethereum address [60] is set, resolve to owner
-     * @param bond : bond
+     * @dev : resolves address for <coin>; if no ethereum address [60] is set, resolve to owner
+     * @param namehash : hash of name
      * @param coinType : <coin>
      * @return _addr : resolved address
      */
-    function addr2(bytes32 bond, uint256 coinType) external view returns (address payable) {
-        bytes memory _addr = _addrs[bond][coinType];
+    function addr2(bytes32 namehash, uint256 coinType) external view returns (address payable) {
+        bytes memory _addr = _addrs[namehash][coinType];
         if (_addr.length == 0 && coinType == 60) {
-            _addr = abi.encodePacked(HELIX2.owner(bond));
+            _addr = abi.encodePacked(HELIX2.owner(namehash));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
-     * @dev : change public key record
-     * @param bond : bond
+     * @dev : changes public key record
+     * @param namehash : hash of name
      * @param x : x-coordinate on elliptic curve
      * @param y : y-coordinate on elliptic curve
      */
-    function setPubkey(bytes32 bond, bytes32 x, bytes32 y) external onlyOwner(bond) {
-        pubkey[bond] = PublicKey(x, y);
-        emit NewPubkey(bond, x, y);
+    function setPubkey(bytes32 namehash, bytes32 x, bytes32 y) external onlyOwner(namehash) {
+        pubkey[namehash] = PublicKey(x, y);
+        emit NewPubkey(namehash, x, y);
     }
 
     /**
-     * @dev : set default text record <onlyDev>
+     * @dev : sets default text record <onlyDev>
      * @param key : key to change
      * @param value : value to set
      */
@@ -206,23 +208,23 @@ contract Resolver is ResolverBase {
     }
 
     /**
-     * @dev : change text record
-     * @param bond : bond
+     * @dev : changes text record
+     * @param namehash : hash of name
      * @param key : key to change
      * @param value : value to set
      */
-    function setText(bytes32 bond, string calldata key, string calldata value) external onlyOwner(bond) {
-        _text[bond][key] = value;
-        emit NewTextRecord(bond, key, value);
+    function setText(bytes32 namehash, string calldata key, string calldata value) external onlyOwner(namehash) {
+        _text[namehash][key] = value;
+        emit NewTextRecord(namehash, key, value);
     }
 
     /**
-     * @dev : get text records
-     * @param bond : bond
+     * @dev : queries text records
+     * @param namehash : hash of name
      * @param key : key to query
-     * @return value : value
+     * @return value of text record
      */
-    function text(bytes32 bond, string calldata key) external view returns (string memory value) {
-        return _text[bond][key];
+    function text(bytes32 namehash, string calldata key) external view returns (string memory value) {
+        return _text[namehash][key];
     }
 }

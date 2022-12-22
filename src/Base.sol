@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/interface/iERC721.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @author sshmatrix
@@ -11,8 +11,16 @@ abstract contract Base {
     /// Dev
     address public Dev;
 
+    /// @dev : Forbidden characters
+    string[4] public constant illegal = [".", "?", "!", "#"];
+
     /// @dev : Root Identifier
-    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("?")));
+    bytes32[4] public constant roothash = [
+        keccak256(abi.encodePacked(bytes32(0), keccak256("."))), /// Name Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("?"))), /// Bond Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("!"))), /// Molecule Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("#")))  /// Polycule Roothash
+    ];
 
     /// @dev : Default resolver used by this contract
     address public DefaultResolver;
@@ -22,10 +30,10 @@ abstract contract Base {
 
     /// @dev : Helix2 Registry array
     address[4] public helix2Registry = [
-        0xC0de4C0Cac01AC0de4C0Cac01AC0de4C0Cac01A0, /// Name Registry
-        0xC0de4C0Cac01A0Cac01AC0d04C0Cac01AC0d01A0, /// Bond Registry
-        0xC0e4C0Cac0C0C0C0C0C0Cac01AC0de4C0Cac01A0, /// Molecule Registry
-        0xC0dc01ACc01AC10deedee4C0c01AC0deC0de01A0, /// Polycule Registry
+        0x0000000000000000000000000000000000000001, /// Name Registry
+        0x0000000000000000000000000000000000000002, /// Bond Registry
+        0x0000000000000000000000000000000000000003, /// Molecule Registry
+        0x0000000000000000000000000000000000000004, /// Polycule Registry
     ];
 
     /// @dev : Pause/Resume contract
@@ -41,7 +49,6 @@ abstract contract Base {
         supportsInterface[type(iERC165).interfaceId] = true;
         supportsInterface[type(iERC721).interfaceId] = true;
         supportsInterface[type(iERC721Metadata).interfaceId] = true;
-
     }
 
     /// @dev : Modifier to allow only dev
@@ -49,6 +56,12 @@ abstract contract Base {
         if (msg.sender != Dev) {
             revert OnlyDev(Dev, msg.sender);
         }
+        _;
+    }
+
+    /// @dev : Modifier to allow only dev
+    modifier isLive() {
+        require(NAME.owner(roothash) == address(this));
         _;
     }
 

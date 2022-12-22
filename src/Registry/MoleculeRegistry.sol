@@ -1,34 +1,49 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/interface/iMolecule.sol";
+import "src/Interface/iMolecule.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-abstract contract Molecule is HELIX2 {
-    /// Helix2 MOLECULE struct
+contract MoleculeRegistry is MOLECULE {
+
+    /// @dev : Molecule roothash
+    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("!")));
+
+    /// @dev : Helix2 MOLECULE struct
     struct Molecule {
         mapping(bytes32 => address) _hooks;
         address _from;
         address[] _to;
         bytes32 _alias;
         address _resolver;
-        address _controller;
+        address _operator;
         bool _secure
     }
     mapping(uint => Molecule) public Molecules;
-    mapping (address => mapping(address => bool)) Controllers;
+    mapping (address => mapping(address => bool)) Operators;
 
-     /**
-     * @dev Initialise a new HELIX2 Molecules Registry
-     * @notice : grants ownership of '0x0' to contract
-     */
+    /// @dev : expiry records
+    mapping (bytes32 => uint) public Expiry;
+    /// @dev : controller records
+    mapping (bytes32 => mapping(address => bool)) Controllers;
+
+    /**
+    * @dev Initialise a new HELIX2 Molecules Registry
+    * @notice : grants ownership of '0x0' to contract
+    */
     constructor() public {
         /// give ownership of '0x0' and <roothash> to contract
         Molecules[0x0].owner = msg.sender;
         Molecules[roothash].owner = msg.sender;
+    }
+
+    /// @dev : Modifier to allow only Controller
+    modifier onlyController(bytes32 moleculehash) {
+        require(Controllers[moleculehash][msg.sender], 'NOT_CONTROLLER');
+        _;
     }
 
     /**
@@ -47,7 +62,7 @@ abstract contract Molecule is HELIX2 {
      */
     modifier onlyOwner(bytes32 moleculehash) {
         address owner = Molecules[moleculehash].owner;
-        require(owner == msg.sender || Controllers[owner][msg.sender], "NOT_OWNER");
+        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }
 
@@ -72,13 +87,13 @@ abstract contract Molecule is HELIX2 {
     }
 
     /**
-     * @dev : set controller for a molecule
-     * @param controller : new controller
+     * @dev : set operator for a molecule
+     * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address controller, bool approved) external onlyOwner(moleculehash) {
-        Controllers[msg.sender][controller] = approved;
-        emit ApprovalForAll(msg.sender, controller, approved);
+    function setApprovalForAll(address operator, bool approved) external onlyOwner(moleculehash) {
+        Operators[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -114,25 +129,13 @@ abstract contract Molecule is HELIX2 {
     }
 
     /**
-     * @dev check if an address is set as controller
+     * @dev check if an address is set as operator
      * @param owner owner of molecule to query
-     * @param controller controller to check
+     * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address controller) external view returns (bool) {
-        return Controllers[owner][controller];
+    function isApprovedForAll(address owner, address operator) external view returns (bool) {
+        return Operators[owner][operator];
     }
 
-    /**
-     * @dev registers a new molecule
-     * @param labelhash label of molecule without suffix
-     * @param owner owner to set for new molecule
-     * @return hash of new molecule
-     */
-    function newMolecule(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
-        bytes32 moleculehash = keccak256(abi.encodePacked(roothash, labelhash));
-        Molecules[moleculehash].owner = owner;
-        emit NewMolecule(moleculehash, owner);
-        return moleculehash;
-    }
 }

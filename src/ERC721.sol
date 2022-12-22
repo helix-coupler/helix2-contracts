@@ -2,7 +2,7 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/Base.sol";
-import "src/interface/iERC721.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @dev : Helix2 ERC721 Base
