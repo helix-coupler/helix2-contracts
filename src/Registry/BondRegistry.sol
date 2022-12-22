@@ -7,7 +7,17 @@ import "src/Interface/iBond.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Bond Base
  */
-contract BondRegistry is BONDS {
+abstract contract Helix2Bonds {
+    /// @dev : Helix2 Bonds events
+    event NewDev(address Dev, address newDev);
+    event NewBond(bytes32 indexed bondhash, address owner);
+    event NewOwner(bytes32 indexed bondhash, address owner);
+    event NewController(bytes32 indexed bondhash, address controller);
+    event NewExpiry(bytes32 indexed bondhash, uint expiry);
+    event NewRecord(bytes32 indexed bondhash, address resolver);
+    event NewResolver(bytes32 indexed bondhash, address resolver);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
     /// Dev
     address public Dev;
 
@@ -17,25 +27,25 @@ contract BondRegistry is BONDS {
     /// @dev : Helix2 Bond struct
     struct Bond {
         mapping(bytes32 => address) _hooks;
-        address from;
+        address _owner;
         address to;
-        bytes32 alias;
-        address resolver;
-        address controller;
-        bool secure
-        uint expiry
+        bytes32 _alias;
+        address _resolver;
+        address _controller;
+        bool secure;
+        uint _expiry;
     }
-    mapping(uint => Bond) public Bonds;
+    mapping (bytes32 => Bond) public Bonds;
     mapping (address => mapping(address => bool)) Operators;
 
     /**
     * @dev Initialise a new HELIX2 Bonds Registry
     * @notice : grants ownership of '0x0' to contract
     */
-    constructor() public {
+    constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Bonds[0x0].owner = msg.sender;
-        Bonds[roothash].owner = msg.sender;
+        Bonds[0x0]._owner = msg.sender;
+        Bonds[roothash]._owner = msg.sender;
         Dev = msg.sender;
     }
 
@@ -56,14 +66,14 @@ contract BondRegistry is BONDS {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 bondhash) {
-        require(Bonds[bondhash].controller, 'NOT_CONTROLLER');
+        require(msg.sender == Bonds[bondhash]._controller, 'NOT_CONTROLLER');
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 bondhash) {
-        address owner = Bonds[bondhash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender] || Bonds[bondhash].controller, "NOT_OWNER_OR_CONTROLLER");
+        address _owner = Bonds[bondhash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Bonds[bondhash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -72,8 +82,8 @@ contract BondRegistry is BONDS {
      * @param labelhash : hash of bond
      */
     modifier isNew(bytes32 labelhash) {
-        address owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))].owner;
-        require(owner == address(0x0), "BOND_EXISTS");
+        address _owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        require(_owner == address(0x0), "BOND_EXISTS");
         _;
     }
 
@@ -82,59 +92,59 @@ contract BondRegistry is BONDS {
      * @param bondhash : hash of bond
      */
     modifier onlyOwner(bytes32 bondhash) {
-        address owner = Bonds[bondhash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
+        address _owner = Bonds[bondhash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
      * @dev : set owner of a bond
      * @param bondhash : hash of bond
-     * @param owner : new owner
+     * @param _owner : new owner
      */
-    function setOwner(bytes32 bondhash, address owner) external onlyOwner(bondhash) {
-        Bonds[bondhash].owner = owner;
-        emit NewOwner(bondhash, owner);
+    function setOwner(bytes32 bondhash, address _owner) external onlyOwner(bondhash) {
+        Bonds[bondhash]._owner = _owner;
+        emit NewOwner(bondhash, _owner);
     }
 
     /**
      * @dev : set controller of a bond
      * @param bondhash : hash of bond
-     * @param controller : new controller
+     * @param _controller : new controller
      */
-    function setController(bytes32 bondhash, address controller) external isOwnerOrController(bondhash) {
-        Bonds[bondhash].controller = controller;
-        emit NewController(bondhash, controller);
+    function setController(bytes32 bondhash, address _controller) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._controller = _controller;
+        emit NewController(bondhash, _controller);
     }
 
     /**
      * @dev : set resolver for a bond
      * @param bondhash : hash of bond
-     * @param resolver : new resolver
+     * @param _resolver : new resolver
      */
-    function setResolver(bytes32 bondhash, address resolver) external isOwnerOrController(bondhash) {
-        Bonds[bondhash].resolver = resolver;
-        emit NewResolver(bondhash, resolver);
+    function setResolver(bytes32 bondhash, address _resolver) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._resolver = _resolver;
+        emit NewResolver(bondhash, _resolver);
     }
 
     /**
-     * @dev : set resolver for a bond
+     * @dev : set expiry for a bond
      * @param bondhash : hash of bond
-     * @param expiry : new expiry
+     * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 bondhash, uint expiry) external isOwnerOrController(bondhash) {
-        Bonds[bondhash].expiry = expiry;
-        emit NewExpiry(bondhash, expiry);
+    function setExpiry(bytes32 bondhash, uint _expiry) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._expiry = _expiry;
+        emit NewExpiry(bondhash, _expiry);
     }
 
     /**
      * @dev : set record for a bond
      * @param bondhash : hash of bond
-     * @param expiry : new expiry
+     * @param _resolver : new record
      */
-    function setRecord(bytes32 bondhash, address resolver) external isOwnerOrController(bondhash) {
-        Bonds[bondhash].resolver = resolver;
-        emit NewRecord(bondhash, resolver);
+    function setRecord(bytes32 bondhash, address _resolver) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._resolver = _resolver;
+        emit NewRecord(bondhash, _resolver);
     }
 
     /**
@@ -142,7 +152,7 @@ contract BondRegistry is BONDS {
      * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address operator, bool approved) external onlyOwner(bondhash) {
+    function setApprovalForAll(address operator, bool approved) external {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -153,7 +163,7 @@ contract BondRegistry is BONDS {
      * @return address of owner
      */
     function owner(bytes32 bondhash) public view returns (address) {
-        address addr = Bonds[bondhash].owner;
+        address addr = Bonds[bondhash]._owner;
         if (addr == address(this)) {
             return address(0x0);
         }
@@ -161,13 +171,33 @@ contract BondRegistry is BONDS {
     }
 
     /**
+     * @dev return controller of a bond
+     * @param bondhash hash of bond to query
+     * @return address of controller
+     */
+    function controller(bytes32 bondhash) public view returns (address) {
+        address _controller = Bonds[bondhash]._controller;
+        return _controller;
+    }
+
+    /**
+     * @dev return expiry of a bond
+     * @param bondhash hash of bond to query
+     * @return expiry
+     */
+    function expiry(bytes32 bondhash) public view returns (uint) {
+        uint _expiry = Bonds[bondhash]._expiry;
+        return _expiry;
+    }   
+
+    /**
      * @dev return resolver of a bond
      * @param bondhash hash of bond to query
      * @return address of resolver
      */
     function resolver(bytes32 bondhash) public view returns (address) {
-        address resolver = Bonds[bondhash].resolver;
-        return resolver;
+        address _resolver = Bonds[bondhash]._resolver;
+        return _resolver;
     }
 
     /**
@@ -176,17 +206,17 @@ contract BondRegistry is BONDS {
      * @return true or false
      */
     function recordExists(bytes32 bondhash) public view returns (bool) {
-        return Bonds[bondhash].owner != address(0x0);
+        return Bonds[bondhash]._owner != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param owner owner of bond to query
+     * @param _owner owner of bond to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address operator) external view returns (bool) {
-        return Operators[owner][operator];
+    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
+        return Operators[_owner][operator];
     }
 
 }

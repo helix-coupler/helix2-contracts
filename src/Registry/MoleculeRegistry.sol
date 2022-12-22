@@ -7,7 +7,17 @@ import "src/Interface/iMolecule.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-contract MoleculeRegistry is MOLECULES {
+abstract contract Helix2Molecules {
+    /// @dev : Helix2 Molecules events
+    event NewDev(address Dev, address newDev);
+    event NewMolecule(bytes32 indexed moleculehash, address owner);
+    event NewOwner(bytes32 indexed moleculehash, address owner);
+    event NewController(bytes32 indexed moleculehash, address controller);
+    event NewExpiry(bytes32 indexed moleculehash, uint expiry);
+    event NewRecord(bytes32 indexed moleculehash, address resolver);
+    event NewResolver(bytes32 indexed moleculehash, address resolver);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    
     /// Dev
     address public Dev;
 
@@ -17,25 +27,25 @@ contract MoleculeRegistry is MOLECULES {
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
         mapping(bytes32 => address) _hooks;
-        address from;
+        address _owner;
         address[] to;
-        bytes32 alias;
-        address resolver;
-        address controller;
+        bytes32 _alias;
+        address _resolver;
+        address _controller;
         bool secure;
-        uint expiry;
+        uint _expiry;
     }
-    mapping(uint => Molecule) public Molecules;
+    mapping (bytes32 => Molecule) public Molecules;
     mapping (address => mapping(address => bool)) Operators;
 
     /**
     * @dev Initialise a new HELIX2 Molecules Registry
     * @notice : grants ownership of '0x0' to contract
     */
-    constructor() public {
+    constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Molecules[0x0].owner = msg.sender;
-        Molecules[roothash].owner = msg.sender;
+        Molecules[0x0]._owner = msg.sender;
+        Molecules[roothash]._owner = msg.sender;
         Dev = msg.sender;
     }
 
@@ -56,14 +66,14 @@ contract MoleculeRegistry is MOLECULES {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 moleculehash) {
-        require(Molecules[moleculehash].controller, 'NOT_CONTROLLER');
+        require(msg.sender == Molecules[moleculehash]._controller, 'NOT_CONTROLLER');
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 moleculehash) {
-        address owner = Molecules[moleculehash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender] || Molecules[moleculehash].controller, "NOT_OWNER_OR_CONTROLLER");
+        address _owner = Molecules[moleculehash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Molecules[moleculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -72,8 +82,8 @@ contract MoleculeRegistry is MOLECULES {
      * @param labelhash : hash of molecule
      */
     modifier isNew(bytes32 labelhash) {
-        address owner =  Molecules[keccak256(abi.encodePacked(roothash, labelhash))].owner;
-        require(owner == address(0x0), "MOLECULE_EXISTS");
+        address _owner =  Molecules[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        require(_owner == address(0x0), "MOLECULE_EXISTS");
         _;
     }
 
@@ -82,59 +92,59 @@ contract MoleculeRegistry is MOLECULES {
      * @param moleculehash : hash of molecule
      */
     modifier onlyOwner(bytes32 moleculehash) {
-        address owner = Molecules[moleculehash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
+        address _owner = Molecules[moleculehash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
      * @dev : set owner of a molecule
      * @param moleculehash : hash of molecule
-     * @param owner : new owner
+     * @param _owner : new owner
      */
-    function setOwner(bytes32 moleculehash, address owner) external onlyOwner(moleculehash) {
-        Molecules[moleculehash].owner = owner;
-        emit NewOwner(moleculehash, owner);
+    function setOwner(bytes32 moleculehash, address _owner) external onlyOwner(moleculehash) {
+        Molecules[moleculehash]._owner = _owner;
+        emit NewOwner(moleculehash, _owner);
     }
 
     /**
      * @dev : set controller of a molecule
      * @param moleculehash : hash of molecule
-     * @param controller : new controller
+     * @param _controller : new controller
      */
-    function setController(bytes32 moleculehash, address controller) external isOwnerOrController(moleculehash) {
-        Molecules[moleculehash].controller = controller;
-        emit NewController(moleculehash, controller);
+    function setController(bytes32 moleculehash, address _controller) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash]._controller = _controller;
+        emit NewController(moleculehash, _controller);
     }
 
     /**
      * @dev : set resolver for a molecule
      * @param moleculehash : hash of molecule
-     * @param resolver : new resolver
+     * @param _resolver : new resolver
      */
-    function setResolver(bytes32 moleculehash, address resolver) external isOwnerOrController(moleculehash) {
-        Molecules[moleculehash].resolver = resolver;
-        emit NewResolver(moleculehash, resolver);
+    function setResolver(bytes32 moleculehash, address _resolver) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash]._resolver = _resolver;
+        emit NewResolver(moleculehash, _resolver);
     }
 
     /**
-     * @dev : set resolver for a molecule
+     * @dev : set expiry for a molecule
      * @param moleculehash : hash of molecule
-     * @param expiry : new expiry
+     * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 moleculehash, uint expiry) external isOwnerOrController(moleculehash) {
-        Molecules[moleculehash].expiry = expiry;
-        emit NewExpiry(moleculehash, expiry);
+    function setExpiry(bytes32 moleculehash, uint _expiry) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash]._expiry = _expiry;
+        emit NewExpiry(moleculehash, _expiry);
     }
 
     /**
      * @dev : set record for a molecule
      * @param moleculehash : hash of molecule
-     * @param expiry : new expiry
+     * @param _resolver: new record
      */
-    function setRecord(bytes32 moleculehash, address resolver) external isOwnerOrController(moleculehash) {
-        Molecules[moleculehash].resolver = resolver;
-        emit NewRecord(moleculehash, resolver);
+    function setRecord(bytes32 moleculehash, address _resolver) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash]._resolver = _resolver;
+        emit NewRecord(moleculehash, _resolver);
     }
 
     /**
@@ -142,7 +152,7 @@ contract MoleculeRegistry is MOLECULES {
      * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address operator, bool approved) external onlyOwner(moleculehash) {
+    function setApprovalForAll(address operator, bool approved) external {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -153,7 +163,7 @@ contract MoleculeRegistry is MOLECULES {
      * @return address of owner
      */
     function owner(bytes32 moleculehash) public view returns (address) {
-        address addr = Molecules[moleculehash].owner;
+        address addr = Molecules[moleculehash]._owner;
         if (addr == address(this)) {
             return address(0x0);
         }
@@ -161,13 +171,33 @@ contract MoleculeRegistry is MOLECULES {
     }
 
     /**
+     * @dev return controller of a molecule
+     * @param moleculehash hash of molecule to query
+     * @return address of controller
+     */
+    function controller(bytes32 moleculehash) public view returns (address) {
+        address _controller = Molecules[moleculehash]._controller;
+        return _controller;
+    }
+
+    /**
+     * @dev return expiry of a molecule
+     * @param moleculehash hash of molecule to query
+     * @return expiry
+     */
+    function expiry(bytes32 moleculehash) public view returns (uint) {
+        uint _expiry = Molecules[moleculehash]._expiry;
+        return _expiry;
+    }   
+
+    /**
      * @dev return resolver of a molecule
      * @param moleculehash hash of molecule to query
      * @return address of resolver
      */
     function resolver(bytes32 moleculehash) public view returns (address) {
-        address resolver = Molecules[moleculehash].resolver;
-        return resolver;
+        address _resolver = Molecules[moleculehash]._resolver;
+        return _resolver;
     }
 
     /**
@@ -176,17 +206,17 @@ contract MoleculeRegistry is MOLECULES {
      * @return true or false
      */
     function recordExists(bytes32 moleculehash) public view returns (bool) {
-        return Molecules[moleculehash].owner != address(0x0);
+        return Molecules[moleculehash]._owner != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param owner owner of molecule to query
+     * @param _owner owner of molecule to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address operator) external view returns (bool) {
-        return Operators[owner][operator];
+    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
+        return Operators[_owner][operator];
     }
 
 }

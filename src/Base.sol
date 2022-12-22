@@ -8,14 +8,17 @@ import "src/Interface/iERC721.sol";
  * @title Helix2 Base
  */
 abstract contract Base {
+    /// Events
+    error OnlyDev(address _dev, address _you);
+    
     /// Dev
     address public Dev;
-
+    
     /// @dev : Forbidden characters
-    string[4] public constant illegal = [".", "?", "!", "#"];
+    string[4] public illegal = [".", "?", "!", "#"];
 
     /// @dev : Root Identifier
-    bytes32[4] public constant roothash = [
+    bytes32[4] public roothash = [
         keccak256(abi.encodePacked(bytes32(0), keccak256("."))), /// Name Roothash
         keccak256(abi.encodePacked(bytes32(0), keccak256("?"))), /// Bond Roothash
         keccak256(abi.encodePacked(bytes32(0), keccak256("!"))), /// Molecule Roothash
@@ -33,7 +36,7 @@ abstract contract Base {
         0x0000000000000000000000000000000000000001, /// Name Registry
         0x0000000000000000000000000000000000000002, /// Bond Registry
         0x0000000000000000000000000000000000000003, /// Molecule Registry
-        0x0000000000000000000000000000000000000004, /// Polycule Registry
+        0x0000000000000000000000000000000000000004  /// Polycule Registry
     ];
 
     /// @dev : Pause/Resume contract
@@ -56,12 +59,6 @@ abstract contract Base {
         if (msg.sender != Dev) {
             revert OnlyDev(Dev, msg.sender);
         }
-        _;
-    }
-
-    /// @dev : Modifier to allow only dev
-    modifier isLive() {
-        require(NAME.owner(roothash) == address(this));
         _;
     }
 
@@ -89,6 +86,13 @@ abstract contract Base {
      */
     function withdrawToken(address token) external payable {
         iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+    }
+
+    /**
+     * @dev : returns Dev address
+     */
+    function isDev() public view returns(address) {
+        return Dev;
     }
 
     /// @dev : revert on fallback

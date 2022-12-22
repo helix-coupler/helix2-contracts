@@ -1,0 +1,526 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_dev",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_you",
+          "type": "address"
+        }
+      ],
+      "name": "OnlyDev",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address[4]",
+          "name": "newReg",
+          "type": "address[4]"
+        }
+      ],
+      "name": "NewRegistry",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newReg",
+          "type": "address"
+        }
+      ],
+      "name": "NewSubRegistry",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "isDev",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "isDev()": "f079914f"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_dev\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_you\",\"type\":\"address\"}],\"name\":\"OnlyDev\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address[4]\",\"name\":\"newReg\",\"type\":\"address[4]\"}],\"name\":\"NewRegistry\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newReg\",\"type\":\"address\"}],\"name\":\"NewSubRegistry\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"isDev\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Helix2 Interface\",\"events\":{\"NewRegistry(address[4])\":{\"details\":\": Helix2 global events\"}},\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/Interface/iHelix2.sol\":\"iHELIX2\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":6666},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/Interface/iHelix2.sol\":{\"keccak256\":\"0x8dafde35994959846fb8f4f630f10d22190e06985781989c20651bc029fc0ab8\",\"license\":\"WTFPL.ETH\",\"urls\":[\"bzz-raw://9210f9937a9cea6f44806bd92b0abdca984b027836009b30eda61c81165f909d\",\"dweb:/ipfs/QmRvn6DK8dUECEa7K2nEHGAyyLKzrWw8zXPr724ATPPuXW\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.16+commit.07a7930e"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_dev",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_you",
+              "type": "address"
+            }
+          ],
+          "type": "error",
+          "name": "OnlyDev"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address[4]",
+              "name": "newReg",
+              "type": "address[4]",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "NewRegistry",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "index",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "internalType": "address",
+              "name": "newReg",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "NewSubRegistry",
+          "anonymous": false
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "isDev",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 6666
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/Interface/iHelix2.sol": "iHELIX2"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/Interface/iHelix2.sol": {
+        "keccak256": "0x8dafde35994959846fb8f4f630f10d22190e06985781989c20651bc029fc0ab8",
+        "urls": [
+          "bzz-raw://9210f9937a9cea6f44806bd92b0abdca984b027836009b30eda61c81165f909d",
+          "dweb:/ipfs/QmRvn6DK8dUECEa7K2nEHGAyyLKzrWw8zXPr724ATPPuXW"
+        ],
+        "license": "WTFPL.ETH"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/Interface/iHelix2.sol",
+    "id": 25843,
+    "exportedSymbols": {
+      "iHELIX2": [
+        25842
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "37:323:20",
+    "nodes": [
+      {
+        "id": 25816,
+        "nodeType": "PragmaDirective",
+        "src": "37:30:20",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          ">",
+          "0.8",
+          ".0",
+          "<",
+          "0.9",
+          ".0"
+        ]
+      },
+      {
+        "id": 25842,
+        "nodeType": "ContractDefinition",
+        "src": "102:258:20",
+        "nodes": [
+          {
+            "id": 25823,
+            "nodeType": "ErrorDefinition",
+            "src": "126:42:20",
+            "nodes": [],
+            "errorSelector": "8ea458f6",
+            "name": "OnlyDev",
+            "nameLocation": "132:7:20",
+            "parameters": {
+              "id": 25822,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 25819,
+                  "mutability": "mutable",
+                  "name": "_dev",
+                  "nameLocation": "148:4:20",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25823,
+                  "src": "140:12:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 25818,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "140:7:20",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 25821,
+                  "mutability": "mutable",
+                  "name": "_you",
+                  "nameLocation": "162:4:20",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25823,
+                  "src": "154:12:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 25820,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "154:7:20",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "139:28:20"
+            }
+          },
+          {
+            "id": 25830,
+            "nodeType": "EventDefinition",
+            "src": "210:37:20",
+            "nodes": [],
+            "anonymous": false,
+            "documentation": {
+              "id": 25824,
+              "nodeType": "StructuredDocumentation",
+              "src": "174:31:20",
+              "text": "@dev : Helix2 global events"
+            },
+            "eventSelector": "d013789329f052dd9fe222fe14f05f78a86626c1b4d25232099e6e271be374d5",
+            "name": "NewRegistry",
+            "nameLocation": "216:11:20",
+            "parameters": {
+              "id": 25829,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 25828,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "newReg",
+                  "nameLocation": "239:6:20",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25830,
+                  "src": "228:17:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$4_memory_ptr",
+                    "typeString": "address[4]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 25825,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "228:7:20",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 25827,
+                    "length": {
+                      "hexValue": "34",
+                      "id": 25826,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "number",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "236:1:20",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_rational_4_by_1",
+                        "typeString": "int_const 4"
+                      },
+                      "value": "4"
+                    },
+                    "nodeType": "ArrayTypeName",
+                    "src": "228:10:20",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$4_storage_ptr",
+                      "typeString": "address[4]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "227:19:20"
+            }
+          },
+          {
+            "id": 25836,
+            "nodeType": "EventDefinition",
+            "src": "252:52:20",
+            "nodes": [],
+            "anonymous": false,
+            "eventSelector": "c5771d6049f79b265c3b7984f6e33f6e256608c6c2efcc0933d382ace7aad583",
+            "name": "NewSubRegistry",
+            "nameLocation": "258:14:20",
+            "parameters": {
+              "id": 25835,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 25832,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "index",
+                  "nameLocation": "281:5:20",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25836,
+                  "src": "273:13:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 25831,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "273:7:20",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 25834,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "newReg",
+                  "nameLocation": "296:6:20",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25836,
+                  "src": "288:14:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 25833,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "288:7:20",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "272:31:20"
+            }
+          },
+          {
+            "id": 25841,
+            "nodeType": "FunctionDefinition",
+            "src": "310:48:20",
+            "nodes": [],
+            "functionSelector": "f079914f",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "isDev",
+            "nameLocation": "319:5:20",
+            "parameters": {
+              "id": 25837,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "324:2:20"
+            },
+            "returnParameters": {
+              "id": 25840,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 25839,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 25841,
+                  "src": "349:7:20",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 25838,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "349:7:20",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "348:9:20"
+            },
+            "scope": 25842,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "iHELIX2",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 25817,
+          "nodeType": "StructuredDocumentation",
+          "src": "69:32:20",
+          "text": " @dev Helix2 Interface"
+        },
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          25842
+        ],
+        "name": "iHELIX2",
+        "nameLocation": "112:7:20",
+        "scope": 25843,
+        "usedErrors": [
+          25823
+        ]
+      }
+    ],
+    "license": "WTFPL.ETH"
+  },
+  "id": 20
+}

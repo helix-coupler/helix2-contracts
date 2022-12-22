@@ -27,28 +27,17 @@ import "src/Interface/iERC721.sol";
  * @title Helix2 Registrar
  */
 contract HELIX2 is ERC721 {
+    /// @dev : Events
+    event NewRegistry(address[4] newReg);
+    event NewSubRegistry(uint256 index, address newReg);
 
-    /// @dev : initialise interfaces
-    iENS public ENS;
-    iNAME public NAMES;
-    iBOND public BONDS;
-    iMOLECULE public MOLECULES;
-    iPOLYCULE public POLYCULES;
-
-    mapping(bytes4 => bool) public supportsInterface;
-
-    /// @dev : initialise registers
-    ENS = iENS(ensRegistry);
-    NAMES = iNAME(helix2Registry[0]);
-    BONDS = iBOND(helix2Registry[1]);
-    MOLECULES = iMOLECULE(helix2Registry[2]);
-    POLYCULES = iPOLYCULE(helix2Registry[3]);
-
-    /// @dev : Modifier to allow only dev
-    modifier onlyDev() {
-        require(msg.sender == Dev, "NOT_DEV");
-        _;
-    }
+    /// @dev : Initialise Registers
+    
+    iENS public ENS = iENS(ensRegistry);
+    iNAME public NAMES = iNAME(helix2Registry[0]);
+    iBOND public BONDS = iBOND(helix2Registry[1]);
+    iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
+    iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
 
     /**
      * @dev : transfer contract ownership to new Dev
@@ -63,7 +52,7 @@ contract HELIX2 is ERC721 {
      * @dev : migrate all Helix2 Registers
      * @param newReg : new Registry array
      */
-    function setRegistry(address[4] newReg) external onlyDev {
+    function setRegistry(address[4] calldata newReg) external onlyDev {
         emit NewRegistry(newReg);
         helix2Registry = newReg;
     }
@@ -76,16 +65,6 @@ contract HELIX2 is ERC721 {
     function setSubRegistry(uint256 index, address newReg) external onlyDev {
         emit NewSubRegistry(index, newReg);
         helix2Registry[index] = newReg;
-    }
-
-    /**
-     * @dev : setInterface
-     * @param sig : signature
-     * @param value : boolean
-     */
-    function setInterface(bytes4 sig, bool value) external payable onlyDev {
-        require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
-        supportsInterface[sig] = value;
     }
 
 }

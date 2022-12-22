@@ -8,25 +8,20 @@ interface iBOND {
     /// REGISTRAR
 
     /// REGISTRY
-    /// @dev : HELIX2 Bonds events
-    event NewBond(bytes32 indexed bondhash, address owner);
-    event NewOwner(bytes32 indexed bondhash, address owner);
-    event NewController(bytes32 indexed namehash, address controller);
-    event NewExpiry(bytes32 indexed namehash, uint expiry);
-    event NewRecord(bytes32 indexed namehash, address resolver);
-    event NewResolver(bytes32 indexed bondhash, address resolver);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-    
     /// @dev : HELIX2 Bonds external functions
     // write functions
-    function newBond(bytes32 labelhash, address owner) external;
     function setOwner(bytes32 bondhash, address owner) external;
+    function setController(bytes32 bondhash, address controller) external;
+    function setExpiry(bytes32 bondhash, uint expiry) external;
+    function setRecord(bytes32 bondhash, address resolver) external;
     function setResolver(bytes32 bondhash, address resolver) external;
     function setApprovalForAll(address controller, bool approved) external;
     function changeDev(address newDev) external;
 
     // view functions
     function owner(bytes32 bondhash) external view returns(address);
+    function controller(bytes32 bondhash, address controller) external view returns(address);
+    function expiry(bytes32 bondhash, uint expiry) external view returns(uint);
     function resolver(bytes32 bondhash) external view returns(address);
     function recordExists(bytes32 bondhash) external view returns(bool);
     function isApprovedForAll(address owner, address controller) external view returns(bool);

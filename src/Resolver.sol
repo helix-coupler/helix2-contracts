@@ -5,26 +5,27 @@ import "src/Interface/iResolver.sol";
 import "src/Interface/iENS.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iERC721.sol";
+import "src/Interface/iName.sol";
 
 /**
- * @notice : Helix2 Resolver Base
- * @author: sshmatrix (BeenSick Labs)
+ * @dev : Helix2 Resolver Base
+ * @notice : sshmatrix (BeenSick Labs)
  */
 abstract contract ResolverBase {
-
     /// Events
     error OnlyDev(address _dev, address _you);
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        if (msg.sender != HELIX2.Dev()) {
-            revert OnlyDev(HELIX2.Dev(), msg.sender);
+        if (msg.sender != HELIX2.isDev()) {
+            revert OnlyDev(HELIX2.isDev(), msg.sender);
         }
         _;
     }
 
     /// @dev : Helix2 Contract Interface
     iHELIX2 public HELIX2;
+    iNAME public NAMES;
     mapping(bytes4 => bool) public supportsInterface;
 
     /**
@@ -41,7 +42,7 @@ abstract contract ResolverBase {
      * @dev : withdraw ether only to Dev (or multi-sig)
      */
     function withdrawEther() external payable {
-        (bool ok,) = HELIX2.Dev().call{value: address(this).balance}("");
+        (bool ok,) = HELIX2.isDev().call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }
 
@@ -52,7 +53,7 @@ abstract contract ResolverBase {
      */
     function withdrawToken(address token, uint256 value) external payable {
         require(token != address(this), "RESOLVER_LOCKED");
-        iERC721(token).transferFrom(address(this), HELIX2.Dev(), value);
+        iERC721(token).transferFrom(address(this), HELIX2.isDev(), value);
     }
 
     // @dev : Revert on fallback
@@ -106,7 +107,7 @@ contract Resolver is ResolverBase {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        require(msg.sender == HELIX2.owner(namehash), "NOT_AUTHORISED");
+        require(msg.sender == NAMES.owner(namehash), "NOT_AUTHORISED");
         _;
     }
 
@@ -167,7 +168,7 @@ contract Resolver is ResolverBase {
     function addr(bytes32 namehash) external view returns (address payable) {
         bytes memory _addr = _addrs[namehash][60];
         if (_addr.length == 0) {
-            return payable(HELIX2.owner(namehash));
+            return payable(NAMES.owner(namehash));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
@@ -181,7 +182,7 @@ contract Resolver is ResolverBase {
     function addr2(bytes32 namehash, uint256 coinType) external view returns (address payable) {
         bytes memory _addr = _addrs[namehash][coinType];
         if (_addr.length == 0 && coinType == 60) {
-            _addr = abi.encodePacked(HELIX2.owner(namehash));
+            _addr = abi.encodePacked(NAMES.owner(namehash));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }

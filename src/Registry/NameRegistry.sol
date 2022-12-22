@@ -7,7 +7,17 @@ import "src/Interface/iName.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-contract NameRegistry is NAMES {
+abstract contract Helix2Names {
+    /// @dev : Helix2 Names events
+    event NewDev(address Dev, address newDev);
+    event NewName(bytes32 indexed namehash, address owner);
+    event NewOwner(bytes32 indexed namehash, address owner);
+    event NewController(bytes32 indexed namehash, address controller);
+    event NewExpiry(bytes32 indexed namehash, uint expiry);
+    event NewRecord(bytes32 indexed namehash, address resolver);
+    event NewResolver(bytes32 indexed namehash, address resolver);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
     /// Dev
     address public Dev;
 
@@ -16,22 +26,22 @@ contract NameRegistry is NAMES {
 
     /// @dev : Helix2 Name struct
     struct Name {
-        address owner;
-        address resolver;
-        address controller;
-        uint expiry;
+        address _owner;
+        address _resolver;
+        address _controller;
+        uint _expiry;
     }
-    mapping(uint => Name) public Names;
+    mapping (bytes32 => Name) public Names;
     mapping (address => mapping(address => bool)) Operators;
 
     /**
     * @dev : Initialise a new HELIX2 Names Registry
     * @notice : grants ownership of '0x0' to contract
     */
-    constructor() public {
+    constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Names[0x0].owner = msg.sender;
-        Names[roothash].owner = msg.sender;
+        Names[0x0]._owner = msg.sender;
+        Names[roothash]._owner = msg.sender;
         Dev = msg.sender;
     }
 
@@ -52,14 +62,14 @@ contract NameRegistry is NAMES {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 namehash) {
-        require(Names[namehash].controller, 'NOT_CONTROLLER');
+        require(msg.sender == Names[namehash]._controller, 'NOT_CONTROLLER');
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 namehash) {
-        address owner = Names[namehash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender] || Names[namehash].controller, "NOT_OWNER_OR_CONTROLLER");
+        address _owner = Names[namehash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Names[namehash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -68,8 +78,8 @@ contract NameRegistry is NAMES {
      * @param labelhash : hash of name
      */
     modifier isNew(bytes32 labelhash) {
-        address owner =  Names[keccak256(abi.encodePacked(roothash, labelhash))].owner;
-        require(owner == address(0x0), "NAME_EXISTS");
+        address _owner =  Names[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        require(_owner == address(0x0), "NAME_EXISTS");
         _;
     }
 
@@ -78,59 +88,59 @@ contract NameRegistry is NAMES {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        address owner = Names[namehash].owner;
-        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
+        address _owner = Names[namehash]._owner;
+        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
      * @dev : set owner of a name
      * @param namehash : hash of name
-     * @param owner : new owner
+     * @param _owner : new owner
      */
-    function setOwner(bytes32 namehash, address owner) external onlyOwner(namehash) {
-        Names[namehash].owner = owner;
-        emit NewOwner(namehash, owner);
+    function setOwner(bytes32 namehash, address _owner) external onlyOwner(namehash) {
+        Names[namehash]._owner = _owner;
+        emit NewOwner(namehash, _owner);
     }
 
     /**
      * @dev : set controller of a name
      * @param namehash : hash of name
-     * @param controller : new controller
+     * @param _controller : new controller
      */
-    function setController(bytes32 namehash, address controller) external isOwnerOrController(namehash) {
-        Names[namehash].controller = controller;
-        emit NewController(namehash, controller);
+    function setController(bytes32 namehash, address _controller) external isOwnerOrController(namehash) {
+        Names[namehash]._controller = _controller;
+        emit NewController(namehash, _controller);
     }
 
     /**
      * @dev : set resolver for a name
      * @param namehash : hash of name
-     * @param resolver : new resolver
+     * @param _resolver : new resolver
      */
-    function setResolver(bytes32 namehash, address resolver) external isOwnerOrController(namehash) {
-        Names[namehash].resolver = resolver;
-        emit NewResolver(namehash, resolver);
+    function setResolver(bytes32 namehash, address _resolver) external isOwnerOrController(namehash) {
+        Names[namehash]._resolver = _resolver;
+        emit NewResolver(namehash, _resolver);
     }
 
     /**
-     * @dev : set resolver for a name
+     * @dev : set expiry for a name
      * @param namehash : hash of name
-     * @param expiry : new expiry
+     * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 namehash, uint expiry) external isOwnerOrController(namehash) {
-        Names[namehash].expiry = expiry;
-        emit NewExpiry(namehash, expiry);
+    function setExpiry(bytes32 namehash, uint _expiry) external isOwnerOrController(namehash) {
+        Names[namehash]._expiry = _expiry;
+        emit NewExpiry(namehash, _expiry);
     }
 
     /**
      * @dev : set record for a name
      * @param namehash : hash of name
-     * @param expiry : new expiry
+     * @param _resolver : new record
      */
-    function setRecord(bytes32 namehash, address resolver) external isOwnerOrController(namehash) {
-        Names[namehash].resolver = resolver;
-        emit NewRecord(namehash, resolver);
+    function setRecord(bytes32 namehash, address _resolver) external isOwnerOrController(namehash) {
+        Names[namehash]._resolver = _resolver;
+        emit NewRecord(namehash, _resolver);
     }
 
     /**
@@ -138,7 +148,7 @@ contract NameRegistry is NAMES {
      * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address operator, bool approved) external onlyOwner(namehash) {
+    function setApprovalForAll(address operator, bool approved) external payable {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -149,7 +159,7 @@ contract NameRegistry is NAMES {
      * @return address of owner
      */
     function owner(bytes32 namehash) public view returns (address) {
-        address addr = Names[namehash].owner;
+        address addr = Names[namehash]._owner;
         if (addr == address(this)) {
             return address(0x0);
         }
@@ -157,13 +167,33 @@ contract NameRegistry is NAMES {
     }
 
     /**
+     * @dev return controller of a name
+     * @param namehash hash of name to query
+     * @return address of controller
+     */
+    function controller(bytes32 namehash) public view returns (address) {
+        address _controller = Names[namehash]._controller;
+        return _controller;
+    }
+
+    /**
+     * @dev return expiry of a name
+     * @param namehash hash of name to query
+     * @return expiry
+     */
+    function expiry(bytes32 namehash) public view returns (uint) {
+        uint _expiry = Names[namehash]._expiry;
+        return _expiry;
+    }    
+
+    /**
      * @dev return resolver of a name
      * @param namehash hash of name to query
      * @return address of resolver
      */
     function resolver(bytes32 namehash) public view returns (address) {
-        address resolver = Names[namehash].resolver;
-        return resolver;
+        address _resolver = Names[namehash]._resolver;
+        return _resolver;
     }
 
     /**
@@ -172,17 +202,17 @@ contract NameRegistry is NAMES {
      * @return true or false
      */
     function recordExists(bytes32 namehash) public view returns (bool) {
-        return Names[namehash].owner != address(0x0);
+        return Names[namehash]._owner != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param owner owner of name to query
+     * @param _owner owner of name to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address owner, address operator) external view returns (bool) {
-        return Operators[owner][operator];
+    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
+        return Operators[_owner][operator];
     }
 
 }
