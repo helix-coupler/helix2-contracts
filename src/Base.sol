@@ -17,6 +17,14 @@ abstract contract Base {
     /// @dev : ENS Registry
     address public ensRegistry = 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e;
 
+    /// @dev : Helix2 Registry array
+    address[4] public helix2Registry = [
+        0xC0de4C0Cac01AC0de4C0Cac01AC0de4C0Cac01A0, /// Name Registry
+        0xC0de4C0Cac01A0Cac01AC0d04C0Cac01AC0d01A0, /// Bond Registry
+        0xC0e4C0Cac0C0C0C0C0C0Cac01AC0de4C0Cac01A0, /// Molecule Registry
+        0xC0dc01ACc01AC10deedee4C0c01AC0deC0de01A0, /// Polycule Registry
+    ];
+
     /// @dev Pause/Resume contract
     bool public active = true;
     

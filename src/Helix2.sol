@@ -1,18 +1,26 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
+/// @dev : ERC Standards
 import "src/ERC721.sol";
+
+/// @dev : Helix2 Structs
+import "src/Name.sol";
 import "src/Bond.sol";
 import "src/Molecule.sol";
 import "src/Polycule.sol";
 
-interface iResolver {
-    function contenthash(bytes32 bond) external view returns(bytes memory);
-    function addr(bytes32 bond) external view returns(address payable);
-    function addr2(bytes32 bond, uint256 coinType) external view returns(bytes memory);
-    function pubkey(bytes32 bond) external view returns(bytes32 x, bytes32 y);
-    function text(bytes32 bond, string calldata key) external view returns(string memory);
-}
+/// @dev : Helix2 Interfaces
+import "src/interface/iHelix2.sol";
+import "src/interface/iName.sol";
+import "src/interface/iBond.sol";
+import "src/interface/iMolecule.sol";
+import "src/interface/iPolycule.sol";
+//import "src/interface/iResolver.sol";
+
+/// @dev : Other Interfaces
+import "src/interface/iENS.sol";
+import "src/interface/iERC721.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
@@ -20,10 +28,25 @@ interface iResolver {
  */
 contract HELIX2 is ERC721 {
 
-    ENS = iENS(ensRegistry);
+    /// @dev : initialise interfaces
+    iENS public ENS;
+    iNAME public NAME;
+    iBOND public BOND;
+    iMOLECULE public MOLECULE;
+    iPOLYCULE public POLYCULE;
 
+    mapping(bytes4 => bool) public supportsInterface;
+
+    /// @dev : initialise registers
+    ENS = iENS(ensRegistry);
+    NAME = iNAME(helix2Registry[0]);
+    BOND = iBOND(helix2Registry[1]);
+    MOLECULE = iMOLECULE(helix2Registry[2]);
+    POLYCULE = iPOLYCULE(helix2Registry[3]);
+
+    /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        require(msg.sender == Dev, "ONLY_DEV");
+        require(msg.sender == Dev, "NOT_DEV");
         _;
     }
 
@@ -37,12 +60,22 @@ contract HELIX2 is ERC721 {
     }
 
     /**
-     * @dev : migrate ENS Registry
-     * @param newReg : new Registry
+     * @dev : migrate all Helix2 Registers
+     * @param newReg : new Registry array
      */
-    function setEnsRegistry(address newReg) external onlyDev {
-        emit NewENSRegistry(newReg);
-        ens = newReg;
+    function setRegistry(address[4] newReg) external onlyDev {
+        emit NewRegistry(newReg);
+        helix2Registry = newReg;
+    }
+
+    /**
+     * @dev : replace one index of Helix2 Register
+     * @param index : index to replace (starts from 0)
+     * @param newReg : new Register for index
+     */
+    function setSubRegistry(uint256 index, address newReg) external onlyDev {
+        emit NewSubRegistry(index, newReg);
+        helix2Registry[index] = newReg;
     }
 
     /**
