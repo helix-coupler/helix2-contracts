@@ -7,12 +7,14 @@ pragma solidity >0.8.0 <0.9.0;
 interface iNAME {
 
     /// @dev : HELIX2 Names events
+    event NewName(bytes32 indexed namehash, address owner);
     event NewOwner(bytes32 indexed namehash, address owner);
     event NewResolver(bytes32 indexed namehash, address resolver);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     
     /// @dev : HELIX2 Names external functions
     // write functions
+    function newName(bytes32 labelhash, address owner) external;
     function setOwner(bytes32 namehash, address owner) external;
     function setResolver(bytes32 namehash, address resolver) external;
     function setApprovalForAll(address controller, bool approved) external;

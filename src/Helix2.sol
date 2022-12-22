@@ -87,4 +87,47 @@ contract HELIX2 is ERC721 {
         require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
         supportsInterface[sig] = value;
     }
+
+    // CORE FUNCTIONS
+
+    /**
+     * @dev registers a new name
+     * @param labelhash label of name without suffix
+     * @param owner owner to set for new name
+     * @return hash of new name
+     */
+    function registerName(bytes32 labelhash, address owner) external {
+        NAME.newName(bytes32 labelhash, address owner);
+    }
+
+    /**
+     * @dev registers a new bond
+     * @param labelhash label of bond without suffix
+     * @param owner owner to set for new bond
+     * @return hash of new bond
+     */
+    function registerBond(bytes32 labelhash, address owner) external {
+        BOND.newBond(bytes32 labelhash, address owner);
+    }
+
+    /**
+     * @dev registers a new molecule
+     * @param labelhash label of molecule without suffix
+     * @param owner owner to set for new molecule
+     * @return hash of new molecule
+     */
+    function registerMolecule(bytes32 labelhash, address owner) external {
+        MOLECULE.newMolecule(bytes32 labelhash, address owner);
+    }
+
+    /**
+     * @dev registers a new polycule
+     * @param labelhash label of polycule without suffix
+     * @param owner owner to set for new polycule
+     * @return hash of new polycule
+     */
+    function registerPolycule(bytes32 labelhash, address owner) external {
+        POLYCULE.newPolycule(bytes32 labelhash, address owner);
+    }
+
 }

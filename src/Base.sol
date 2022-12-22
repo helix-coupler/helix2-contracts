@@ -11,6 +11,9 @@ abstract contract Base {
     /// Dev
     address public Dev;
 
+    /// @dev : Root Identifier
+    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("?")));
+
     /// @dev : Default resolver used by this contract
     address public DefaultResolver;
 
@@ -25,9 +28,10 @@ abstract contract Base {
         0xC0dc01ACc01AC10deedee4C0c01AC0deC0de01A0, /// Polycule Registry
     ];
 
-    /// @dev Pause/Resume contract
+    /// @dev : Pause/Resume contract
     bool public active = true;
     
+    /// @dev : Contract metadata
     string public constant name = "Helix2 Link Service";
     string public constant symbol = "HELIX2";
     mapping(bytes4 => bool) public supportsInterface;

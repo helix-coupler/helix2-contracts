@@ -23,9 +23,22 @@ abstract contract Bond is HELIX2 {
 
      /**
      * @dev Initialise a new HELIX2 Bonds Registry
+     * @notice : grants ownership of '0x0' to contract
      */
     constructor() public {
+        /// give ownership of '0x0' and <roothash> to contract
         Bonds[0x0].owner = msg.sender;
+        Bonds[roothash].owner = msg.sender;
+    }
+
+    /**
+     * @dev : verify bond belongs to root
+     * @param labelhash : hash of bond
+     */
+    modifier isNew(bytes32 labelhash) {
+        address owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))].owner;
+        require(owner == address(0x0), "BOND_EXISTS");
+        _;
     }
 
     /**
@@ -108,5 +121,18 @@ abstract contract Bond is HELIX2 {
      */
     function isApprovedForAll(address owner, address controller) external view returns (bool) {
         return Controllers[owner][controller];
+    }
+
+    /**
+     * @dev registers a new bond
+     * @param labelhash label of bond without suffix
+     * @param owner owner to set for new bond
+     * @return hash of new bond
+     */
+    function newBond(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
+        bytes32 bondhash = keccak256(abi.encodePacked(roothash, labelhash));
+        Bonds[bondhash].owner = owner;
+        emit NewBond(bondhash, owner);
+        return bondhash;
     }
 }

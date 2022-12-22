@@ -7,12 +7,14 @@ pragma solidity >0.8.0 <0.9.0;
 interface iMOLECULE {
 
     /// @dev : HELIX2 Molecules events
+    event NewMolecule(bytes32 indexed moleculehash, address owner);
     event NewOwner(bytes32 indexed moleculehash, address owner);
     event NewResolver(bytes32 indexed moleculehash, address resolver);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     
     /// @dev : HELIX2 Molecules external functions
     // write functions
+    function newMolecule(bytes32 labelhash, address owner) external;
     function setOwner(bytes32 moleculehash, address owner) external;
     function setResolver(bytes32 moleculehash, address resolver) external;
     function setApprovalForAll(address controller, bool approved) external;

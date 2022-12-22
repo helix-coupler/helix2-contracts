@@ -8,6 +8,7 @@ import "src/interface/iName.sol";
  * @title Helix2 Name Base
  */
 abstract contract Name is HELIX2 {
+
     /// Helix2 Name struct
     struct Name {
         address owner;
@@ -17,10 +18,23 @@ abstract contract Name is HELIX2 {
     mapping (address => mapping(address => bool)) Controllers;
 
      /**
-     * @dev Initialise a new HELIX2 Names Registry
+     * @dev : Initialise a new HELIX2 Names Registry
+     * @notice : grants ownership of '0x0' to contract
      */
     constructor() public {
+        /// give ownership of '0x0' and <roothash> to contract
         Names[0x0].owner = msg.sender;
+        Names[roothash].owner = msg.sender;
+    }
+
+    /**
+     * @dev : verify name belongs to root
+     * @param labelhash : hash of name
+     */
+    modifier isNew(bytes32 labelhash) {
+        address owner =  Names[keccak256(abi.encodePacked(roothash, labelhash))].owner;
+        require(owner == address(0x0), "NAME_EXISTS");
+        _;
     }
 
     /**
@@ -103,5 +117,18 @@ abstract contract Name is HELIX2 {
      */
     function isApprovedForAll(address owner, address controller) external view returns (bool) {
         return Controllers[owner][controller];
+    }
+
+    /**
+     * @dev registers a new name
+     * @param labelhash label of name without suffix
+     * @param owner owner to set for new name
+     * @return hash of new name
+     */
+    function newName(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
+        bytes32 namehash = keccak256(abi.encodePacked(roothash, labelhash));
+        Names[namehash].owner = owner;
+        emit NewName(namehash, owner);
+        return namehash;
     }
 }

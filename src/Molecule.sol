@@ -23,9 +23,22 @@ abstract contract Molecule is HELIX2 {
 
      /**
      * @dev Initialise a new HELIX2 Molecules Registry
+     * @notice : grants ownership of '0x0' to contract
      */
     constructor() public {
+        /// give ownership of '0x0' and <roothash> to contract
         Molecules[0x0].owner = msg.sender;
+        Molecules[roothash].owner = msg.sender;
+    }
+
+    /**
+     * @dev : verify molecule belongs to root
+     * @param labelhash : hash of molecule
+     */
+    modifier isNew(bytes32 labelhash) {
+        address owner =  Molecules[keccak256(abi.encodePacked(roothash, labelhash))].owner;
+        require(owner == address(0x0), "MOLECULE_EXISTS");
+        _;
     }
 
     /**
@@ -108,5 +121,18 @@ abstract contract Molecule is HELIX2 {
      */
     function isApprovedForAll(address owner, address controller) external view returns (bool) {
         return Controllers[owner][controller];
+    }
+
+    /**
+     * @dev registers a new molecule
+     * @param labelhash label of molecule without suffix
+     * @param owner owner to set for new molecule
+     * @return hash of new molecule
+     */
+    function newMolecule(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
+        bytes32 moleculehash = keccak256(abi.encodePacked(roothash, labelhash));
+        Molecules[moleculehash].owner = owner;
+        emit NewMolecule(moleculehash, owner);
+        return moleculehash;
     }
 }

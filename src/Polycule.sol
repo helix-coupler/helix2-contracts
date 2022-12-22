@@ -23,9 +23,22 @@ abstract contract Polycule is HELIX2 {
 
      /**
      * @dev Initialise a new HELIX2 Polycules Registry
+     * @notice : grants ownership of '0x0' to contract
      */
     constructor() public {
+        /// give ownership of '0x0' and <roothash> to contract
         Polycules[0x0].owner = msg.sender;
+        Polycules[roothash].owner = msg.sender;
+    }
+
+    /**
+     * @dev : verify polycule belongs to root
+     * @param labelhash : hash of polycule
+     */
+    modifier isNew(bytes32 labelhash) {
+        address owner =  Polycules[keccak256(abi.encodePacked(roothash, labelhash))].owner;
+        require(owner == address(0x0), "POLYCULE_EXISTS");
+        _;
     }
 
     /**
@@ -109,4 +122,18 @@ abstract contract Polycule is HELIX2 {
     function isApprovedForAll(address owner, address controller) external view returns (bool) {
         return Controllers[owner][controller];
     }
+
+    /**
+     * @dev registers a new polycule
+     * @param labelhash label of polycule without suffix
+     * @param owner owner to set for new polycule
+     * @return hash of new polycule
+     */
+    function newPolycule(bytes32 labelhash, address owner) external isNew(labelhash) returns(bytes32) {
+        bytes32 polyculehash = keccak256(abi.encodePacked(roothash, labelhash));
+        Molecules[polyculehash].owner = owner;
+        emit NewMolecule(polyculehash, owner);
+        return polyculehash;
+    }
+}
 }
