@@ -143,4 +143,19 @@ library LibString {
         }
         return result;
     }
+
+    /**
+     * @dev : check if a value exists in an array
+     * @param array : array to search in
+     * @param value : value to search
+     * @return true or false
+     */
+    function existsIn(string calldata value, string[4] calldata array) public pure returns (bool) {
+        for (uint i = 0; i < array.length; i++) {
+            if (keccak256(abi.encodePacked(array[i])) == keccak256(abi.encodePacked(value))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

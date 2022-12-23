@@ -20,8 +20,8 @@ interface iPOLYCULE {
 
     // view functions
     function owner(bytes32 polyculehash) external view returns(address);
-    function controller(bytes32 polyculehash, address controller) external view returns(address);
-    function expiry(bytes32 polyculehash, uint expiry) external view returns(uint);
+    function controller(bytes32 polyculehash) external view returns(address);
+    function expiry(bytes32 polyculehash) external view returns(uint);
     function resolver(bytes32 polyculehash) external view returns(address);
     function recordExists(bytes32 polyculehash) external view returns(bool);
     function isApprovedForAll(address owner, address controller) external view returns(bool);

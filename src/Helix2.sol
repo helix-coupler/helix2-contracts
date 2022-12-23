@@ -27,6 +27,10 @@ import "src/Interface/iERC721.sol";
  * @title Helix2 Registrar
  */
 contract HELIX2 is ERC721 {
+    /// @dev : Contract metadata
+    string public constant name = "Helix2 Link Service";
+    string public constant symbol = "HELIX2";
+
     /// @dev : Events
     event NewRegistry(address[4] newReg);
     event NewSubRegistry(uint256 index, address newReg);
@@ -38,15 +42,6 @@ contract HELIX2 is ERC721 {
     iBOND public BONDS = iBOND(helix2Registry[1]);
     iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
     iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
-
-    /**
-     * @dev : transfer contract ownership to new Dev
-     * @param newDev : new Dev
-     */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
-        Dev = newDev;
-    }
 
     /**
      * @dev : migrate all Helix2 Registers

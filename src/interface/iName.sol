@@ -20,7 +20,7 @@ interface iNAME {
 
     // view functions
     function owner(bytes32 namehash) external view returns(address);
-    function controller(bytes32 namehash, address controller) external view returns(address);
+    function controller(bytes32 namehash) external view returns(address);
     function expiry(bytes32 namehash) external view returns(uint);
     function resolver(bytes32 namehash) external view returns(address);
     function recordExists(bytes32 namehash) external view returns(bool);

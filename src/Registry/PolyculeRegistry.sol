@@ -8,7 +8,7 @@ import "src/Interface/iPolycule.sol";
  * @title Helix2 Polycule Base
  */
 abstract contract Helix2Polycules {
-    /// @dev : Helix2 Polycules events
+    /// @dev : Helix2 Polycule events
     event NewDev(address Dev, address newDev);
     event NewPolycule(bytes32 indexed polyculehash, address owner);
     event NewOwner(bytes32 indexed polyculehash, address owner);

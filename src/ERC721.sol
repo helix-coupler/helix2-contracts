@@ -9,20 +9,33 @@ import "src/Interface/iERC721.sol";
  */
 abstract contract ERC721 is Base {
     mapping(uint256 => address) internal _ownerOf;
+    mapping(address => uint256) internal _balanceOf;
     mapping(uint256 => address) public _approved;
     mapping(address => mapping(address => bool)) public isApprovedForAll;
 
     error CannotBurn();
-    event NewDev(address Dev, address newDev);
     error ERC721IncompatibleReceiver(address to);
     error Unauthorized(address operator, address owner, uint256 tokenID);
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenID);
     event Approval(address indexed owner, address indexed spender, uint256 indexed tokenID);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
+    /**
+     * @dev : returns owner of a token ID
+     * @param tokenID : token ID
+     */
     function ownerOf(uint256 tokenID) public view returns (address) {
         require(_ownerOf[tokenID] != address(0), "INVALID_TOKENID");
         return _ownerOf[tokenID];
+    }
+
+    /**
+     * @dev : returns token balance of a wallet
+     * @param wallet : wallet address
+     */
+    function balanceOf(address wallet) public view returns (uint256) {
+        require(wallet != address(0), "ZERO_ADDRESS");
+        return _balanceOf[wallet];
     }
 
     /**
@@ -80,7 +93,7 @@ abstract contract ERC721 is Base {
     }
 
     /**
-     * @dev : custom _transfer() function
+     * @dev : custom _transfer() function that also mints
      * @param from : address of sender
      * @param to : address of receiver
      * @param tokenID : token
@@ -101,6 +114,10 @@ abstract contract ERC721 is Base {
 
         delete _approved[tokenID]; // reset approved
         _ownerOf[tokenID] = to;    // change ownership
+        unchecked {                // update balances
+            _balanceOf[from]--;
+            _balanceOf[to]++;
+        }
         emit Transfer(from, to, tokenID);
         if (to.code.length > 0) {
             try iERC721Receiver(to).onERC721Received(msg.sender, from, tokenID, data) returns (bytes4 retval) {

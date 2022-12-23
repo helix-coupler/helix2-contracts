@@ -8,7 +8,7 @@ import "src/Interface/iMolecule.sol";
  * @title Helix2 Molecule Base
  */
 abstract contract Helix2Molecules {
-    /// @dev : Helix2 Molecules events
+    /// @dev : Helix2 Molecule events
     event NewDev(address Dev, address newDev);
     event NewMolecule(bytes32 indexed moleculehash, address owner);
     event NewOwner(bytes32 indexed moleculehash, address owner);

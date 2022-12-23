@@ -8,7 +8,7 @@ import "src/Interface/iName.sol";
  * @title Helix2 Name Base
  */
 abstract contract Helix2Names {
-    /// @dev : Helix2 Names events
+    /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
     event NewName(bytes32 indexed namehash, address owner);
     event NewOwner(bytes32 indexed namehash, address owner);

@@ -10,6 +10,7 @@ import "src/Interface/iERC721.sol";
 abstract contract Base {
     /// Events
     error OnlyDev(address _dev, address _you);
+    event NewDev(address Dev, address newDev);
     
     /// Dev
     address public Dev;
@@ -25,9 +26,6 @@ abstract contract Base {
         keccak256(abi.encodePacked(bytes32(0), keccak256("#")))  /// Polycule Roothash
     ];
 
-    /// @dev : Default resolver used by this contract
-    address public DefaultResolver;
-
     /// @dev : ENS Registry
     address public ensRegistry = 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e;
 
@@ -42,9 +40,6 @@ abstract contract Base {
     /// @dev : Pause/Resume contract
     bool public active = true;
     
-    /// @dev : Contract metadata
-    string public constant name = "Helix2 Link Service";
-    string public constant symbol = "HELIX2";
     mapping(bytes4 => bool) public supportsInterface;
 
     constructor() {
@@ -60,6 +55,15 @@ abstract contract Base {
             revert OnlyDev(Dev, msg.sender);
         }
         _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
     }
 
     /**

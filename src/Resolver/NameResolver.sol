@@ -11,7 +11,7 @@ import "src/Interface/iName.sol";
  * @dev : Helix2 Resolver Base
  * @notice : sshmatrix (BeenSick Labs)
  */
-abstract contract ResolverBase {
+abstract contract NameResolverBase {
     /// Events
     error OnlyDev(address _dev, address _you);
 
@@ -70,7 +70,7 @@ abstract contract ResolverBase {
 /**
  * @dev : Helix2 Resolver
  */
-contract Resolver is ResolverBase {
+contract NameResolver is NameResolverBase {
 
     struct PublicKey { bytes32 x; bytes32 y; }
     mapping(bytes32 => bytes) internal _contenthash;

@@ -20,8 +20,8 @@ interface iMOLECULE {
 
     // view functions
     function owner(bytes32 moleculehash) external view returns(address);
-    function controller(bytes32 moleculehash, address controller) external view returns(address);
-    function expiry(bytes32 moleculehash, uint expiry) external view returns(uint);
+    function controller(bytes32 moleculehash) external view returns(address);
+    function expiry(bytes32 moleculehash) external view returns(uint);
     function resolver(bytes32 moleculehash) external view returns(address);
     function recordExists(bytes32 moleculehash) external view returns(bool);
     function isApprovedForAll(address owner, address controller) external view returns(bool);

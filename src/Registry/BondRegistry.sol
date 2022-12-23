@@ -8,7 +8,7 @@ import "src/Interface/iBond.sol";
  * @title Helix2 Bond Base
  */
 abstract contract Helix2Bonds {
-    /// @dev : Helix2 Bonds events
+    /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
     event NewBond(bytes32 indexed bondhash, address owner);
     event NewOwner(bytes32 indexed bondhash, address owner);
