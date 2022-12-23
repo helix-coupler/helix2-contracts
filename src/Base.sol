@@ -16,7 +16,10 @@ abstract contract Base {
     address public Dev;
     
     /// @dev : Forbidden characters
-    string[4] public illegal = [".", "?", "!", "#"];
+    string[4] public illegalBlocks = [".", "?", "!", "#"];
+
+    /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
+    uint256[4] public sizes = [32, 32, 32, 32];
 
     /// @dev : Root Identifier
     bytes32[4] public roothash = [
@@ -40,7 +43,7 @@ abstract contract Base {
     /// @dev : Pause/Resume contract
     bool public active = true;
     
-    mapping(bytes4 => bool) public supportsInterface;
+    mapping (bytes4 => bool) public supportsInterface;
 
     constructor() {
         Dev = msg.sender;

@@ -55,8 +55,8 @@ contract MoleculeRegistrar is ERC721 {
      * @param label : label of molecule
      */
     modifier isLegal(string calldata label) {
-        require(bytes(label).length > 10, 'ILLEGAL_LABEL'); /// check for oversized label
-        require(!label.existsIn(illegal), 'ILLEGAL_CHARS'); /// check for forbidden characters
+        require(bytes(label).length > sizes[2], 'ILLEGAL_LABEL'); /// check for oversized label
+        require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
         _;
     }
 

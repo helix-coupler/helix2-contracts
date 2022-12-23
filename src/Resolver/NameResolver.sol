@@ -26,7 +26,7 @@ abstract contract NameResolverBase {
     /// @dev : Helix2 Contract Interface
     iHELIX2 public HELIX2;
     iNAME public NAMES;
-    mapping(bytes4 => bool) public supportsInterface;
+    mapping (bytes4 => bool) public supportsInterface;
 
     /**
      * @dev : setInterface
