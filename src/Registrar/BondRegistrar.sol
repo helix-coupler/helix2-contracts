@@ -52,7 +52,14 @@ contract BondRegistrar is ERC721 {
      * @param label : label of bond
      */
     modifier isNew(string calldata label) {
-        bytes32 _owner =  BONDS.owner(keccak256(abi.encodePacked(roothash[1], keccak256(abi.encodePacked(label)))));
+        bytes32 _owner =  BONDS.owner(
+            keccak256(
+                abi.encodePacked(
+                    roothash[1], 
+                    keccak256(abi.encodePacked(label))
+                )
+            )
+        );
         address owner = NAMES.owner(_owner);
         require(owner == address(0x0), "BOND_EXISTS");
         _;
@@ -73,7 +80,12 @@ contract BondRegistrar is ERC721 {
      * @param label : label of bond
      */
     modifier isNotExpired(string calldata label) {
-        bytes32 bondhash = keccak256(abi.encodePacked(roothash[1], keccak256(abi.encodePacked(label))));
+        bytes32 bondhash = keccak256(
+            abi.encodePacked(
+                roothash[1], 
+                keccak256(abi.encodePacked(label))
+            )
+        );
         require(BONDS.expiry(bondhash) < block.timestamp, 'BOND_NOT_EXPIRED'); /// check if bond has expired
         _;
     }
@@ -83,8 +95,9 @@ contract BondRegistrar is ERC721 {
      * @param bondhash : hash of bond
      */
     modifier onlyOwner(bytes32 bondhash) {
-        bytes32 _owner = BONDS.owner(bondhash);
-        address owner = NAMES.owner(_owner);
+        address owner = NAMES.owner(
+            BONDS.owner(bondhash)
+        );
         require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }
@@ -123,10 +136,9 @@ contract BondRegistrar is ERC721 {
       isNotExpired(label) 
       returns(bytes32) 
     {
-        //address _owner = NAMES.owner(owner);
-        //require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
+        address _owner = NAMES.owner(owner);
+        require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
         bytes32 bondhash = keccak256(abi.encodePacked(roothash[1], keccak256(abi.encodePacked(label))));
-        /*
         BONDS.setOwner(bondhash, owner);                        /// set new owner
         BONDS.setExpiry(bondhash, block.timestamp + lifespan);  /// set new expiry
         BONDS.setController(bondhash, _owner);                  /// set new controller
@@ -136,7 +148,6 @@ contract BondRegistrar is ERC721 {
             _balanceOf[_owner]++;
         }
         emit NewBond(bondhash, owner);
-        */
         return bondhash;
     }
 

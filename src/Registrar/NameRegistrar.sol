@@ -49,7 +49,14 @@ contract NameRegistrar is ERC721 {
      * @param label : label of name
      */
     modifier isNew(string calldata label) {
-        address owner =  NAMES.owner(keccak256(abi.encodePacked(roothash[0], keccak256(abi.encodePacked(label)))));
+        address owner =  NAMES.owner(
+            keccak256(
+                abi.encodePacked(
+                    roothash[0], 
+                    keccak256(abi.encodePacked(label))
+                )
+            )
+        );
         require(owner == address(0x0), "NAME_EXISTS");
         _;
     }
@@ -69,7 +76,12 @@ contract NameRegistrar is ERC721 {
      * @param label : label of name
      */
     modifier isNotExpired(string calldata label) {
-        bytes32 namehash = keccak256(abi.encodePacked(roothash[0], keccak256(abi.encodePacked(label))));
+        bytes32 namehash = keccak256(
+            abi.encodePacked(
+                roothash[0], 
+                keccak256(abi.encodePacked(label))
+            )
+        );
         require(NAMES.expiry(namehash) < block.timestamp, 'NAME_NOT_EXPIRED'); /// check if name has expired
         _;
     }

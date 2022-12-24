@@ -51,8 +51,16 @@ contract PolyculeRegistrar is ERC721 {
      * @param label : label of polycule
      */
     modifier isNew(string calldata label) {
-        bytes32 _owner =  POLYCULES.owner(keccak256(abi.encodePacked(roothash[3], keccak256(abi.encodePacked(label)))));
-        address owner = NAMES.owner(_owner);
+        address owner = NAMES.owner(
+            POLYCULES.owner(
+                keccak256(
+                    abi.encodePacked(
+                        roothash[3], 
+                        keccak256(abi.encodePacked(label))
+                    )
+                )
+            )
+        );
         require(owner == address(0x0), "POLYCULE_EXISTS");
         _;
     }
@@ -72,7 +80,14 @@ contract PolyculeRegistrar is ERC721 {
      * @param label : label of polycule
      */
     modifier isNotExpired(string calldata label) {
-        bytes32 polyculehash = keccak256(abi.encodePacked(roothash[3], keccak256(abi.encodePacked(label))));
+        bytes32 polyculehash = keccak256(
+            abi.encodePacked(
+                roothash[3], 
+                keccak256(
+                    abi.encodePacked(label)
+                )
+            )
+        );
         require(POLYCULES.expiry(polyculehash) < block.timestamp, 'POLYCULE_NOT_EXPIRED'); /// check if polycule has expired
         _;
     }
@@ -82,8 +97,9 @@ contract PolyculeRegistrar is ERC721 {
      * @param polyculehash : hash of polycule
      */
     modifier onlyOwner(bytes32 polyculehash) {
-        bytes32 _owner = POLYCULES.owner(polyculehash);
-        address owner = NAMES.owner(_owner);
+        address owner = NAMES.owner(
+            POLYCULES.owner(polyculehash)
+        );
         require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }

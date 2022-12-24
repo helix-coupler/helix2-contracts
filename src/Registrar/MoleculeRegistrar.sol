@@ -51,7 +51,14 @@ contract MoleculeRegistrar is ERC721 {
      * @param label : label of molecule
      */
     modifier isNew(string calldata label) {
-        bytes32 _owner =  MOLECULES.owner(keccak256(abi.encodePacked(roothash[2], keccak256(abi.encodePacked(label)))));
+        bytes32 _owner =  MOLECULES.owner(
+            keccak256(
+                abi.encodePacked(
+                    roothash[2], 
+                    keccak256(abi.encodePacked(label))
+                )
+            )
+        );
         address owner = NAMES.owner(_owner);
         require(owner == address(0x0), "MOLECULE_EXISTS");
         _;
@@ -72,7 +79,12 @@ contract MoleculeRegistrar is ERC721 {
      * @param label : label of molecule
      */
     modifier isNotExpired(string calldata label) {
-        bytes32 moleculehash = keccak256(abi.encodePacked(roothash[2], keccak256(abi.encodePacked(label))));
+        bytes32 moleculehash = keccak256(
+            abi.encodePacked(
+                roothash[2], 
+                keccak256(abi.encodePacked(label))
+            )
+        );
         require(MOLECULES.expiry(moleculehash) < block.timestamp, 'MOLECULE_NOT_EXPIRED'); /// check if molecule has expired
         _;
     }
@@ -82,8 +94,9 @@ contract MoleculeRegistrar is ERC721 {
      * @param moleculehash : hash of molecule
      */
     modifier onlyOwner(bytes32 moleculehash) {
-        bytes32 _owner = MOLECULES.owner(moleculehash);
-        address owner = NAMES.owner(_owner);
+        address owner = NAMES.owner(
+            MOLECULES.owner(moleculehash)
+        );
         require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
     }
