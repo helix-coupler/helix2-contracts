@@ -10,7 +10,7 @@ interface iPOLYCULE {
     /// REGISTRY
     /// @dev : HELIX2 Polycules external functions
     // write functions
-    function setOwner(bytes32 polyculehash, address owner) external;
+    function setOwner(bytes32 polyculehash, bytes32 owner) external;
     function setController(bytes32 polyculehash, address controller) external;
     function setExpiry(bytes32 polyculehash, uint expiry) external;
     function setRecord(bytes32 polyculehash, address resolver) external;
@@ -19,7 +19,7 @@ interface iPOLYCULE {
     function changeDev(address newDev) external;
 
     // view functions
-    function owner(bytes32 polyculehash) external view returns(address);
+    function owner(bytes32 polyculehash) external view returns(bytes32);
     function controller(bytes32 polyculehash) external view returns(address);
     function expiry(bytes32 polyculehash) external view returns(uint);
     function resolver(bytes32 polyculehash) external view returns(address);

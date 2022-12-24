@@ -40,6 +40,14 @@ abstract contract Base {
         0x0000000000000000000000000000000000000004  /// Polycule Registry
     ];
 
+    /// @dev : Helix2 base prices
+    uint256[4] public prices = [
+        0.00005 ether, /// Name Base Price
+        0.00005 ether, /// Bond Base Price
+        0.00005 ether, /// Molecule Base Price
+        0.00005 ether  /// Polycule Base Price
+    ];
+
     /// @dev : Pause/Resume contract
     bool public active = true;
     
@@ -93,6 +101,27 @@ abstract contract Base {
      */
     function withdrawToken(address token) external payable {
         iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+    }
+
+    /**
+     * @dev : returns Base Price list
+     */
+    function getPrices() public view returns(uint256[4] memory) {
+        return prices;
+    }    
+
+    /**
+     * @dev : returns Registry
+     */
+    function getRegistry() public view returns(address[4] memory) {
+        return helix2Registry;
+    }
+
+    /**
+     * @dev : returns hashes of root labels
+     */
+    function getRoothash() public view returns(bytes32[4] memory) {
+        return roothash;
     }
 
     /**

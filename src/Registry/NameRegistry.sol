@@ -2,12 +2,17 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/Interface/iName.sol";
+import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
 abstract contract Helix2Names {
+
+    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
+
     /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
     event NewName(bytes32 indexed namehash, address owner);
@@ -22,14 +27,14 @@ abstract contract Helix2Names {
     address public Dev;
 
     /// @dev : Name roothash
-    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256(".")));
+    bytes32 public roothash = HELIX2.getRoothash()[0];
 
     /// @dev : Helix2 Name struct
     struct Name {
-        address _owner;
-        address _resolver;
-        address _controller;
-        uint _expiry;
+        address _owner;         /// Owner of Name
+        address _resolver;      /// Resolver of Name
+        address _controller;    /// Controller of Name
+        uint _expiry;           /// Expiry of Name
     }
     mapping (bytes32 => Name) public Names;
     mapping (address => mapping(address => bool)) Operators;
@@ -215,4 +220,19 @@ abstract contract Helix2Names {
         return Operators[_owner][operator];
     }
 
+    /**
+     * @dev : withdraw ether to Dev, anyone can trigger
+     */
+    function withdrawEther() external payable {
+        (bool ok,) = Dev.call{value: address(this).balance}("");
+        require(ok, "ETH_TRANSFER_FAILED");
+    }
+
+    /**
+     * @dev : to be used in case some tokens get locked in the contract
+     * @param token : token to release
+     */
+    function withdrawToken(address token) external payable {
+        iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+    }
 }

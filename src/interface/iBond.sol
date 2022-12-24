@@ -10,7 +10,7 @@ interface iBOND {
     /// REGISTRY
     /// @dev : HELIX2 Bonds external functions
     // write functions
-    function setOwner(bytes32 bondhash, address owner) external;
+    function setOwner(bytes32 bondhash, bytes32 owner) external;
     function setController(bytes32 bondhash, address controller) external;
     function setExpiry(bytes32 bondhash, uint expiry) external;
     function setRecord(bytes32 bondhash, address resolver) external;
@@ -19,7 +19,7 @@ interface iBOND {
     function changeDev(address newDev) external;
 
     // view functions
-    function owner(bytes32 bondhash) external view returns(address);
+    function owner(bytes32 bondhash) external view returns(bytes32);
     function controller(bytes32 bondhash) external view returns(address);
     function expiry(bytes32 bondhash) external view returns(uint);
     function resolver(bytes32 bondhash) external view returns(address);

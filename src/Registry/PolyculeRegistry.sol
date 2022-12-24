@@ -2,16 +2,23 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/Interface/iPolycule.sol";
+import "src/Interface/iName.sol";
+import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Polycule Base
  */
 abstract contract Helix2Polycules {
+
+    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
+    iNAME public NAMES = iNAME(HELIX2.getRegistry()[3]);
+
     /// @dev : Helix2 Polycule events
     event NewDev(address Dev, address newDev);
-    event NewPolycule(bytes32 indexed polyculehash, address owner);
-    event NewOwner(bytes32 indexed polyculehash, address owner);
+    event NewPolycule(bytes32 indexed polyculehash, bytes32 owner);
+    event NewOwner(bytes32 indexed polyculehash, bytes32 owner);
     event NewController(bytes32 indexed polyculehash, address controller);
     event NewExpiry(bytes32 indexed polyculehash, uint expiry);
     event NewRecord(bytes32 indexed polyculehash, address resolver);
@@ -22,18 +29,18 @@ abstract contract Helix2Polycules {
     address public Dev;
 
     /// @dev : Polycule roothash
-    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("#")));
+    bytes32 public roothash = HELIX2.getRoothash()[3];
 
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
-        mapping(bytes32 => address[]) _hooks;
-        address _owner;
-        address[] to;
-        bytes32 _alias;
-        address _resolver;
-        address _controller;
-        bool[] secure;
-        uint _expiry;
+        mapping(bytes32 => mapping(uint8 => address[])) _hooks;   /// Hooks (ordered) with Rules
+        bytes32 _owner;                                           /// Source of Polycule (= Owner)
+        bytes32[] _to;                                            /// Targets of Polycule (ordered)
+        bytes32 _alias;                                           /// Hash of Polycule
+        address _resolver;                                        /// Resolver of Polycule
+        address _controller;                                      /// Controller of Polycule
+        bool[] _secure;                                           /// Mutuality Flags (ordered)
+        uint _expiry;                                             /// Expiry of Polycule
     }
     mapping (bytes32 => Polycule) public Polycules;
     mapping (address => mapping(address => bool)) Operators;
@@ -44,13 +51,13 @@ abstract contract Helix2Polycules {
     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Polycules[0x0]._owner = msg.sender;
-        Polycules[roothash]._owner = msg.sender;
+        Polycules[0x0]._owner = roothash;
+        Polycules[roothash]._owner = roothash;
         Dev = msg.sender;
     }
 
     /// @dev : Modifier to allow only dev
-    modifier onlyDev() virtual {
+    modifier onlyDev() {
         require(msg.sender == Dev, "NOT_DEV");
         _;
     }
@@ -72,7 +79,8 @@ abstract contract Helix2Polycules {
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 polyculehash) {
-        address _owner = Polycules[polyculehash]._owner;
+        bytes32 __owner = Polycules[polyculehash]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Polycules[polyculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
@@ -82,7 +90,8 @@ abstract contract Helix2Polycules {
      * @param labelhash : hash of polycule
      */
     modifier isNew(bytes32 labelhash) {
-        address _owner =  Polycules[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        bytes32 __owner =  Polycules[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == address(0x0), "POLYCULE_EXISTS");
         _;
     }
@@ -92,7 +101,8 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      */
     modifier onlyOwner(bytes32 polyculehash) {
-        address _owner = Polycules[polyculehash]._owner;
+        bytes32 __owner = Polycules[polyculehash]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
         _;
     }
@@ -102,7 +112,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _owner : new owner
      */
-    function setOwner(bytes32 polyculehash, address _owner) external onlyOwner(polyculehash) {
+    function setOwner(bytes32 polyculehash, bytes32 _owner) external onlyOwner(polyculehash) {
         Polycules[polyculehash]._owner = _owner;
         emit NewOwner(polyculehash, _owner);
     }
@@ -160,14 +170,15 @@ abstract contract Helix2Polycules {
     /**
      * @dev return owner of a polycule
      * @param polyculehash hash of polycule to query
-     * @return address of owner
+     * @return hash of owner
      */
-    function owner(bytes32 polyculehash) public view returns (address) {
-        address addr = Polycules[polyculehash]._owner;
-        if (addr == address(this)) {
-            return address(0x0);
+    function owner(bytes32 polyculehash) public view returns (bytes32) {
+        bytes32 __owner = Polycules[polyculehash]._owner;
+        address _owner = NAMES.owner(__owner);
+        if (_owner == address(this)) {
+            return roothash;
         }
-        return addr;
+        return __owner;
     }
 
     /**
@@ -206,7 +217,7 @@ abstract contract Helix2Polycules {
      * @return true or false
      */
     function recordExists(bytes32 polyculehash) public view returns (bool) {
-        return Polycules[polyculehash]._owner != address(0x0);
+        return NAMES.owner(Polycules[polyculehash]._owner) != address(0x0);
     }
 
     /**
@@ -215,9 +226,24 @@ abstract contract Helix2Polycules {
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
-        return Operators[_owner][operator];
+    function isApprovedForAll(bytes32 _owner, address operator) external view returns (bool) {
+        address __owner = NAMES.owner(_owner);
+        return Operators[__owner][operator];
     }
 
-}
+    /**
+     * @dev : withdraw ether to Dev, anyone can trigger
+     */
+    function withdrawEther() external payable {
+        (bool ok,) = Dev.call{value: address(this).balance}("");
+        require(ok, "ETH_TRANSFER_FAILED");
+    }
 
+    /**
+     * @dev : to be used in case some tokens get locked in the contract
+     * @param token : token to release
+     */
+    function withdrawToken(address token) external payable {
+        iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+    }
+}

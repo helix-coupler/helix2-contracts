@@ -34,6 +34,8 @@ contract HELIX2 is ERC721 {
     /// @dev : Events
     event NewRegistry(address[4] newReg);
     event NewSubRegistry(uint256 index, address newReg);
+    event NewPrices(uint256[4] newPrices);
+    event NewSubPrice(uint256 index, uint256 newPrice);
 
     /// @dev : Initialise Registers
     
@@ -42,6 +44,25 @@ contract HELIX2 is ERC721 {
     iBOND public BONDS = iBOND(helix2Registry[1]);
     iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
     iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
+
+    /**
+     * @dev : sets new base price list
+     * @param newPrices : list of base prices
+     */
+    function setPrices(uint256[4] calldata newPrices) external onlyDev {
+        emit NewPrices(newPrices);
+        prices = newPrices;
+    }
+
+    /**
+     * @dev : replace single base price value
+     * @param index : index to replace (starts from 0)
+     * @param newPrice : new base price for index
+     */
+    function setSubPrice(uint256 index, uint256 newPrice) external onlyDev {
+        emit NewSubPrice(index, newPrice);
+        prices[index] = newPrice;
+    }
 
     /**
      * @dev : migrate all Helix2 Registers

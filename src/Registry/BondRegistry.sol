@@ -2,16 +2,23 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/Interface/iBond.sol";
+import "src/Interface/iName.sol";
+import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC721.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Bond Base
  */
 abstract contract Helix2Bonds {
+
+    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
+    iNAME public NAMES = iNAME(HELIX2.getRegistry()[1]);
+
     /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
-    event NewBond(bytes32 indexed bondhash, address owner);
-    event NewOwner(bytes32 indexed bondhash, address owner);
+    event NewBond(bytes32 indexed bondhash, bytes32 owner);
+    event NewOwner(bytes32 indexed bondhash, bytes32 owner);
     event NewController(bytes32 indexed bondhash, address controller);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
@@ -22,18 +29,18 @@ abstract contract Helix2Bonds {
     address public Dev;
 
     /// @dev : Bond roothash
-    bytes32 public constant roothash = keccak256(abi.encodePacked(bytes32(0), keccak256("?")));
+    bytes32 public roothash = HELIX2.getRoothash()[1];
 
     /// @dev : Helix2 Bond struct
     struct Bond {
-        mapping(bytes32 => address) _hooks;
-        address _owner;
-        address to;
-        bytes32 _alias;
-        address _resolver;
-        address _controller;
-        bool secure;
-        uint _expiry;
+        mapping(bytes32 => mapping(uint8 => address)) _hooks;     /// Hooks with Rules
+        bytes32 _owner;                                           /// Source of Bond (= Owner)
+        bytes32 _to;                                              /// Target of Bond
+        bytes32 _alias;                                           /// Hash of Bond
+        address _resolver;                                        /// Resolver of Bond
+        address _controller;                                      /// Controller of Bond
+        bool _secure;                                             /// Mutuality Flag
+        uint _expiry;                                             /// Expiry of Bond
     }
     mapping (bytes32 => Bond) public Bonds;
     mapping (address => mapping(address => bool)) Operators;
@@ -44,8 +51,8 @@ abstract contract Helix2Bonds {
     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Bonds[0x0]._owner = msg.sender;
-        Bonds[roothash]._owner = msg.sender;
+        Bonds[0x0]._owner = roothash;
+        Bonds[roothash]._owner = roothash;
         Dev = msg.sender;
     }
 
@@ -72,7 +79,8 @@ abstract contract Helix2Bonds {
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 bondhash) {
-        address _owner = Bonds[bondhash]._owner;
+        bytes32 __owner = Bonds[bondhash]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Bonds[bondhash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
@@ -82,7 +90,8 @@ abstract contract Helix2Bonds {
      * @param labelhash : hash of bond
      */
     modifier isNew(bytes32 labelhash) {
-        address _owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        bytes32 __owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == address(0x0), "BOND_EXISTS");
         _;
     }
@@ -92,7 +101,8 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      */
     modifier onlyOwner(bytes32 bondhash) {
-        address _owner = Bonds[bondhash]._owner;
+        bytes32 __owner = Bonds[bondhash]._owner;
+        address _owner = NAMES.owner(__owner);
         require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
         _;
     }
@@ -102,7 +112,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _owner : new owner
      */
-    function setOwner(bytes32 bondhash, address _owner) external onlyOwner(bondhash) {
+    function setOwner(bytes32 bondhash, bytes32 _owner) external onlyOwner(bondhash) {
         Bonds[bondhash]._owner = _owner;
         emit NewOwner(bondhash, _owner);
     }
@@ -160,14 +170,15 @@ abstract contract Helix2Bonds {
     /**
      * @dev return owner of a bond
      * @param bondhash hash of bond to query
-     * @return address of owner
+     * @return hash of owner
      */
-    function owner(bytes32 bondhash) public view returns (address) {
-        address addr = Bonds[bondhash]._owner;
-        if (addr == address(this)) {
-            return address(0x0);
+    function owner(bytes32 bondhash) public view returns (bytes32) {
+        bytes32 __owner = Bonds[bondhash]._owner;
+        address _owner = NAMES.owner(__owner);
+        if (_owner == address(this)) {
+            return roothash;
         }
-        return addr;
+        return __owner;
     }
 
     /**
@@ -206,7 +217,7 @@ abstract contract Helix2Bonds {
      * @return true or false
      */
     function recordExists(bytes32 bondhash) public view returns (bool) {
-        return Bonds[bondhash]._owner != address(0x0);
+        return NAMES.owner(Bonds[bondhash]._owner) != address(0x0);
     }
 
     /**
@@ -215,8 +226,24 @@ abstract contract Helix2Bonds {
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
-        return Operators[_owner][operator];
+    function isApprovedForAll(bytes32 _owner, address operator) external view returns (bool) {
+        address __owner = NAMES.owner(_owner);
+        return Operators[__owner][operator];
     }
 
+    /**
+     * @dev : withdraw ether to Dev, anyone can trigger
+     */
+    function withdrawEther() external payable {
+        (bool ok,) = Dev.call{value: address(this).balance}("");
+        require(ok, "ETH_TRANSFER_FAILED");
+    }
+
+    /**
+     * @dev : to be used in case some tokens get locked in the contract
+     * @param token : token to release
+     */
+    function withdrawToken(address token) external payable {
+        iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+    }
 }
