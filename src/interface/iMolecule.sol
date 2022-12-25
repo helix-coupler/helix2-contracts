@@ -12,12 +12,18 @@ interface iMOLECULE {
     // write functions
     function setCation(bytes32 moleculehash, bytes32 cation) external;
     function setController(bytes32 moleculehash, address controller) external;
-    function setAnion(bytes32 moleculehash, bytes32[] calldata anion) external;
+    function addAnion(bytes32 moleculehash, bytes32 anion) external;
+    function setAnions(bytes32 moleculehash, bytes32[] memory anion) external;
+    function popAnion(bytes32 moleculehash, bytes32 anion) external;
     function setAlias(bytes32 moleculehash, bytes32 _alias) external;
     function setSecure(bytes32 moleculehash, bool secure) external;
     function setExpiry(bytes32 moleculehash, uint expiry) external;
     function setRecord(bytes32 moleculehash, address resolver) external;
     function setResolver(bytes32 moleculehash, address resolver) external;
+    function hook(bytes32 moleculehash, uint8 rule, address config) external;
+    function rehook(bytes32 moleculehash, uint8 rule, address config) external;
+    function unhook(bytes32 moleculehash, address config) external;
+    function unhookAll(bytes32 moleculehash) external;
     function setApprovalForAll(address controller, bool approved) external;
     function changeDev(address newDev) external;
 

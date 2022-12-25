@@ -107,6 +107,7 @@ contract NameResolver is NameResolverBase {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
         require(msg.sender == NAMES.owner(namehash), "NOT_AUTHORISED");
         _;
     }
@@ -124,10 +125,51 @@ contract NameResolver is NameResolverBase {
      * @param namehash : hash of name
      */
     function contenthash(bytes32 namehash) public view returns (bytes memory _hash) {
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
         _hash = _contenthash[namehash];
         if (_hash.length == 0) {
             _hash = _contenthash[bytes32(0)];
         }
+    }
+
+    /**
+     * @dev : defaults to owner if no address is set for Ethereum [60]
+     * @param namehash : hash of name
+     * @return : resolved address
+     */
+    function addr(bytes32 namehash) external view returns (address payable) {
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
+        bytes memory _addr = _addrs[namehash][60];
+        if (_addr.length == 0) {
+            return payable(NAMES.owner(namehash));
+        }
+        return payable(address(uint160(uint256(bytes32(_addr)))));
+    }
+
+    /**
+     * @dev : queries text records
+     * @param namehash : hash of name
+     * @param key : key to query
+     * @return value of text record
+     */
+    function text(bytes32 namehash, string calldata key) external view returns (string memory value) {
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
+        return _text[namehash][key];
+    }
+
+    /**
+     * @dev : resolves address for <coin>; if no ethereum address [60] is set, resolve to owner
+     * @param namehash : hash of name
+     * @param coinType : <coin>
+     * @return _addr : resolved address
+     */
+    function addr2(bytes32 namehash, uint256 coinType) external view returns (address payable) {
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
+        bytes memory _addr = _addrs[namehash][coinType];
+        if (_addr.length == 0 && coinType == 60) {
+            _addr = abi.encodePacked(NAMES.owner(namehash));
+        }
+        return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
@@ -158,33 +200,6 @@ contract NameResolver is NameResolverBase {
     function setAddressCoin(bytes32 namehash, uint256 coinType, bytes memory _addr) external onlyOwner(namehash) {
         _addrs[namehash][coinType] = _addr;
         emit NewAddr2(namehash, coinType, _addr);
-    }
-
-    /**
-     * @dev : defaults to owner if no address is set for Ethereum [60]
-     * @param namehash : hash of name
-     * @return : resolved address
-     */
-    function addr(bytes32 namehash) external view returns (address payable) {
-        bytes memory _addr = _addrs[namehash][60];
-        if (_addr.length == 0) {
-            return payable(NAMES.owner(namehash));
-        }
-        return payable(address(uint160(uint256(bytes32(_addr)))));
-    }
-
-    /**
-     * @dev : resolves address for <coin>; if no ethereum address [60] is set, resolve to owner
-     * @param namehash : hash of name
-     * @param coinType : <coin>
-     * @return _addr : resolved address
-     */
-    function addr2(bytes32 namehash, uint256 coinType) external view returns (address payable) {
-        bytes memory _addr = _addrs[namehash][coinType];
-        if (_addr.length == 0 && coinType == 60) {
-            _addr = abi.encodePacked(NAMES.owner(namehash));
-        }
-        return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
@@ -219,13 +234,4 @@ contract NameResolver is NameResolverBase {
         emit NewTextRecord(namehash, key, value);
     }
 
-    /**
-     * @dev : queries text records
-     * @param namehash : hash of name
-     * @param key : key to query
-     * @return value of text record
-     */
-    function text(bytes32 namehash, string calldata key) external view returns (string memory value) {
-        return _text[namehash][key];
-    }
 }

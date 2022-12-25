@@ -12,6 +12,10 @@ import "src/Interface/iHelix2.sol";
  * @title Helix2 Molecule Base
  */
 contract MoleculeRegistrar is ERC721 {
+    using LibString for bytes32[];
+    using LibString for bytes32;
+    using LibString for address[];
+    using LibString for address;
     using LibString for string[];
     using LibString for string;
 
@@ -47,45 +51,18 @@ contract MoleculeRegistrar is ERC721 {
     }
 
     /**
-     * @dev : verify molecule belongs to root
-     * @param label : label of molecule
+     * @dev : verify alias has legal form
+     * @param _alias : alias of molecule
      */
-    modifier isNew(string memory label) {
-        bytes32 _cation =  MOLECULES.cation(
-            keccak256(
-                abi.encodePacked(
-                    roothash[2], 
-                    keccak256(abi.encodePacked(label))
-                )
-            )
-        );
-        address cation = NAMES.owner(_cation);
-        require(cation == address(0x0), "MOLECULE_EXISTS");
-        _;
-    }
-
-    /**
-     * @dev : verify molecule belongs to root
-     * @param label : label of molecule
-     */
-    modifier isLegal(string memory label) {
-        require(bytes(label).length > sizes[2], 'ILLEGAL_LABEL'); /// check for oversized label
-        require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
-        _;
-    }
-
-    /**
-     * @dev : verify molecule belongs to root
-     * @param label : label of molecule
-     */
-    modifier isNotExpired(string memory label) {
-        bytes32 moleculehash = keccak256(
-            abi.encodePacked(
-                roothash[2], 
-                keccak256(abi.encodePacked(label))
-            )
-        );
-        require(MOLECULES.expiry(moleculehash) < block.timestamp, 'MOLECULE_NOT_EXPIRED'); /// check if molecule has expired
+    modifier isLegal(string memory _alias) {
+        require(
+            bytes(_alias).length < sizes[1], 
+            'ILLEGAL_LABEL'
+        ); /// check for oversized label <<< SIZE LIMIT
+        require(
+            !_alias.existsIn4(illegalBlocks), 
+            'ILLEGAL_CHARS'
+        ); /// check for forbidden characters
         _;
     }
 
@@ -94,10 +71,17 @@ contract MoleculeRegistrar is ERC721 {
      * @param moleculehash : hash of molecule
      */
     modifier onlyCation(bytes32 moleculehash) {
+        require(
+            block.timestamp < MOLECULES.expiry(moleculehash), 
+            "MOLECULE_EXPIRED"
+        ); // expiry check
         address cation = NAMES.owner(
             MOLECULES.cation(moleculehash)
         );
-        require(cation == msg.sender || Operators[cation][msg.sender], "NOT_OWNER");
+        require(
+            cation == msg.sender || Operators[cation][msg.sender], 
+            "NOT_OWNER"
+        );
         _;
     }
 
@@ -119,34 +103,43 @@ contract MoleculeRegistrar is ERC721 {
 
     /**
      * @dev registers a new molecule
-     * @param label : label of molecule without suffix (maxLength = 32)
+     * @param _alias : label of molecule without suffix (maxLength = 32)
      * @param cation : cation to set for new molecule
+     * @param anion : array of target anions 
      * @param lifespan : duration of registration
      * @return hash of new molecule
      */
     function newMolecule(
-        string memory label, 
+        string memory _alias,
         bytes32 cation, 
-        bytes32[] calldata anion,
+        bytes32[] memory anion,
         uint lifespan
     ) external 
       payable
-      isNew(label)
-      isLegal(label)
-      isNotExpired(label) 
+      isLegal(_alias)
       returns(bytes32) 
     {
         address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
         require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
-        bytes32 moleculehash = keccak256(abi.encodePacked(roothash[2], keccak256(abi.encodePacked(label))));
+        bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 moleculehash = keccak256(
+            abi.encodePacked(
+                cation,
+                roothash[2], 
+                aliashash
+            )
+        );
         MOLECULES.setCation(moleculehash, cation);                      /// set new cation (= from)
-        MOLECULES.setAnion(moleculehash, anion);                        /// set anions (= to)
+        MOLECULES.setAnions(moleculehash, anion);                       /// set anions (= to)
         MOLECULES.setExpiry(moleculehash, block.timestamp + lifespan);  /// set new expiry
         MOLECULES.setController(moleculehash, _cation);                 /// set new controller
         MOLECULES.setResolver(moleculehash, defaultResolver);           /// set new resolver
-        _ownerOf[uint256(moleculehash)] = _cation; // change ownership record
-        unchecked {                                // update balances
+        MOLECULES.setAlias(moleculehash, aliashash);                    /// set new alias
+        MOLECULES.setSecure(moleculehash, false);                       /// set new secure flag
+        MOLECULES.unhookAll(moleculehash);                              /// reset hooks
+        _ownerOf[uint256(moleculehash)] = _cation;                      /// change ownership record
+        unchecked {                                                     /// update balances
             _balanceOf[_cation]++;
         }
         emit NewMolecule(moleculehash, cation);

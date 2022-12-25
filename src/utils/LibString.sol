@@ -145,12 +145,12 @@ library LibString {
     }
 
     /**
-     * @dev : check if a value exists in an array
+     * @dev : check if a value exists in a calldata array of size 4
      * @param array : array to search in
      * @param value : value to search
      * @return true or false
      */
-    function existsIn(string calldata value, string[4] calldata array) public pure returns (bool) {
+    function existsIn4(string calldata value, string[4] calldata array) public pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (keccak256(abi.encodePacked(array[i])) == keccak256(abi.encodePacked(value))) {
                 return true;
@@ -158,4 +158,65 @@ library LibString {
         }
         return false;
     }
+
+    /**
+     * @dev : check if a value exists in a dynamic memory array of addresses
+     * @param array : array of addresses to search in
+     * @param value : value to search
+     * @return true or false
+     */
+    function existsIn(address value, address[] memory array) public pure returns (bool) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @dev : find an element in a dynamic memory array of addresses
+     * @param array : array of addresses to search in
+     * @param value : value to search
+     * @return index
+     */
+    function findIn(address value, address[] memory array) public pure returns (uint) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return i;
+            }
+        }
+        return uint(0);
+    }
+
+    /**
+     * @dev : check if a value exists in a dynamic memory array of bytes32
+     * @param array : array of bytes32 to search in
+     * @param value : value to search
+     * @return true or false
+     */
+    function existsIn(bytes32 value, bytes32[] memory array) public pure returns (bool) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @dev : find an element in a dynamic memory array of bytes32
+     * @param array : array of bytes32 to search in
+     * @param value : value to search
+     * @return index
+     */
+    function findIn(bytes32 value, bytes32[] memory array) public pure returns (uint) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return i;
+            }
+        }
+        return uint(0);
+    }
+
 }

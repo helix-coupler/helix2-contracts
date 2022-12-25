@@ -12,12 +12,26 @@ interface iPOLYCULE {
     // write functions
     function setCation(bytes32 polyculehash, bytes32 cation) external;
     function setController(bytes32 polyculehash, address controller) external;
-    function setAnion(bytes32 polyculehash, bytes32[] calldata anion) external;
+    function addAnion(bytes32 polyculehash, bytes32 anion) external;
+    function setAnions(
+        bytes32 polyculehash, 
+        bytes32[] memory anion, 
+        address[] memory config,
+        uint8[] memory rules
+    ) external;
+    function popAnion(bytes32 polyculehash, bytes32 anion) external;
     function setAlias(bytes32 polyculehash, bytes32 _alias) external;
     function setSecure(bytes32 polyculehash, bool[] memory secure) external;
+    function switchSecure(bytes32 polyculehash, bytes32 anion) external;
     function setExpiry(bytes32 polyculehash, uint expiry) external;
     function setRecord(bytes32 polyculehash, address resolver) external;
     function setResolver(bytes32 polyculehash, address resolver) external;
+    function hook(bytes32 polyculehash, uint8 rule, address config) external;
+    function rehook(bytes32 polyculehash, uint8 rule, address config) external;
+    function rehook(bytes32 polyculehash, uint8 rule, bytes32 anion) external;
+    function unhook(bytes32 polyculehash, address config) external;
+    function unhook(bytes32 polyculehash, bytes32 anion) external;
+    function unhookAll(bytes32 polyculehash) external;
     function setApprovalForAll(address controller, bool approved) external;
     function changeDev(address newDev) external;
 

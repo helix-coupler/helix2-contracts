@@ -18,6 +18,10 @@ interface iBOND {
     function setExpiry(bytes32 bondhash, uint expiry) external;
     function setRecord(bytes32 bondhash, address resolver) external;
     function setResolver(bytes32 bondhash, address resolver) external;
+    function hook(bytes32 bondhash, uint8 rule, address config) external;
+    function rehook(bytes32 bondhash, uint8 rule, address config) external;
+    function unhook(bytes32 bondhash, address config) external;
+    function unhookAll(bytes32 bondhash) external;
     function setApprovalForAll(address controller, bool approved) external;
     function changeDev(address newDev) external;
 

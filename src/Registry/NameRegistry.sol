@@ -4,12 +4,19 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Interface/iName.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iERC721.sol";
+import "src/Utils/LibString.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
 abstract contract Helix2Names {
+    using LibString for bytes32[];
+    using LibString for bytes32;
+    using LibString for address[];
+    using LibString for address;
+    using LibString for string[];
+    using LibString for string;
 
     iHELIX2 public HELIX2 = iHELIX2(address(0x0));
 
@@ -28,6 +35,7 @@ abstract contract Helix2Names {
 
     /// @dev : Name roothash
     bytes32 public roothash = HELIX2.getRoothash()[0];
+    uint256 public basePrice = HELIX2.getPrices()[0]; 
 
     /// @dev : Helix2 Name struct
     struct Name {
@@ -52,7 +60,10 @@ abstract contract Helix2Names {
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        require(msg.sender == Dev, "NOT_DEV");
+        require(
+            msg.sender == Dev, 
+            "NOT_DEV"
+        );
         _;
     }
 
@@ -67,24 +78,40 @@ abstract contract Helix2Names {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 namehash) {
-        require(msg.sender == Names[namehash]._controller, 'NOT_CONTROLLER');
+        require(
+            block.timestamp < Names[namehash]._expiry, 
+            "NAME_EXPIRED"
+        ); // expiry check
+        require(
+            msg.sender == Names[namehash]._controller, 
+            'NOT_CONTROLLER'
+        );
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 namehash) {
+        require(
+            block.timestamp < Names[namehash]._expiry, 
+            "NAME_EXPIRED"
+        ); // expiry check
         address _owner = Names[namehash]._owner;
-        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Names[namehash]._controller, "NOT_OWNER_OR_CONTROLLER");
+        require(
+            _owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Names[namehash]._controller, 
+            "NOT_OWNER_OR_CONTROLLER"
+        );
         _;
     }
 
     /**
-     * @dev : verify name belongs to root
-     * @param labelhash : hash of name
+     * @dev : check if name is not expired
+     * @param namehash : hash of name
      */
-    modifier isNew(bytes32 labelhash) {
-        address _owner =  Names[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
-        require(_owner == address(0x0), "NAME_EXISTS");
+    modifier isNotExpired(bytes32 namehash) {
+        require(
+            block.timestamp < Names[namehash]._expiry, 
+            "NAME_EXPIRED"
+        ); // expiry check
         _;
     }
 
@@ -93,8 +120,15 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
+        require(
+            block.timestamp < Names[namehash]._expiry, 
+            "NAME_EXPIRED"
+        ); // expiry check
         address _owner = Names[namehash]._owner;
-        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
+        require(
+            _owner == msg.sender || Operators[_owner][msg.sender], 
+            "NOT_OWNER"
+        );
         _;
     }
 
@@ -133,7 +167,16 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 namehash, uint _expiry) external isOwnerOrController(namehash) {
+    function setExpiry(bytes32 namehash, uint _expiry) external payable isOwnerOrController(namehash) {
+        require(
+            _expiry > Names[namehash]._expiry,
+            "BAD_EXPIRY"
+        );
+        uint newDuration = _expiry - Names[namehash]._expiry;
+        require(
+            msg.value >= newDuration * basePrice,
+            'INSUFFICIENT_ETHER'
+        );
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
     }
@@ -163,9 +206,9 @@ abstract contract Helix2Names {
      * @param namehash hash of name to query
      * @return address of owner
      */
-    function owner(bytes32 namehash) public view returns (address) {
+    function owner(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
         address addr = Names[namehash]._owner;
-        if (addr == address(this)) {
+        if (addr == address(this) ) {
             return address(0x0);
         }
         return addr;
@@ -176,7 +219,7 @@ abstract contract Helix2Names {
      * @param namehash hash of name to query
      * @return address of controller
      */
-    function controller(bytes32 namehash) public view returns (address) {
+    function controller(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
         address _controller = Names[namehash]._controller;
         return _controller;
     }
@@ -196,7 +239,7 @@ abstract contract Helix2Names {
      * @param namehash hash of name to query
      * @return address of resolver
      */
-    function resolver(bytes32 namehash) public view returns (address) {
+    function resolver(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
         address _resolver = Names[namehash]._resolver;
         return _resolver;
     }
@@ -207,7 +250,7 @@ abstract contract Helix2Names {
      * @return true or false
      */
     function recordExists(bytes32 namehash) public view returns (bool) {
-        return Names[namehash]._owner != address(0x0);
+        return block.timestamp < Names[namehash]._expiry;
     }
 
     /**
