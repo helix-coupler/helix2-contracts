@@ -22,6 +22,44 @@
     {
       "inputs": [
         {
+          "internalType": "bytes32",
+          "name": "moleculehash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "anion",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "moleculehash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "cation",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "newDev",
           "type": "address"
@@ -74,7 +112,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "owner",
+          "name": "cation",
           "type": "address"
         },
         {
@@ -89,25 +127,6 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "moleculehash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "owner",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
@@ -191,6 +210,24 @@
     {
       "inputs": [
         {
+          "internalType": "bytes32",
+          "name": "moleculehash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "anion",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "setAnion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "controller",
           "type": "address"
@@ -202,6 +239,24 @@
         }
       ],
       "name": "setApprovalForAll",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "moleculehash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "cation",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setCation",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -238,24 +293,6 @@
         }
       ],
       "name": "setExpiry",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "moleculehash",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "owner",
-          "type": "bytes32"
-        }
-      ],
-      "name": "setOwner",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -313,43 +350,6 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "moleculehash",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32[]",
-          "name": "target",
-          "type": "bytes32[]"
-        }
-      ],
-      "name": "setTarget",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "moleculehash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "target",
-      "outputs": [
-        {
-          "internalType": "bytes32[]",
-          "name": "",
-          "type": "bytes32[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
     }
   ],
   "bytecode": {
@@ -364,26 +364,26 @@
   },
   "methodIdentifiers": {
     "_alias(bytes32)": "3af550b0",
+    "anion(bytes32)": "0e68b116",
+    "cation(bytes32)": "f61ccd53",
     "changeDev(address)": "88a8c95c",
     "controller(bytes32)": "dbd4e021",
     "expiry(bytes32)": "d2ec5fca",
     "isApprovedForAll(address,address)": "e985e9c5",
-    "owner(bytes32)": "02571be3",
     "recordExists(bytes32)": "f79fe538",
     "resolver(bytes32)": "0178b8bf",
     "secure(bytes32)": "3ba5e7a7",
     "setAlias(bytes32,bytes32)": "1f06e91c",
+    "setAnion(bytes32,bytes32[])": "c74c0372",
     "setApprovalForAll(address,bool)": "a22cb465",
+    "setCation(bytes32,bytes32)": "8146970a",
     "setController(bytes32,address)": "d3156905",
     "setExpiry(bytes32,uint256)": "39de6469",
-    "setOwner(bytes32,bytes32)": "1fb63bb6",
     "setRecord(bytes32,address)": "d9b76ed4",
     "setResolver(bytes32,address)": "1896f70a",
-    "setSecure(bytes32,bool)": "e7db1717",
-    "setTarget(bytes32,bytes32[])": "3e0f548e",
-    "target(bytes32)": "90c9d877"
+    "setSecure(bytes32,bool)": "e7db1717"
   },
-  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"_alias\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newDev\",\"type\":\"address\"}],\"name\":\"changeDev\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"controller\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"expiry\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"isApprovedForAll\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"recordExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"secure\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_alias\",\"type\":\"bytes32\"}],\"name\":\"setAlias\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"approved\",\"type\":\"bool\"}],\"name\":\"setApprovalForAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\"}],\"name\":\"setExpiry\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"owner\",\"type\":\"bytes32\"}],\"name\":\"setOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setRecord\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"secure\",\"type\":\"bool\"}],\"name\":\"setSecure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"target\",\"type\":\"bytes32[]\"}],\"name\":\"setTarget\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"target\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Helix2 Molecules Interface\",\"kind\":\"dev\",\"methods\":{\"setOwner(bytes32,bytes32)\":{\"details\":\": HELIX2 Molecules external functions\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"setOwner(bytes32,bytes32)\":{\"notice\":\"REGISTRY\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/Interface/iMolecule.sol\":\"iMOLECULE\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":6666},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/Interface/iMolecule.sol\":{\"keccak256\":\"0x42db41fbbfe8aa5ee82ccd380dfe5e93c217a449ba5dbbffa961035bac30e647\",\"license\":\"WTFPL.ETH\",\"urls\":[\"bzz-raw://e579955fdee67e9a6789f9822aec4efa77a93eccbfb32eb22323b8edc0d52198\",\"dweb:/ipfs/QmTJu3HXtxiQkbF3CWQkEaKECWZTEZDamapGTrAQJfzNsm\"]}},\"version\":1}",
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"_alias\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"anion\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"cation\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newDev\",\"type\":\"address\"}],\"name\":\"changeDev\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"controller\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"expiry\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"cation\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"isApprovedForAll\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"recordExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"}],\"name\":\"secure\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_alias\",\"type\":\"bytes32\"}],\"name\":\"setAlias\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"anion\",\"type\":\"bytes32[]\"}],\"name\":\"setAnion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"approved\",\"type\":\"bool\"}],\"name\":\"setApprovalForAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"cation\",\"type\":\"bytes32\"}],\"name\":\"setCation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\"}],\"name\":\"setExpiry\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setRecord\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"moleculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"secure\",\"type\":\"bool\"}],\"name\":\"setSecure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Helix2 Molecules Interface\",\"kind\":\"dev\",\"methods\":{\"setCation(bytes32,bytes32)\":{\"details\":\": HELIX2 Molecules external functions\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"setCation(bytes32,bytes32)\":{\"notice\":\"REGISTRY\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/Interface/iMolecule.sol\":\"iMOLECULE\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":6666},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/Interface/iMolecule.sol\":{\"keccak256\":\"0xb4ed4d2ecceb41f6c1d641355d019741effdd0eb143b586e3636da9cc2435041\",\"license\":\"WTFPL.ETH\",\"urls\":[\"bzz-raw://c30c5fe276c6ee12eac7be65e53f17a3514151b7337570d580b9ed1755ac05d3\",\"dweb:/ipfs/QmWLUfFUwRhHBU8NxxZ6dTdQnZJ3asW1fBfi3zK9HQVSPs\"]}},\"version\":1}",
   "metadata": {
     "compiler": {
       "version": "0.8.16+commit.07a7930e"
@@ -402,6 +402,44 @@
           "stateMutability": "view",
           "type": "function",
           "name": "_alias",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "moleculehash",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "anion",
+          "outputs": [
+            {
+              "internalType": "bytes32[]",
+              "name": "",
+              "type": "bytes32[]"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "moleculehash",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "cation",
           "outputs": [
             {
               "internalType": "bytes32",
@@ -464,7 +502,7 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "owner",
+              "name": "cation",
               "type": "address"
             },
             {
@@ -481,25 +519,6 @@
               "internalType": "bool",
               "name": "",
               "type": "bool"
-            }
-          ]
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "moleculehash",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function",
-          "name": "owner",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
             }
           ]
         },
@@ -580,6 +599,23 @@
         {
           "inputs": [
             {
+              "internalType": "bytes32",
+              "name": "moleculehash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "anion",
+              "type": "bytes32[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setAnion"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "address",
               "name": "controller",
               "type": "address"
@@ -593,6 +629,23 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setApprovalForAll"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "moleculehash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "cation",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setCation"
         },
         {
           "inputs": [
@@ -627,23 +680,6 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setExpiry"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "moleculehash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "owner",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function",
-          "name": "setOwner"
         },
         {
           "inputs": [
@@ -695,48 +731,12 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setSecure"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "moleculehash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32[]",
-              "name": "target",
-              "type": "bytes32[]"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function",
-          "name": "setTarget"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "moleculehash",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function",
-          "name": "target",
-          "outputs": [
-            {
-              "internalType": "bytes32[]",
-              "name": "",
-              "type": "bytes32[]"
-            }
-          ]
         }
       ],
       "devdoc": {
         "kind": "dev",
         "methods": {
-          "setOwner(bytes32,bytes32)": {
+          "setCation(bytes32,bytes32)": {
             "details": ": HELIX2 Molecules external functions"
           }
         },
@@ -745,7 +745,7 @@
       "userdoc": {
         "kind": "user",
         "methods": {
-          "setOwner(bytes32,bytes32)": {
+          "setCation(bytes32,bytes32)": {
             "notice": "REGISTRY"
           }
         },
@@ -771,10 +771,10 @@
     },
     "sources": {
       "src/Interface/iMolecule.sol": {
-        "keccak256": "0x42db41fbbfe8aa5ee82ccd380dfe5e93c217a449ba5dbbffa961035bac30e647",
+        "keccak256": "0xb4ed4d2ecceb41f6c1d641355d019741effdd0eb143b586e3636da9cc2435041",
         "urls": [
-          "bzz-raw://e579955fdee67e9a6789f9822aec4efa77a93eccbfb32eb22323b8edc0d52198",
-          "dweb:/ipfs/QmTJu3HXtxiQkbF3CWQkEaKECWZTEZDamapGTrAQJfzNsm"
+          "bzz-raw://c30c5fe276c6ee12eac7be65e53f17a3514151b7337570d580b9ed1755ac05d3",
+          "dweb:/ipfs/QmWLUfFUwRhHBU8NxxZ6dTdQnZJ3asW1fBfi3zK9HQVSPs"
         ],
         "license": "WTFPL.ETH"
       }
@@ -790,7 +790,7 @@
       ]
     },
     "nodeType": "SourceUnit",
-    "src": "37:1637:7",
+    "src": "37:1638:7",
     "nodes": [
       {
         "id": 1369,
@@ -810,12 +810,12 @@
       {
         "id": 1507,
         "nodeType": "ContractDefinition",
-        "src": "112:1562:7",
+        "src": "112:1563:7",
         "nodes": [
           {
             "id": 1378,
             "nodeType": "FunctionDefinition",
-            "src": "248:64:7",
+            "src": "248:66:7",
             "nodes": [],
             "documentation": {
               "id": 1371,
@@ -823,12 +823,12 @@
               "src": "157:63:7",
               "text": "REGISTRY\n @dev : HELIX2 Molecules external functions"
             },
-            "functionSelector": "1fb63bb6",
+            "functionSelector": "8146970a",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "setOwner",
-            "nameLocation": "257:8:7",
+            "name": "setCation",
+            "nameLocation": "257:9:7",
             "parameters": {
               "id": 1376,
               "nodeType": "ParameterList",
@@ -838,10 +838,10 @@
                   "id": 1373,
                   "mutability": "mutable",
                   "name": "moleculehash",
-                  "nameLocation": "274:12:7",
+                  "nameLocation": "275:12:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1378,
-                  "src": "266:20:7",
+                  "src": "267:20:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -852,7 +852,7 @@
                     "id": 1372,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "266:7:7",
+                    "src": "267:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -864,11 +864,11 @@
                   "constant": false,
                   "id": 1375,
                   "mutability": "mutable",
-                  "name": "owner",
-                  "nameLocation": "296:5:7",
+                  "name": "cation",
+                  "nameLocation": "297:6:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1378,
-                  "src": "288:13:7",
+                  "src": "289:14:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -879,7 +879,7 @@
                     "id": 1374,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "288:7:7",
+                    "src": "289:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -888,13 +888,13 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "265:37:7"
+              "src": "266:38:7"
             },
             "returnParameters": {
               "id": 1377,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "311:0:7"
+              "src": "313:0:7"
             },
             "scope": 1507,
             "stateMutability": "nonpayable",
@@ -904,14 +904,14 @@
           {
             "id": 1385,
             "nodeType": "FunctionDefinition",
-            "src": "317:74:7",
+            "src": "319:74:7",
             "nodes": [],
             "functionSelector": "d3156905",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setController",
-            "nameLocation": "326:13:7",
+            "nameLocation": "328:13:7",
             "parameters": {
               "id": 1383,
               "nodeType": "ParameterList",
@@ -921,10 +921,10 @@
                   "id": 1380,
                   "mutability": "mutable",
                   "name": "moleculehash",
-                  "nameLocation": "348:12:7",
+                  "nameLocation": "350:12:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1385,
-                  "src": "340:20:7",
+                  "src": "342:20:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -935,7 +935,7 @@
                     "id": 1379,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "340:7:7",
+                    "src": "342:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -948,10 +948,10 @@
                   "id": 1382,
                   "mutability": "mutable",
                   "name": "controller",
-                  "nameLocation": "370:10:7",
+                  "nameLocation": "372:10:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1385,
-                  "src": "362:18:7",
+                  "src": "364:18:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -962,7 +962,7 @@
                     "id": 1381,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "362:7:7",
+                    "src": "364:7:7",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -972,13 +972,13 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "339:42:7"
+              "src": "341:42:7"
             },
             "returnParameters": {
               "id": 1384,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "390:0:7"
+              "src": "392:0:7"
             },
             "scope": 1507,
             "stateMutability": "nonpayable",
@@ -988,14 +988,14 @@
           {
             "id": 1393,
             "nodeType": "FunctionDefinition",
-            "src": "396:77:7",
+            "src": "398:75:7",
             "nodes": [],
-            "functionSelector": "3e0f548e",
+            "functionSelector": "c74c0372",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "setTarget",
-            "nameLocation": "405:9:7",
+            "name": "setAnion",
+            "nameLocation": "407:8:7",
             "parameters": {
               "id": 1391,
               "nodeType": "ParameterList",
@@ -1005,10 +1005,10 @@
                   "id": 1387,
                   "mutability": "mutable",
                   "name": "moleculehash",
-                  "nameLocation": "423:12:7",
+                  "nameLocation": "424:12:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1393,
-                  "src": "415:20:7",
+                  "src": "416:20:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1019,7 +1019,7 @@
                     "id": 1386,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "415:7:7",
+                    "src": "416:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1031,11 +1031,11 @@
                   "constant": false,
                   "id": 1390,
                   "mutability": "mutable",
-                  "name": "target",
-                  "nameLocation": "456:6:7",
+                  "name": "anion",
+                  "nameLocation": "457:5:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1393,
-                  "src": "437:25:7",
+                  "src": "438:24:7",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1047,7 +1047,7 @@
                       "id": 1388,
                       "name": "bytes32",
                       "nodeType": "ElementaryTypeName",
-                      "src": "437:7:7",
+                      "src": "438:7:7",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bytes32",
                         "typeString": "bytes32"
@@ -1055,7 +1055,7 @@
                     },
                     "id": 1389,
                     "nodeType": "ArrayTypeName",
-                    "src": "437:9:7",
+                    "src": "438:9:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_bytes32_$dyn_storage_ptr",
                       "typeString": "bytes32[]"
@@ -1064,7 +1064,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "414:49:7"
+              "src": "415:48:7"
             },
             "returnParameters": {
               "id": 1392,
@@ -1638,14 +1638,14 @@
           {
             "id": 1447,
             "nodeType": "FunctionDefinition",
-            "src": "980:68:7",
+            "src": "980:69:7",
             "nodes": [],
-            "functionSelector": "02571be3",
+            "functionSelector": "f61ccd53",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "owner",
-            "nameLocation": "989:5:7",
+            "name": "cation",
+            "nameLocation": "989:6:7",
             "parameters": {
               "id": 1443,
               "nodeType": "ParameterList",
@@ -1655,10 +1655,10 @@
                   "id": 1442,
                   "mutability": "mutable",
                   "name": "moleculehash",
-                  "nameLocation": "1003:12:7",
+                  "nameLocation": "1004:12:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1447,
-                  "src": "995:20:7",
+                  "src": "996:20:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1669,7 +1669,7 @@
                     "id": 1441,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "995:7:7",
+                    "src": "996:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1678,7 +1678,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "994:22:7"
+              "src": "995:22:7"
             },
             "returnParameters": {
               "id": 1446,
@@ -1692,7 +1692,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1447,
-                  "src": "1039:7:7",
+                  "src": "1040:7:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1703,7 +1703,7 @@
                     "id": 1444,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1039:7:7",
+                    "src": "1040:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1712,7 +1712,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1038:9:7"
+              "src": "1039:9:7"
             },
             "scope": 1507,
             "stateMutability": "view",
@@ -1722,14 +1722,14 @@
           {
             "id": 1454,
             "nodeType": "FunctionDefinition",
-            "src": "1053:73:7",
+            "src": "1054:73:7",
             "nodes": [],
             "functionSelector": "dbd4e021",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "controller",
-            "nameLocation": "1062:10:7",
+            "nameLocation": "1063:10:7",
             "parameters": {
               "id": 1450,
               "nodeType": "ParameterList",
@@ -1739,10 +1739,10 @@
                   "id": 1449,
                   "mutability": "mutable",
                   "name": "moleculehash",
-                  "nameLocation": "1081:12:7",
+                  "nameLocation": "1082:12:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1454,
-                  "src": "1073:20:7",
+                  "src": "1074:20:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1753,7 +1753,7 @@
                     "id": 1448,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1073:7:7",
+                    "src": "1074:7:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1762,7 +1762,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1072:22:7"
+              "src": "1073:22:7"
             },
             "returnParameters": {
               "id": 1453,
@@ -1776,7 +1776,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1454,
-                  "src": "1117:7:7",
+                  "src": "1118:7:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1787,7 +1787,7 @@
                     "id": 1451,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1117:7:7",
+                    "src": "1118:7:7",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1797,7 +1797,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1116:9:7"
+              "src": "1117:9:7"
             },
             "scope": 1507,
             "stateMutability": "view",
@@ -1807,14 +1807,14 @@
           {
             "id": 1462,
             "nodeType": "FunctionDefinition",
-            "src": "1131:78:7",
+            "src": "1132:77:7",
             "nodes": [],
-            "functionSelector": "90c9d877",
+            "functionSelector": "0e68b116",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "target",
-            "nameLocation": "1140:6:7",
+            "name": "anion",
+            "nameLocation": "1141:5:7",
             "parameters": {
               "id": 1457,
               "nodeType": "ParameterList",
@@ -2321,7 +2321,7 @@
           {
             "id": 1506,
             "nodeType": "FunctionDefinition",
-            "src": "1583:89:7",
+            "src": "1583:90:7",
             "nodes": [],
             "functionSelector": "e985e9c5",
             "implemented": false,
@@ -2337,11 +2337,11 @@
                   "constant": false,
                   "id": 1499,
                   "mutability": "mutable",
-                  "name": "owner",
-                  "nameLocation": "1617:5:7",
+                  "name": "cation",
+                  "nameLocation": "1617:6:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1506,
-                  "src": "1609:13:7",
+                  "src": "1609:14:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2366,10 +2366,10 @@
                   "id": 1501,
                   "mutability": "mutable",
                   "name": "controller",
-                  "nameLocation": "1632:10:7",
+                  "nameLocation": "1633:10:7",
                   "nodeType": "VariableDeclaration",
                   "scope": 1506,
-                  "src": "1624:18:7",
+                  "src": "1625:18:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2380,7 +2380,7 @@
                     "id": 1500,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1624:7:7",
+                    "src": "1625:7:7",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2390,7 +2390,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1608:35:7"
+              "src": "1608:36:7"
             },
             "returnParameters": {
               "id": 1505,
@@ -2404,7 +2404,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1506,
-                  "src": "1666:4:7",
+                  "src": "1667:4:7",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2415,7 +2415,7 @@
                     "id": 1503,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1666:4:7",
+                    "src": "1667:4:7",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -2424,7 +2424,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1665:6:7"
+              "src": "1666:6:7"
             },
             "scope": 1507,
             "stateMutability": "view",

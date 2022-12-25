@@ -23,8 +23,8 @@ contract BondRegistrar is ERC721 {
     string public constant symbol = "HBS";
 
     /// @dev : Helix2 Bond events
-    event NewBond(bytes32 indexed bondhash, bytes32 owner);
-    event NewOwner(bytes32 indexed bondhash, bytes32 owner);
+    event NewBond(bytes32 indexed bondhash, bytes32 cation);
+    event NewCation(bytes32 indexed bondhash, bytes32 cation);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
     event NewResolver(bytes32 indexed bondhash, address resolver);
@@ -52,7 +52,7 @@ contract BondRegistrar is ERC721 {
      * @param label : label of bond
      */
     modifier isNew(string memory label) {
-        bytes32 _owner =  BONDS.owner(
+        bytes32 _cation =  BONDS.cation(
             keccak256(
                 abi.encodePacked(
                     roothash[1], 
@@ -60,7 +60,7 @@ contract BondRegistrar is ERC721 {
                 )
             )
         );
-        address owner = NAMES.owner(_owner);
+        address owner = NAMES.owner(_cation);
         require(owner == address(0x0), "BOND_EXISTS");
         _;
     }
@@ -94,9 +94,9 @@ contract BondRegistrar is ERC721 {
      * @dev : verify ownership of bond
      * @param bondhash : hash of bond
      */
-    modifier onlyOwner(bytes32 bondhash) {
+    modifier onlyCation(bytes32 bondhash) {
         address owner = NAMES.owner(
-            BONDS.owner(bondhash)
+            BONDS.cation(bondhash)
         );
         require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
         _;
@@ -121,14 +121,14 @@ contract BondRegistrar is ERC721 {
     /**
      * @dev registers a new bond
      * @param label : label of bond without suffix (maxLength = 32)
-     * @param owner : owner to set for new bond
+     * @param cation : cation to set for new bond
      * @param lifespan : duration of registration
      * @return hash of new bond
      */
     function newBond(
         string memory label, 
-        bytes32 owner, 
-        bytes32 target,
+        bytes32 cation, 
+        bytes32 anion,
         uint lifespan
     ) external 
       payable
@@ -137,20 +137,20 @@ contract BondRegistrar is ERC721 {
       isNotExpired(label) 
       returns(bytes32) 
     {
-        address _owner = NAMES.owner(owner);
+        address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
         require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 bondhash = keccak256(abi.encodePacked(roothash[1], keccak256(abi.encodePacked(label))));
-        BONDS.setOwner(bondhash, owner);                        /// set new owner (= from)
-        BONDS.setTarget(bondhash, target);                      /// set target (= to)
+        BONDS.setCation(bondhash, cation);                      /// set new cation (= from)
+        BONDS.setAnion(bondhash, anion);                        /// set anion (= to)
         BONDS.setExpiry(bondhash, block.timestamp + lifespan);  /// set new expiry
-        BONDS.setController(bondhash, _owner);                  /// set new controller
+        BONDS.setController(bondhash, _cation);                 /// set new controller
         BONDS.setResolver(bondhash, defaultResolver);           /// set new resolver
-        _ownerOf[uint256(bondhash)] = _owner; // change ownership record
-        unchecked {                           // update balances
-            _balanceOf[_owner]++;
+        _ownerOf[uint256(bondhash)] = _cation; // change ownership record
+        unchecked {                            // update balances
+            _balanceOf[_cation]++;
         }
-        emit NewBond(bondhash, owner);
+        emit NewBond(bondhash, cation);
         return bondhash;
     }
 

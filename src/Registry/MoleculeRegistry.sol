@@ -17,15 +17,15 @@ abstract contract Helix2Molecules {
 
     /// @dev : Helix2 Molecule events
     event NewDev(address Dev, address newDev);
-    event NewMolecule(bytes32 indexed moleculehash, bytes32 owner);
-    event NewOwner(bytes32 indexed moleculehash, bytes32 owner);
-    event NewTarget(bytes32 indexed moleculehash, bytes32[] target);
+    event NewMolecule(bytes32 indexed moleculehash, bytes32 cation);
+    event NewCation(bytes32 indexed moleculehash, bytes32 cation);
+    event NewTarget(bytes32 indexed moleculehash, bytes32[] anion);
     event NewAlias(bytes32 indexed moleculehash, bytes32 _alias);
     event NewController(bytes32 indexed moleculehash, address controller);
     event NewExpiry(bytes32 indexed moleculehash, uint expiry);
     event NewRecord(bytes32 indexed moleculehash, address resolver);
     event NewResolver(bytes32 indexed moleculehash, address resolver);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event ApprovalForAll(address indexed cation, address indexed operator, bool approved);
     
     /// Dev
     address public Dev;
@@ -36,8 +36,8 @@ abstract contract Helix2Molecules {
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
         mapping(bytes32 => mapping(uint8 => address)) _hooks;     /// Hooks with Rules
-        bytes32 _owner;                                           /// Source of Molecule (= Owner)
-        bytes32[] _target;                                        /// Targets of Molecule
+        bytes32 _cation;                                          /// Source of Molecule (= Owner)
+        bytes32[] _anion;                                         /// Targets of Molecule
         bytes32 _alias;                                           /// Hash of Molecule
         address _resolver;                                        /// Resolver of Molecule
         address _controller;                                      /// Controller of Molecule
@@ -53,8 +53,8 @@ abstract contract Helix2Molecules {
     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Molecules[0x0]._owner = roothash;
-        Molecules[roothash]._owner = roothash;
+        Molecules[0x0]._cation = roothash;
+        Molecules[roothash]._cation = roothash;
         Dev = msg.sender;
     }
 
@@ -79,11 +79,11 @@ abstract contract Helix2Molecules {
         _;
     }
 
-    /// @dev : Modifier to allow Owner or Controller
-    modifier isOwnerOrController(bytes32 moleculehash) {
-        bytes32 __owner = Molecules[moleculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Molecules[moleculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
+    /// @dev : Modifier to allow Cation or Controller
+    modifier isCationOrController(bytes32 moleculehash) {
+        bytes32 __owner = Molecules[moleculehash]._cation;
+        address _cation = NAMES.owner(__owner);
+        require(_cation == msg.sender || Operators[_cation][msg.sender] || msg.sender == Molecules[moleculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -92,9 +92,9 @@ abstract contract Helix2Molecules {
      * @param labelhash : hash of molecule
      */
     modifier isNew(bytes32 labelhash) {
-        bytes32 __owner =  Molecules[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == address(0x0), "MOLECULE_EXISTS");
+        bytes32 __owner =  Molecules[keccak256(abi.encodePacked(roothash, labelhash))]._cation;
+        address _cation = NAMES.owner(__owner);
+        require(_cation == address(0x0), "MOLECULE_EXISTS");
         _;
     }
 
@@ -102,32 +102,32 @@ abstract contract Helix2Molecules {
      * @dev : verify ownership of molecule
      * @param moleculehash : hash of molecule
      */
-    modifier onlyOwner(bytes32 moleculehash) {
-        bytes32 __owner = Molecules[moleculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
+    modifier onlyCation(bytes32 moleculehash) {
+        bytes32 __owner = Molecules[moleculehash]._cation;
+        address _cation = NAMES.owner(__owner);
+        require(_cation == msg.sender || Operators[_cation][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
-     * @dev : set owner of a molecule
+     * @dev : set cation of a molecule
      * @param moleculehash : hash of molecule
-     * @param _owner : new owner
+     * @param _cation : new cation
      */
-    function setOwner(bytes32 moleculehash, bytes32 _owner) external onlyOwner(moleculehash) {
-        Molecules[moleculehash]._owner = _owner;
-        emit NewOwner(moleculehash, _owner);
+    function setCation(bytes32 moleculehash, bytes32 _cation) external onlyCation(moleculehash) {
+        Molecules[moleculehash]._cation = _cation;
+        emit NewCation(moleculehash, _cation);
     }
 
 
     /**
-     * @dev : set new target of a polycule
-     * @param polyculehash : hash of targets
-     * @param _target : address of target
+     * @dev : set new anion of a polycule
+     * @param polyculehash : hash of anions
+     * @param _anion : address of anion
      */
-    function setTarget(bytes32 polyculehash, bytes32[] calldata _target) external isOwnerOrController(polyculehash) {
-        Molecules[polyculehash]._target = _target;
-        emit NewTarget(polyculehash, _target);
+    function setTarget(bytes32 polyculehash, bytes32[] calldata _anion) external isCationOrController(polyculehash) {
+        Molecules[polyculehash]._anion = _anion;
+        emit NewTarget(polyculehash, _anion);
     }
 
     /**
@@ -135,7 +135,7 @@ abstract contract Helix2Molecules {
      * @param moleculehash : hash of molecule
      * @param _alias : bash of alias
      */
-    function setAlias(bytes32 moleculehash, bytes32 _alias) external isOwnerOrController(moleculehash) {
+    function setAlias(bytes32 moleculehash, bytes32 _alias) external isCationOrController(moleculehash) {
         Molecules[moleculehash]._alias = _alias;
         emit NewAlias(moleculehash, _alias);
     }
@@ -145,7 +145,7 @@ abstract contract Helix2Molecules {
      * @param moleculehash : hash of molecule
      * @param _controller : new controller
      */
-    function setController(bytes32 moleculehash, address _controller) external isOwnerOrController(moleculehash) {
+    function setController(bytes32 moleculehash, address _controller) external isCationOrController(moleculehash) {
         Molecules[moleculehash]._controller = _controller;
         emit NewController(moleculehash, _controller);
     }
@@ -155,7 +155,7 @@ abstract contract Helix2Molecules {
      * @param moleculehash : hash of molecule
      * @param _resolver : new resolver
      */
-    function setResolver(bytes32 moleculehash, address _resolver) external isOwnerOrController(moleculehash) {
+    function setResolver(bytes32 moleculehash, address _resolver) external isCationOrController(moleculehash) {
         Molecules[moleculehash]._resolver = _resolver;
         emit NewResolver(moleculehash, _resolver);
     }
@@ -165,7 +165,7 @@ abstract contract Helix2Molecules {
      * @param moleculehash : hash of molecule
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 moleculehash, uint _expiry) external isOwnerOrController(moleculehash) {
+    function setExpiry(bytes32 moleculehash, uint _expiry) external isCationOrController(moleculehash) {
         Molecules[moleculehash]._expiry = _expiry;
         emit NewExpiry(moleculehash, _expiry);
     }
@@ -175,7 +175,7 @@ abstract contract Helix2Molecules {
      * @param moleculehash : hash of molecule
      * @param _resolver : new record
      */
-    function setRecord(bytes32 moleculehash, address _resolver) external isOwnerOrController(moleculehash) {
+    function setRecord(bytes32 moleculehash, address _resolver) external isCationOrController(moleculehash) {
         Molecules[moleculehash]._resolver = _resolver;
         emit NewRecord(moleculehash, _resolver);
     }
@@ -191,14 +191,14 @@ abstract contract Helix2Molecules {
     }
 
     /**
-     * @dev return owner of a molecule
+     * @dev return cation of a molecule
      * @param moleculehash hash of molecule to query
-     * @return hash of owner
+     * @return hash of cation
      */
-    function owner(bytes32 moleculehash) public view returns (bytes32) {
-        bytes32 __owner = Molecules[moleculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        if (_owner == address(this)) {
+    function cation(bytes32 moleculehash) public view returns (bytes32) {
+        bytes32 __owner = Molecules[moleculehash]._cation;
+        address _cation = NAMES.owner(__owner);
+        if (_cation == address(this)) {
             return roothash;
         }
         return __owner;
@@ -214,15 +214,25 @@ abstract contract Helix2Molecules {
         return _controller;
     }
 
+    /**
+     * @dev shows mutuality state of a molecule
+     * @param moleculehash hash of molecule to query
+     * @return mutuality state of the molecule
+     */
+    function secure(bytes32 moleculehash) public view returns (bool) {
+        bool _secure = Molecules[moleculehash]._secure;
+        return _secure;
+    }
+
 
     /**
-     * @dev return target of a molecule
+     * @dev return anion of a molecule
      * @param moleculehash hash of molecule to query
-     * @return hash of target
+     * @return hash of anion
      */
-    function target(bytes32 moleculehash) public view returns (bytes32[] memory) {
-        bytes32[] memory _target = Molecules[moleculehash]._target;
-        return _target;
+    function anion(bytes32 moleculehash) public view returns (bytes32[] memory) {
+        bytes32[] memory _anion = Molecules[moleculehash]._anion;
+        return _anion;
     }
 
     /**
@@ -251,17 +261,17 @@ abstract contract Helix2Molecules {
      * @return true or false
      */
     function recordExists(bytes32 moleculehash) public view returns (bool) {
-        return NAMES.owner(Molecules[moleculehash]._owner) != address(0x0);
+        return NAMES.owner(Molecules[moleculehash]._cation) != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param _owner owner of molecule to query
+     * @param _cation cation of molecule to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(bytes32 _owner, address operator) external view returns (bool) {
-        address __owner = NAMES.owner(_owner);
+    function isApprovedForAll(bytes32 _cation, address operator) external view returns (bool) {
+        address __owner = NAMES.owner(_cation);
         return Operators[__owner][operator];
     }
 

@@ -23,8 +23,8 @@ contract MoleculeRegistrar is ERC721 {
     string public constant symbol = "HMS";
 
     /// @dev : Helix2 Molecule events
-    event NewMolecule(bytes32 indexed moleculehash, bytes32 owner);
-    event NewOwner(bytes32 indexed moleculehash, bytes32 owner);
+    event NewMolecule(bytes32 indexed moleculehash, bytes32 cation);
+    event NewCation(bytes32 indexed moleculehash, bytes32 cation);
     event NewExpiry(bytes32 indexed moleculehash, uint expiry);
     event NewRecord(bytes32 indexed moleculehash, address resolver);
     event NewResolver(bytes32 indexed moleculehash, address resolver);
@@ -51,7 +51,7 @@ contract MoleculeRegistrar is ERC721 {
      * @param label : label of molecule
      */
     modifier isNew(string memory label) {
-        bytes32 _owner =  MOLECULES.owner(
+        bytes32 _cation =  MOLECULES.cation(
             keccak256(
                 abi.encodePacked(
                     roothash[2], 
@@ -59,8 +59,8 @@ contract MoleculeRegistrar is ERC721 {
                 )
             )
         );
-        address owner = NAMES.owner(_owner);
-        require(owner == address(0x0), "MOLECULE_EXISTS");
+        address cation = NAMES.owner(_cation);
+        require(cation == address(0x0), "MOLECULE_EXISTS");
         _;
     }
 
@@ -93,11 +93,11 @@ contract MoleculeRegistrar is ERC721 {
      * @dev : verify ownership of molecule
      * @param moleculehash : hash of molecule
      */
-    modifier onlyOwner(bytes32 moleculehash) {
-        address owner = NAMES.owner(
-            MOLECULES.owner(moleculehash)
+    modifier onlyCation(bytes32 moleculehash) {
+        address cation = NAMES.owner(
+            MOLECULES.cation(moleculehash)
         );
-        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
+        require(cation == msg.sender || Operators[cation][msg.sender], "NOT_OWNER");
         _;
     }
 
@@ -120,14 +120,14 @@ contract MoleculeRegistrar is ERC721 {
     /**
      * @dev registers a new molecule
      * @param label : label of molecule without suffix (maxLength = 32)
-     * @param owner : owner to set for new molecule
+     * @param cation : cation to set for new molecule
      * @param lifespan : duration of registration
      * @return hash of new molecule
      */
     function newMolecule(
         string memory label, 
-        bytes32 owner, 
-        bytes32[] calldata target,
+        bytes32 cation, 
+        bytes32[] calldata anion,
         uint lifespan
     ) external 
       payable
@@ -136,20 +136,20 @@ contract MoleculeRegistrar is ERC721 {
       isNotExpired(label) 
       returns(bytes32) 
     {
-        address _owner = NAMES.owner(owner);
+        address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
         require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 moleculehash = keccak256(abi.encodePacked(roothash[2], keccak256(abi.encodePacked(label))));
-        MOLECULES.setOwner(moleculehash, owner);                        /// set new owner (= from)
-        MOLECULES.setTarget(moleculehash, target);                      /// set targets (= to)
+        MOLECULES.setCation(moleculehash, cation);                      /// set new cation (= from)
+        MOLECULES.setAnion(moleculehash, anion);                        /// set anions (= to)
         MOLECULES.setExpiry(moleculehash, block.timestamp + lifespan);  /// set new expiry
-        MOLECULES.setController(moleculehash, _owner);                  /// set new controller
+        MOLECULES.setController(moleculehash, _cation);                 /// set new controller
         MOLECULES.setResolver(moleculehash, defaultResolver);           /// set new resolver
-        _ownerOf[uint256(moleculehash)] = _owner; // change ownership record
-        unchecked {                               // update balances
-            _balanceOf[_owner]++;
+        _ownerOf[uint256(moleculehash)] = _cation; // change ownership record
+        unchecked {                                // update balances
+            _balanceOf[_cation]++;
         }
-        emit NewMolecule(moleculehash, owner);
+        emit NewMolecule(moleculehash, cation);
         return moleculehash;
     }
 

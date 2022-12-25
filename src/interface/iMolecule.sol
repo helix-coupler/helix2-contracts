@@ -10,9 +10,9 @@ interface iMOLECULE {
     /// REGISTRY
     /// @dev : HELIX2 Molecules external functions
     // write functions
-    function setOwner(bytes32 moleculehash, bytes32 owner) external;
+    function setCation(bytes32 moleculehash, bytes32 cation) external;
     function setController(bytes32 moleculehash, address controller) external;
-    function setTarget(bytes32 moleculehash, bytes32[] calldata target) external;
+    function setAnion(bytes32 moleculehash, bytes32[] calldata anion) external;
     function setAlias(bytes32 moleculehash, bytes32 _alias) external;
     function setSecure(bytes32 moleculehash, bool secure) external;
     function setExpiry(bytes32 moleculehash, uint expiry) external;
@@ -22,13 +22,13 @@ interface iMOLECULE {
     function changeDev(address newDev) external;
 
     // view functions
-    function owner(bytes32 moleculehash) external view returns(bytes32);
+    function cation(bytes32 moleculehash) external view returns(bytes32);
     function controller(bytes32 moleculehash) external view returns(address);
-    function target(bytes32 moleculehash) external view returns(bytes32[] memory);
+    function anion(bytes32 moleculehash) external view returns(bytes32[] memory);
     function _alias(bytes32 moleculehash) external view returns(bytes32);
     function secure(bytes32 moleculehash) external view returns(bool);
     function expiry(bytes32 moleculehash) external view returns(uint);
     function resolver(bytes32 moleculehash) external view returns(address);
     function recordExists(bytes32 moleculehash) external view returns(bool);
-    function isApprovedForAll(address owner, address controller) external view returns(bool);
+    function isApprovedForAll(address cation, address controller) external view returns(bool);
 }

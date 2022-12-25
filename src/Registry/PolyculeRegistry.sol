@@ -17,15 +17,15 @@ abstract contract Helix2Polycules {
 
     /// @dev : Helix2 Polycule events
     event NewDev(address Dev, address newDev);
-    event NewPolycule(bytes32 indexed polyculehash, bytes32 owner);
-    event NewOwner(bytes32 indexed polyculehash, bytes32 owner);
-    event NewTarget(bytes32 indexed polyculehash, bytes32[] target);
+    event NewPolycule(bytes32 indexed polyculehash, bytes32 cation);
+    event NewCation(bytes32 indexed polyculehash, bytes32 cation);
+    event NewTarget(bytes32 indexed polyculehash, bytes32[] anion);
     event NewAlias(bytes32 indexed polyculehash, bytes32 _alias);
     event NewController(bytes32 indexed polyculehash, address controller);
     event NewExpiry(bytes32 indexed polyculehash, uint expiry);
     event NewRecord(bytes32 indexed polyculehash, address resolver);
     event NewResolver(bytes32 indexed polyculehash, address resolver);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event ApprovalForAll(address indexed cation, address indexed operator, bool approved);
     
     /// Dev
     address public Dev;
@@ -36,8 +36,8 @@ abstract contract Helix2Polycules {
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
         mapping(bytes32 => mapping(uint8 => address[])) _hooks;   /// Hooks (ordered list) with Rules
-        bytes32 _owner;                                           /// Source of Polycule (= Owner)
-        bytes32[] _target;                                        /// Targets of Polycule (ordered list)
+        bytes32 _cation;                                          /// Source of Polycule (= Owner)
+        bytes32[] _anion;                                         /// Targets of Polycule (ordered list)
         bytes32 _alias;                                           /// Hash of Polycule
         address _resolver;                                        /// Resolver of Polycule
         address _controller;                                      /// Controller of Polycule
@@ -53,8 +53,8 @@ abstract contract Helix2Polycules {
     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Polycules[0x0]._owner = roothash;
-        Polycules[roothash]._owner = roothash;
+        Polycules[0x0]._cation = roothash;
+        Polycules[roothash]._cation = roothash;
         Dev = msg.sender;
     }
 
@@ -79,11 +79,11 @@ abstract contract Helix2Polycules {
         _;
     }
 
-    /// @dev : Modifier to allow Owner or Controller
-    modifier isOwnerOrController(bytes32 polyculehash) {
-        bytes32 __owner = Polycules[polyculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Polycules[polyculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
+    /// @dev : Modifier to allow Cation or Controller
+    modifier isCationOrController(bytes32 polyculehash) {
+        bytes32 __cation = Polycules[polyculehash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == msg.sender || Operators[_cation][msg.sender] || msg.sender == Polycules[polyculehash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -92,9 +92,9 @@ abstract contract Helix2Polycules {
      * @param labelhash : hash of polycule
      */
     modifier isNew(bytes32 labelhash) {
-        bytes32 __owner =  Polycules[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == address(0x0), "POLYCULE_EXISTS");
+        bytes32 __cation =  Polycules[keccak256(abi.encodePacked(roothash, labelhash))]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == address(0x0), "POLYCULE_EXISTS");
         _;
     }
 
@@ -102,32 +102,32 @@ abstract contract Helix2Polycules {
      * @dev : verify ownership of polycule
      * @param polyculehash : hash of polycule
      */
-    modifier onlyOwner(bytes32 polyculehash) {
-        bytes32 __owner = Polycules[polyculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
+    modifier onlyCation(bytes32 polyculehash) {
+        bytes32 __cation = Polycules[polyculehash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == msg.sender || Operators[_cation][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
-     * @dev : set owner of a polycule
+     * @dev : set cation of a polycule
      * @param polyculehash : hash of polycule
-     * @param _owner : new owner
+     * @param _cation : new cation
      */
-    function setOwner(bytes32 polyculehash, bytes32 _owner) external onlyOwner(polyculehash) {
-        Polycules[polyculehash]._owner = _owner;
-        emit NewOwner(polyculehash, _owner);
+    function setCation(bytes32 polyculehash, bytes32 _cation) external onlyCation(polyculehash) {
+        Polycules[polyculehash]._cation = _cation;
+        emit NewCation(polyculehash, _cation);
     }
 
 
     /**
-     * @dev : set new target of a polycule
-     * @param polyculehash : hash of targets
-     * @param _target : address of target
+     * @dev : set new anion of a polycule
+     * @param polyculehash : hash of anions
+     * @param _anion : address of anion
      */
-    function setTarget(bytes32 polyculehash, bytes32[] calldata _target) external isOwnerOrController(polyculehash) {
-        Polycules[polyculehash]._target = _target;
-        emit NewTarget(polyculehash, _target);
+    function setTarget(bytes32 polyculehash, bytes32[] calldata _anion) external isCationOrController(polyculehash) {
+        Polycules[polyculehash]._anion = _anion;
+        emit NewTarget(polyculehash, _anion);
     }
 
     /**
@@ -135,7 +135,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _alias : bash of alias
      */
-    function setAlias(bytes32 polyculehash, bytes32 _alias) external isOwnerOrController(polyculehash) {
+    function setAlias(bytes32 polyculehash, bytes32 _alias) external isCationOrController(polyculehash) {
         Polycules[polyculehash]._alias = _alias;
         emit NewAlias(polyculehash, _alias);
     }
@@ -145,7 +145,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _controller : new controller
      */
-    function setController(bytes32 polyculehash, address _controller) external isOwnerOrController(polyculehash) {
+    function setController(bytes32 polyculehash, address _controller) external isCationOrController(polyculehash) {
         Polycules[polyculehash]._controller = _controller;
         emit NewController(polyculehash, _controller);
     }
@@ -155,7 +155,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _resolver : new resolver
      */
-    function setResolver(bytes32 polyculehash, address _resolver) external isOwnerOrController(polyculehash) {
+    function setResolver(bytes32 polyculehash, address _resolver) external isCationOrController(polyculehash) {
         Polycules[polyculehash]._resolver = _resolver;
         emit NewResolver(polyculehash, _resolver);
     }
@@ -165,7 +165,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 polyculehash, uint _expiry) external isOwnerOrController(polyculehash) {
+    function setExpiry(bytes32 polyculehash, uint _expiry) external isCationOrController(polyculehash) {
         Polycules[polyculehash]._expiry = _expiry;
         emit NewExpiry(polyculehash, _expiry);
     }
@@ -175,7 +175,7 @@ abstract contract Helix2Polycules {
      * @param polyculehash : hash of polycule
      * @param _resolver : new record
      */
-    function setRecord(bytes32 polyculehash, address _resolver) external isOwnerOrController(polyculehash) {
+    function setRecord(bytes32 polyculehash, address _resolver) external isCationOrController(polyculehash) {
         Polycules[polyculehash]._resolver = _resolver;
         emit NewRecord(polyculehash, _resolver);
     }
@@ -191,17 +191,17 @@ abstract contract Helix2Polycules {
     }
 
     /**
-     * @dev return owner of a polycule
+     * @dev return cation of a polycule
      * @param polyculehash hash of polycule to query
-     * @return hash of owner
+     * @return hash of cation
      */
-    function owner(bytes32 polyculehash) public view returns (bytes32) {
-        bytes32 __owner = Polycules[polyculehash]._owner;
-        address _owner = NAMES.owner(__owner);
-        if (_owner == address(this)) {
+    function cation(bytes32 polyculehash) public view returns (bytes32) {
+        bytes32 __cation = Polycules[polyculehash]._cation;
+        address _cation = NAMES.owner(__cation);
+        if (_cation == address(this)) {
             return roothash;
         }
-        return __owner;
+        return __cation;
     }
 
     /**
@@ -214,15 +214,24 @@ abstract contract Helix2Polycules {
         return _controller;
     }
 
+    /**
+     * @dev shows mutuality state of a polycule
+     * @param polyculehash hash of polycule to query
+     * @return mutuality state of the polycule
+     */
+    function secure(bytes32 polyculehash) public view returns (bool[] memory) {
+        bool[] memory _secure = Polycules[polyculehash]._secure;
+        return _secure;
+    }
 
     /**
-     * @dev return target of a polycule
+     * @dev return anion of a polycule
      * @param polyculehash hash of polycule to query
-     * @return hash of target
+     * @return hash of anion
      */
-    function target(bytes32 polyculehash) public view returns (bytes32[] memory) {
-        bytes32[] memory _target = Polycules[polyculehash]._target;
-        return _target;
+    function anion(bytes32 polyculehash) public view returns (bytes32[] memory) {
+        bytes32[] memory _anion = Polycules[polyculehash]._anion;
+        return _anion;
     }
 
     /**
@@ -251,18 +260,18 @@ abstract contract Helix2Polycules {
      * @return true or false
      */
     function recordExists(bytes32 polyculehash) public view returns (bool) {
-        return NAMES.owner(Polycules[polyculehash]._owner) != address(0x0);
+        return NAMES.owner(Polycules[polyculehash]._cation) != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param _owner owner of polycule to query
+     * @param _cation cation of polycule to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(bytes32 _owner, address operator) external view returns (bool) {
-        address __owner = NAMES.owner(_owner);
-        return Operators[__owner][operator];
+    function isApprovedForAll(bytes32 _cation, address operator) external view returns (bool) {
+        address __cation = NAMES.owner(_cation);
+        return Operators[__cation][operator];
     }
 
     /**

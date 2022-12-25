@@ -17,15 +17,15 @@ abstract contract Helix2Bonds {
 
     /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
-    event NewBond(bytes32 indexed bondhash, bytes32 owner);
-    event NewOwner(bytes32 indexed bondhash, bytes32 owner);
-    event NewTarget(bytes32 indexed bondhash, bytes32 target);
+    event NewBond(bytes32 indexed bondhash, bytes32 cation);
+    event NewCation(bytes32 indexed bondhash, bytes32 cation);
+    event NewTarget(bytes32 indexed bondhash, bytes32 anion);
     event NewAlias(bytes32 indexed bondhash, bytes32 _alias);
     event NewController(bytes32 indexed bondhash, address controller);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
     event NewResolver(bytes32 indexed bondhash, address resolver);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event ApprovalForAll(address indexed cation, address indexed operator, bool approved);
 
     /// Dev
     address public Dev;
@@ -36,8 +36,8 @@ abstract contract Helix2Bonds {
     /// @dev : Helix2 Bond struct
     struct Bond {
         mapping(bytes32 => mapping(uint8 => address)) _hooks;     /// Hooks with Rules
-        bytes32 _owner;                                           /// Source of Bond (= Owner)
-        bytes32 _target;                                          /// Target of Bond
+        bytes32 _cation;                                          /// Source of Bond (= Owner)
+        bytes32 _anion;                                           /// Target of Bond
         bytes32 _alias;                                           /// Hash of Bond
         address _resolver;                                        /// Resolver of Bond
         address _controller;                                      /// Controller of Bond
@@ -53,8 +53,8 @@ abstract contract Helix2Bonds {
     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
-        Bonds[0x0]._owner = roothash;
-        Bonds[roothash]._owner = roothash;
+        Bonds[0x0]._cation = roothash;
+        Bonds[roothash]._cation = roothash;
         Dev = msg.sender;
     }
 
@@ -79,11 +79,11 @@ abstract contract Helix2Bonds {
         _;
     }
 
-    /// @dev : Modifier to allow Owner or Controller
-    modifier isOwnerOrController(bytes32 bondhash) {
-        bytes32 __owner = Bonds[bondhash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Bonds[bondhash]._controller, "NOT_OWNER_OR_CONTROLLER");
+    /// @dev : Modifier to allow Cation or Controller
+    modifier isCationOrController(bytes32 bondhash) {
+        bytes32 __cation = Bonds[bondhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == msg.sender || Operators[_cation][msg.sender] || msg.sender == Bonds[bondhash]._controller, "NOT_OWNER_OR_CONTROLLER");
         _;
     }
 
@@ -92,9 +92,9 @@ abstract contract Helix2Bonds {
      * @param labelhash : hash of bond
      */
     modifier isNew(bytes32 labelhash) {
-        bytes32 __owner =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == address(0x0), "BOND_EXISTS");
+        bytes32 __cation =  Bonds[keccak256(abi.encodePacked(roothash, labelhash))]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == address(0x0), "BOND_EXISTS");
         _;
     }
 
@@ -102,21 +102,21 @@ abstract contract Helix2Bonds {
      * @dev : verify ownership of bond
      * @param bondhash : hash of bond
      */
-    modifier onlyOwner(bytes32 bondhash) {
-        bytes32 __owner = Bonds[bondhash]._owner;
-        address _owner = NAMES.owner(__owner);
-        require(_owner == msg.sender || Operators[_owner][msg.sender], "NOT_OWNER");
+    modifier onlyCation(bytes32 bondhash) {
+        bytes32 __cation = Bonds[bondhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(_cation == msg.sender || Operators[_cation][msg.sender], "NOT_OWNER");
         _;
     }
 
     /**
-     * @dev : set owner of a bond
+     * @dev : set cation of a bond
      * @param bondhash : hash of bond
-     * @param _owner : new owner
+     * @param _cation : new cation
      */
-    function setOwner(bytes32 bondhash, bytes32 _owner) external onlyOwner(bondhash) {
-        Bonds[bondhash]._owner = _owner;
-        emit NewOwner(bondhash, _owner);
+    function setCation(bytes32 bondhash, bytes32 _cation) external onlyCation(bondhash) {
+        Bonds[bondhash]._cation = _cation;
+        emit NewCation(bondhash, _cation);
     }
 
     /**
@@ -124,19 +124,19 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _controller : new controller
      */
-    function setController(bytes32 bondhash, address _controller) external isOwnerOrController(bondhash) {
+    function setController(bytes32 bondhash, address _controller) external isCationOrController(bondhash) {
         Bonds[bondhash]._controller = _controller;
         emit NewController(bondhash, _controller);
     }
 
     /**
-     * @dev : set new target of a bond
-     * @param bondhash : hash of targets
-     * @param _target : address of target
+     * @dev : set new anion of a bond
+     * @param bondhash : hash of anion
+     * @param _anion : address of anion
      */
-    function setTarget(bytes32 bondhash, bytes32 _target) external isOwnerOrController(bondhash) {
-        Bonds[bondhash]._target = _target;
-        emit NewTarget(bondhash, _target);
+    function setTarget(bytes32 bondhash, bytes32 _anion) external isCationOrController(bondhash) {
+        Bonds[bondhash]._anion = _anion;
+        emit NewTarget(bondhash, _anion);
     }
 
     /**
@@ -144,7 +144,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _alias : bash of alias
      */
-    function setAlias(bytes32 bondhash, bytes32 _alias) external isOwnerOrController(bondhash) {
+    function setAlias(bytes32 bondhash, bytes32 _alias) external isCationOrController(bondhash) {
         Bonds[bondhash]._alias = _alias;
         emit NewAlias(bondhash, _alias);
     }
@@ -154,7 +154,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _resolver : new resolver
      */
-    function setResolver(bytes32 bondhash, address _resolver) external isOwnerOrController(bondhash) {
+    function setResolver(bytes32 bondhash, address _resolver) external isCationOrController(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewResolver(bondhash, _resolver);
     }
@@ -164,7 +164,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 bondhash, uint _expiry) external isOwnerOrController(bondhash) {
+    function setExpiry(bytes32 bondhash, uint _expiry) external isCationOrController(bondhash) {
         Bonds[bondhash]._expiry = _expiry;
         emit NewExpiry(bondhash, _expiry);
     }
@@ -174,7 +174,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _resolver : new record
      */
-    function setRecord(bytes32 bondhash, address _resolver) external isOwnerOrController(bondhash) {
+    function setRecord(bytes32 bondhash, address _resolver) external isCationOrController(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewRecord(bondhash, _resolver);
     }
@@ -190,17 +190,17 @@ abstract contract Helix2Bonds {
     }
 
     /**
-     * @dev return owner of a bond
+     * @dev return cation of a bond
      * @param bondhash hash of bond to query
-     * @return hash of owner
+     * @return hash of cation
      */
-    function owner(bytes32 bondhash) public view returns (bytes32) {
-        bytes32 __owner = Bonds[bondhash]._owner;
-        address _owner = NAMES.owner(__owner);
-        if (_owner == address(this)) {
+    function cation(bytes32 bondhash) public view returns (bytes32) {
+        bytes32 __cation = Bonds[bondhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        if (_cation == address(this)) {
             return roothash;
         }
-        return __owner;
+        return __cation;
     }
 
     /**
@@ -214,13 +214,23 @@ abstract contract Helix2Bonds {
     }
 
     /**
-     * @dev return target of a bond
+     * @dev return anion of a bond
      * @param bondhash hash of bond to query
-     * @return hash of target
+     * @return hash of anion
      */
-    function target(bytes32 bondhash) public view returns (bytes32) {
-        bytes32 _target = Bonds[bondhash]._target;
-        return _target;
+    function anion(bytes32 bondhash) public view returns (bytes32) {
+        bytes32 _anion = Bonds[bondhash]._anion;
+        return _anion;
+    }
+
+    /**
+     * @dev shows mutuality state of a bond
+     * @param bondhash hash of bond to query
+     * @return mutuality state of the bond
+     */
+    function secure(bytes32 bondhash) public view returns (bool) {
+        bool _secure = Bonds[bondhash]._secure;
+        return _secure;
     }
 
     /**
@@ -249,18 +259,18 @@ abstract contract Helix2Bonds {
      * @return true or false
      */
     function recordExists(bytes32 bondhash) public view returns (bool) {
-        return NAMES.owner(Bonds[bondhash]._owner) != address(0x0);
+        return NAMES.owner(Bonds[bondhash]._cation) != address(0x0);
     }
 
     /**
      * @dev check if an address is set as operator
-     * @param _owner owner of bond to query
+     * @param _cation cation of bond to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(bytes32 _owner, address operator) external view returns (bool) {
-        address __owner = NAMES.owner(_owner);
-        return Operators[__owner][operator];
+    function isApprovedForAll(bytes32 _cation, address operator) external view returns (bool) {
+        address __cation = NAMES.owner(_cation);
+        return Operators[__cation][operator];
     }
 
     /**

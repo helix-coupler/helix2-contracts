@@ -23,8 +23,8 @@ contract PolyculeRegistrar is ERC721 {
     string public constant symbol = "HPS";
 
     /// @dev : Helix2 Polycule events
-    event NewPolycule(bytes32 indexed polyculehash, bytes32 owner);
-    event NewOwner(bytes32 indexed polyculehash, bytes32 owner);
+    event NewPolycule(bytes32 indexed polyculehash, bytes32 cation);
+    event NewCation(bytes32 indexed polyculehash, bytes32 cation);
     event NewExpiry(bytes32 indexed polyculehash, uint expiry);
     event NewRecord(bytes32 indexed polyculehash, address resolver);
     event NewResolver(bytes32 indexed polyculehash, address resolver);
@@ -51,8 +51,8 @@ contract PolyculeRegistrar is ERC721 {
      * @param label : label of polycule
      */
     modifier isNew(string memory label) {
-        address owner = NAMES.owner(
-            POLYCULES.owner(
+        address cation = NAMES.owner(
+            POLYCULES.cation(
                 keccak256(
                     abi.encodePacked(
                         roothash[3], 
@@ -61,7 +61,7 @@ contract PolyculeRegistrar is ERC721 {
                 )
             )
         );
-        require(owner == address(0x0), "POLYCULE_EXISTS");
+        require(cation == address(0x0), "POLYCULE_EXISTS");
         _;
     }
 
@@ -96,11 +96,11 @@ contract PolyculeRegistrar is ERC721 {
      * @dev : verify ownership of polycule
      * @param polyculehash : hash of polycule
      */
-    modifier onlyOwner(bytes32 polyculehash) {
-        address owner = NAMES.owner(
-            POLYCULES.owner(polyculehash)
+    modifier onlyCation(bytes32 polyculehash) {
+        address cation = NAMES.owner(
+            POLYCULES.cation(polyculehash)
         );
-        require(owner == msg.sender || Operators[owner][msg.sender], "NOT_OWNER");
+        require(cation == msg.sender || Operators[cation][msg.sender], "NOT_OWNER");
         _;
     }
 
@@ -123,14 +123,14 @@ contract PolyculeRegistrar is ERC721 {
     /**
      * @dev registers a new polycule
      * @param label : label of polycule without suffix (maxLength = 32)
-     * @param owner : owner to set for new polycule
+     * @param cation : cation to set for new polycule
      * @param lifespan : duration of registration
      * @return hash of new polycule
      */
     function newPolycule(
         string memory label, 
-        bytes32 owner, 
-        bytes32[] calldata target,
+        bytes32 cation, 
+        bytes32[] calldata anion,
         uint lifespan
     ) external
       payable 
@@ -139,20 +139,20 @@ contract PolyculeRegistrar is ERC721 {
       isNotExpired(label) 
       returns(bytes32) 
     {
-        address _owner = NAMES.owner(owner);
+        address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
         require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 polyculehash = keccak256(abi.encodePacked(roothash[3], keccak256(abi.encodePacked(label))));
-        POLYCULES.setOwner(polyculehash, owner);                        /// set new owner
-        POLYCULES.setTarget(polyculehash, target);                      /// set targets (= to)
+        POLYCULES.setCation(polyculehash, cation);                      /// set new cation
+        POLYCULES.setAnion(polyculehash, anion);                        /// set anions (= to)
         POLYCULES.setExpiry(polyculehash, block.timestamp + lifespan);  /// set new expiry
-        POLYCULES.setController(polyculehash, _owner);                  /// set new controller
+        POLYCULES.setController(polyculehash, _cation);                 /// set new controller
         POLYCULES.setResolver(polyculehash, defaultResolver);           /// set new resolver
-        _ownerOf[uint256(polyculehash)] = _owner; // change ownership record
-        unchecked {                               // update balances
-            _balanceOf[_owner]++;
+        _ownerOf[uint256(polyculehash)] = _cation; // change ownership record
+        unchecked {                                // update balances
+            _balanceOf[_cation]++;
         }
-        emit NewPolycule(polyculehash, owner);
+        emit NewPolycule(polyculehash, cation);
         return polyculehash;
     }
 

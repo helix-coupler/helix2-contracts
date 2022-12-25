@@ -22,6 +22,44 @@
     {
       "inputs": [
         {
+          "internalType": "bytes32",
+          "name": "polyculehash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "anion",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "polyculehash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "cation",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "newDev",
           "type": "address"
@@ -74,7 +112,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "owner",
+          "name": "cation",
           "type": "address"
         },
         {
@@ -89,25 +127,6 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "polyculehash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "owner",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
@@ -191,6 +210,24 @@
     {
       "inputs": [
         {
+          "internalType": "bytes32",
+          "name": "polyculehash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "anion",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "setAnion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "controller",
           "type": "address"
@@ -202,6 +239,24 @@
         }
       ],
       "name": "setApprovalForAll",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "polyculehash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "cation",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setCation",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -238,24 +293,6 @@
         }
       ],
       "name": "setExpiry",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "polyculehash",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "owner",
-          "type": "bytes32"
-        }
-      ],
-      "name": "setOwner",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -313,43 +350,6 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "polyculehash",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32[]",
-          "name": "target",
-          "type": "bytes32[]"
-        }
-      ],
-      "name": "setTarget",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "polyculehash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "target",
-      "outputs": [
-        {
-          "internalType": "bytes32[]",
-          "name": "",
-          "type": "bytes32[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
     }
   ],
   "bytecode": {
@@ -364,26 +364,26 @@
   },
   "methodIdentifiers": {
     "_alias(bytes32)": "3af550b0",
+    "anion(bytes32)": "0e68b116",
+    "cation(bytes32)": "f61ccd53",
     "changeDev(address)": "88a8c95c",
     "controller(bytes32)": "dbd4e021",
     "expiry(bytes32)": "d2ec5fca",
     "isApprovedForAll(address,address)": "e985e9c5",
-    "owner(bytes32)": "02571be3",
     "recordExists(bytes32)": "f79fe538",
     "resolver(bytes32)": "0178b8bf",
     "secure(bytes32)": "3ba5e7a7",
     "setAlias(bytes32,bytes32)": "1f06e91c",
+    "setAnion(bytes32,bytes32[])": "c74c0372",
     "setApprovalForAll(address,bool)": "a22cb465",
+    "setCation(bytes32,bytes32)": "8146970a",
     "setController(bytes32,address)": "d3156905",
     "setExpiry(bytes32,uint256)": "39de6469",
-    "setOwner(bytes32,bytes32)": "1fb63bb6",
     "setRecord(bytes32,address)": "d9b76ed4",
     "setResolver(bytes32,address)": "1896f70a",
-    "setSecure(bytes32,bool[])": "8748045b",
-    "setTarget(bytes32,bytes32[])": "3e0f548e",
-    "target(bytes32)": "90c9d877"
+    "setSecure(bytes32,bool[])": "8748045b"
   },
-  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"_alias\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newDev\",\"type\":\"address\"}],\"name\":\"changeDev\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"controller\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"expiry\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"isApprovedForAll\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"recordExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"secure\",\"outputs\":[{\"internalType\":\"bool[]\",\"name\":\"\",\"type\":\"bool[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_alias\",\"type\":\"bytes32\"}],\"name\":\"setAlias\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"approved\",\"type\":\"bool\"}],\"name\":\"setApprovalForAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\"}],\"name\":\"setExpiry\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"owner\",\"type\":\"bytes32\"}],\"name\":\"setOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setRecord\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bool[]\",\"name\":\"secure\",\"type\":\"bool[]\"}],\"name\":\"setSecure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"target\",\"type\":\"bytes32[]\"}],\"name\":\"setTarget\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"target\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Helix2 Polycules Interface\",\"kind\":\"dev\",\"methods\":{\"setOwner(bytes32,bytes32)\":{\"details\":\": HELIX2 Polycules external functions\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"setOwner(bytes32,bytes32)\":{\"notice\":\"REGISTRY\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/Interface/iPolycule.sol\":\"iPOLYCULE\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":6666},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/Interface/iPolycule.sol\":{\"keccak256\":\"0xee0254c80e31e09061cce4e9d6f234e063b5f3bc46e044b6843b022f0d48f8b5\",\"license\":\"WTFPL.ETH\",\"urls\":[\"bzz-raw://c65242cd2be9a25d2b44c5dfe055c436aac61e6adec62db50169cade801673b0\",\"dweb:/ipfs/QmYnzEnc1MZxVfs6kU4QpfdF7i6jPkabg2oEkPP6huTzPA\"]}},\"version\":1}",
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.16+commit.07a7930e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"_alias\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"anion\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"cation\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newDev\",\"type\":\"address\"}],\"name\":\"changeDev\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"controller\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"expiry\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"cation\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"isApprovedForAll\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"recordExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"resolver\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"}],\"name\":\"secure\",\"outputs\":[{\"internalType\":\"bool[]\",\"name\":\"\",\"type\":\"bool[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_alias\",\"type\":\"bytes32\"}],\"name\":\"setAlias\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"anion\",\"type\":\"bytes32[]\"}],\"name\":\"setAnion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"approved\",\"type\":\"bool\"}],\"name\":\"setApprovalForAll\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"cation\",\"type\":\"bytes32\"}],\"name\":\"setCation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\"}],\"name\":\"setExpiry\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setRecord\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"resolver\",\"type\":\"address\"}],\"name\":\"setResolver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"polyculehash\",\"type\":\"bytes32\"},{\"internalType\":\"bool[]\",\"name\":\"secure\",\"type\":\"bool[]\"}],\"name\":\"setSecure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Helix2 Polycules Interface\",\"kind\":\"dev\",\"methods\":{\"setCation(bytes32,bytes32)\":{\"details\":\": HELIX2 Polycules external functions\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"setCation(bytes32,bytes32)\":{\"notice\":\"REGISTRY\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/Interface/iPolycule.sol\":\"iPOLYCULE\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":6666},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/Interface/iPolycule.sol\":{\"keccak256\":\"0x8b23963b6e58d57b1270208b5be41ca284c4b7e7772c3f425bc92966c35acf72\",\"license\":\"WTFPL.ETH\",\"urls\":[\"bzz-raw://46b551b76ab6f1f7df38061a3ae1be86eb37723c4861c4a1589971f566a4d630\",\"dweb:/ipfs/QmcXboM2pokhJ9bU7pd8LttE4vcKYzBkXjq6fzpibVJwQM\"]}},\"version\":1}",
   "metadata": {
     "compiler": {
       "version": "0.8.16+commit.07a7930e"
@@ -402,6 +402,44 @@
           "stateMutability": "view",
           "type": "function",
           "name": "_alias",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "polyculehash",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "anion",
+          "outputs": [
+            {
+              "internalType": "bytes32[]",
+              "name": "",
+              "type": "bytes32[]"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "polyculehash",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "cation",
           "outputs": [
             {
               "internalType": "bytes32",
@@ -464,7 +502,7 @@
           "inputs": [
             {
               "internalType": "address",
-              "name": "owner",
+              "name": "cation",
               "type": "address"
             },
             {
@@ -481,25 +519,6 @@
               "internalType": "bool",
               "name": "",
               "type": "bool"
-            }
-          ]
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "polyculehash",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function",
-          "name": "owner",
-          "outputs": [
-            {
-              "internalType": "bytes32",
-              "name": "",
-              "type": "bytes32"
             }
           ]
         },
@@ -580,6 +599,23 @@
         {
           "inputs": [
             {
+              "internalType": "bytes32",
+              "name": "polyculehash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "anion",
+              "type": "bytes32[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setAnion"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "address",
               "name": "controller",
               "type": "address"
@@ -593,6 +629,23 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setApprovalForAll"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "polyculehash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "cation",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setCation"
         },
         {
           "inputs": [
@@ -627,23 +680,6 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setExpiry"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "polyculehash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "owner",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function",
-          "name": "setOwner"
         },
         {
           "inputs": [
@@ -695,48 +731,12 @@
           "stateMutability": "nonpayable",
           "type": "function",
           "name": "setSecure"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "polyculehash",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32[]",
-              "name": "target",
-              "type": "bytes32[]"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function",
-          "name": "setTarget"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "polyculehash",
-              "type": "bytes32"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function",
-          "name": "target",
-          "outputs": [
-            {
-              "internalType": "bytes32[]",
-              "name": "",
-              "type": "bytes32[]"
-            }
-          ]
         }
       ],
       "devdoc": {
         "kind": "dev",
         "methods": {
-          "setOwner(bytes32,bytes32)": {
+          "setCation(bytes32,bytes32)": {
             "details": ": HELIX2 Polycules external functions"
           }
         },
@@ -745,7 +745,7 @@
       "userdoc": {
         "kind": "user",
         "methods": {
-          "setOwner(bytes32,bytes32)": {
+          "setCation(bytes32,bytes32)": {
             "notice": "REGISTRY"
           }
         },
@@ -771,10 +771,10 @@
     },
     "sources": {
       "src/Interface/iPolycule.sol": {
-        "keccak256": "0xee0254c80e31e09061cce4e9d6f234e063b5f3bc46e044b6843b022f0d48f8b5",
+        "keccak256": "0x8b23963b6e58d57b1270208b5be41ca284c4b7e7772c3f425bc92966c35acf72",
         "urls": [
-          "bzz-raw://c65242cd2be9a25d2b44c5dfe055c436aac61e6adec62db50169cade801673b0",
-          "dweb:/ipfs/QmYnzEnc1MZxVfs6kU4QpfdF7i6jPkabg2oEkPP6huTzPA"
+          "bzz-raw://46b551b76ab6f1f7df38061a3ae1be86eb37723c4861c4a1589971f566a4d630",
+          "dweb:/ipfs/QmcXboM2pokhJ9bU7pd8LttE4vcKYzBkXjq6fzpibVJwQM"
         ],
         "license": "WTFPL.ETH"
       }
@@ -790,7 +790,7 @@
       ]
     },
     "nodeType": "SourceUnit",
-    "src": "37:1655:9",
+    "src": "37:1656:9",
     "nodes": [
       {
         "id": 1605,
@@ -810,12 +810,12 @@
       {
         "id": 1745,
         "nodeType": "ContractDefinition",
-        "src": "112:1580:9",
+        "src": "112:1581:9",
         "nodes": [
           {
             "id": 1614,
             "nodeType": "FunctionDefinition",
-            "src": "248:64:9",
+            "src": "248:66:9",
             "nodes": [],
             "documentation": {
               "id": 1607,
@@ -823,12 +823,12 @@
               "src": "157:63:9",
               "text": "REGISTRY\n @dev : HELIX2 Polycules external functions"
             },
-            "functionSelector": "1fb63bb6",
+            "functionSelector": "8146970a",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "setOwner",
-            "nameLocation": "257:8:9",
+            "name": "setCation",
+            "nameLocation": "257:9:9",
             "parameters": {
               "id": 1612,
               "nodeType": "ParameterList",
@@ -838,10 +838,10 @@
                   "id": 1609,
                   "mutability": "mutable",
                   "name": "polyculehash",
-                  "nameLocation": "274:12:9",
+                  "nameLocation": "275:12:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1614,
-                  "src": "266:20:9",
+                  "src": "267:20:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -852,7 +852,7 @@
                     "id": 1608,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "266:7:9",
+                    "src": "267:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -864,11 +864,11 @@
                   "constant": false,
                   "id": 1611,
                   "mutability": "mutable",
-                  "name": "owner",
-                  "nameLocation": "296:5:9",
+                  "name": "cation",
+                  "nameLocation": "297:6:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1614,
-                  "src": "288:13:9",
+                  "src": "289:14:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -879,7 +879,7 @@
                     "id": 1610,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "288:7:9",
+                    "src": "289:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -888,13 +888,13 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "265:37:9"
+              "src": "266:38:9"
             },
             "returnParameters": {
               "id": 1613,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "311:0:9"
+              "src": "313:0:9"
             },
             "scope": 1745,
             "stateMutability": "nonpayable",
@@ -904,14 +904,14 @@
           {
             "id": 1621,
             "nodeType": "FunctionDefinition",
-            "src": "317:74:9",
+            "src": "319:74:9",
             "nodes": [],
             "functionSelector": "d3156905",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setController",
-            "nameLocation": "326:13:9",
+            "nameLocation": "328:13:9",
             "parameters": {
               "id": 1619,
               "nodeType": "ParameterList",
@@ -921,10 +921,10 @@
                   "id": 1616,
                   "mutability": "mutable",
                   "name": "polyculehash",
-                  "nameLocation": "348:12:9",
+                  "nameLocation": "350:12:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1621,
-                  "src": "340:20:9",
+                  "src": "342:20:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -935,7 +935,7 @@
                     "id": 1615,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "340:7:9",
+                    "src": "342:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -948,10 +948,10 @@
                   "id": 1618,
                   "mutability": "mutable",
                   "name": "controller",
-                  "nameLocation": "370:10:9",
+                  "nameLocation": "372:10:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1621,
-                  "src": "362:18:9",
+                  "src": "364:18:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -962,7 +962,7 @@
                     "id": 1617,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "362:7:9",
+                    "src": "364:7:9",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -972,13 +972,13 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "339:42:9"
+              "src": "341:42:9"
             },
             "returnParameters": {
               "id": 1620,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "390:0:9"
+              "src": "392:0:9"
             },
             "scope": 1745,
             "stateMutability": "nonpayable",
@@ -988,14 +988,14 @@
           {
             "id": 1629,
             "nodeType": "FunctionDefinition",
-            "src": "396:77:9",
+            "src": "398:75:9",
             "nodes": [],
-            "functionSelector": "3e0f548e",
+            "functionSelector": "c74c0372",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "setTarget",
-            "nameLocation": "405:9:9",
+            "name": "setAnion",
+            "nameLocation": "407:8:9",
             "parameters": {
               "id": 1627,
               "nodeType": "ParameterList",
@@ -1005,10 +1005,10 @@
                   "id": 1623,
                   "mutability": "mutable",
                   "name": "polyculehash",
-                  "nameLocation": "423:12:9",
+                  "nameLocation": "424:12:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1629,
-                  "src": "415:20:9",
+                  "src": "416:20:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1019,7 +1019,7 @@
                     "id": 1622,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "415:7:9",
+                    "src": "416:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1031,11 +1031,11 @@
                   "constant": false,
                   "id": 1626,
                   "mutability": "mutable",
-                  "name": "target",
-                  "nameLocation": "456:6:9",
+                  "name": "anion",
+                  "nameLocation": "457:5:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1629,
-                  "src": "437:25:9",
+                  "src": "438:24:9",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1047,7 +1047,7 @@
                       "id": 1624,
                       "name": "bytes32",
                       "nodeType": "ElementaryTypeName",
-                      "src": "437:7:9",
+                      "src": "438:7:9",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bytes32",
                         "typeString": "bytes32"
@@ -1055,7 +1055,7 @@
                     },
                     "id": 1625,
                     "nodeType": "ArrayTypeName",
-                    "src": "437:9:9",
+                    "src": "438:9:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_bytes32_$dyn_storage_ptr",
                       "typeString": "bytes32[]"
@@ -1064,7 +1064,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "414:49:9"
+              "src": "415:48:9"
             },
             "returnParameters": {
               "id": 1628,
@@ -1647,14 +1647,14 @@
           {
             "id": 1684,
             "nodeType": "FunctionDefinition",
-            "src": "989:68:9",
+            "src": "989:69:9",
             "nodes": [],
-            "functionSelector": "02571be3",
+            "functionSelector": "f61ccd53",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "owner",
-            "nameLocation": "998:5:9",
+            "name": "cation",
+            "nameLocation": "998:6:9",
             "parameters": {
               "id": 1680,
               "nodeType": "ParameterList",
@@ -1664,10 +1664,10 @@
                   "id": 1679,
                   "mutability": "mutable",
                   "name": "polyculehash",
-                  "nameLocation": "1012:12:9",
+                  "nameLocation": "1013:12:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1684,
-                  "src": "1004:20:9",
+                  "src": "1005:20:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1678,7 +1678,7 @@
                     "id": 1678,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1004:7:9",
+                    "src": "1005:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1687,7 +1687,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1003:22:9"
+              "src": "1004:22:9"
             },
             "returnParameters": {
               "id": 1683,
@@ -1701,7 +1701,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1684,
-                  "src": "1048:7:9",
+                  "src": "1049:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1712,7 +1712,7 @@
                     "id": 1681,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1048:7:9",
+                    "src": "1049:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1721,7 +1721,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1047:9:9"
+              "src": "1048:9:9"
             },
             "scope": 1745,
             "stateMutability": "view",
@@ -1731,14 +1731,14 @@
           {
             "id": 1691,
             "nodeType": "FunctionDefinition",
-            "src": "1062:73:9",
+            "src": "1063:73:9",
             "nodes": [],
             "functionSelector": "dbd4e021",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "controller",
-            "nameLocation": "1071:10:9",
+            "nameLocation": "1072:10:9",
             "parameters": {
               "id": 1687,
               "nodeType": "ParameterList",
@@ -1748,10 +1748,10 @@
                   "id": 1686,
                   "mutability": "mutable",
                   "name": "polyculehash",
-                  "nameLocation": "1090:12:9",
+                  "nameLocation": "1091:12:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1691,
-                  "src": "1082:20:9",
+                  "src": "1083:20:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1762,7 +1762,7 @@
                     "id": 1685,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1082:7:9",
+                    "src": "1083:7:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
@@ -1771,7 +1771,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1081:22:9"
+              "src": "1082:22:9"
             },
             "returnParameters": {
               "id": 1690,
@@ -1785,7 +1785,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1691,
-                  "src": "1126:7:9",
+                  "src": "1127:7:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1796,7 +1796,7 @@
                     "id": 1688,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1126:7:9",
+                    "src": "1127:7:9",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1806,7 +1806,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1125:9:9"
+              "src": "1126:9:9"
             },
             "scope": 1745,
             "stateMutability": "view",
@@ -1816,14 +1816,14 @@
           {
             "id": 1699,
             "nodeType": "FunctionDefinition",
-            "src": "1140:78:9",
+            "src": "1141:77:9",
             "nodes": [],
-            "functionSelector": "90c9d877",
+            "functionSelector": "0e68b116",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "target",
-            "nameLocation": "1149:6:9",
+            "name": "anion",
+            "nameLocation": "1150:5:9",
             "parameters": {
               "id": 1694,
               "nodeType": "ParameterList",
@@ -2339,7 +2339,7 @@
           {
             "id": 1744,
             "nodeType": "FunctionDefinition",
-            "src": "1601:89:9",
+            "src": "1601:90:9",
             "nodes": [],
             "functionSelector": "e985e9c5",
             "implemented": false,
@@ -2355,11 +2355,11 @@
                   "constant": false,
                   "id": 1737,
                   "mutability": "mutable",
-                  "name": "owner",
-                  "nameLocation": "1635:5:9",
+                  "name": "cation",
+                  "nameLocation": "1635:6:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1744,
-                  "src": "1627:13:9",
+                  "src": "1627:14:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2384,10 +2384,10 @@
                   "id": 1739,
                   "mutability": "mutable",
                   "name": "controller",
-                  "nameLocation": "1650:10:9",
+                  "nameLocation": "1651:10:9",
                   "nodeType": "VariableDeclaration",
                   "scope": 1744,
-                  "src": "1642:18:9",
+                  "src": "1643:18:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2398,7 +2398,7 @@
                     "id": 1738,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1642:7:9",
+                    "src": "1643:7:9",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2408,7 +2408,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1626:35:9"
+              "src": "1626:36:9"
             },
             "returnParameters": {
               "id": 1743,
@@ -2422,7 +2422,7 @@
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
                   "scope": 1744,
-                  "src": "1684:4:9",
+                  "src": "1685:4:9",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2433,7 +2433,7 @@
                     "id": 1741,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1684:4:9",
+                    "src": "1685:4:9",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -2442,7 +2442,7 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1683:6:9"
+              "src": "1684:6:9"
             },
             "scope": 1745,
             "stateMutability": "view",

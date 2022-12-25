@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: WTFPL v6.9
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Interface/iResolver.sol";
+import "src/Interface/iNameResolver.sol";
 import "src/Interface/iENS.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iERC721.sol";
@@ -93,11 +93,11 @@ contract NameResolver is NameResolverBase {
 
     constructor(address _helix2) {
         HELIX2 = iHELIX2(_helix2);
-        supportsInterface[iResolver.addr.selector] = true;
-        supportsInterface[iResolver.addr2.selector] = true;
-        supportsInterface[iResolver.contenthash.selector] = true;
-        supportsInterface[iResolver.pubkey.selector] = true;
-        supportsInterface[iResolver.text.selector] = true;
+        supportsInterface[iNameResolver.addr.selector] = true;
+        supportsInterface[iNameResolver.addr2.selector] = true;
+        supportsInterface[iNameResolver.contenthash.selector] = true;
+        supportsInterface[iNameResolver.pubkey.selector] = true;
+        supportsInterface[iNameResolver.text.selector] = true;
         _contenthash[bytes32(0)] =
             hex"e5010172002408011220a7448dcfc00e746c22e238de5c1e3b6fb97bae0949e47741b4e0ae8e929abd4f";
     }
