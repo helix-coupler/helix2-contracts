@@ -16,9 +16,21 @@ abstract contract ERC721 is Base {
     error CannotBurn();
     error ERC721IncompatibleReceiver(address to);
     error Unauthorized(address operator, address owner, uint256 tokenID);
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenID);
-    event Approval(address indexed owner, address indexed spender, uint256 indexed tokenID);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenID
+    );
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 indexed tokenID
+    );
+    event ApprovalForAll(
+        address indexed owner,
+        address indexed operator,
+        bool approved
+    );
 
     /**
      * @dev : returns owner of a token ID
@@ -44,7 +56,10 @@ abstract contract ERC721 is Base {
      * @param tokenID : token ID
      */
     function approve(address controller, uint256 tokenID) external payable {
-        if (msg.sender != _ownerOf[tokenID] || !isApprovedForAll[_ownerOf[tokenID]][msg.sender]) {
+        if (
+            msg.sender != _ownerOf[tokenID] ||
+            !isApprovedForAll[_ownerOf[tokenID]][msg.sender]
+        ) {
             revert Unauthorized(msg.sender, _ownerOf[tokenID], tokenID);
         }
         _approved[tokenID] = controller;
@@ -67,8 +82,12 @@ abstract contract ERC721 is Base {
      * @param to : to address
      * @param tokenID : token
      */
-    function transferFrom(address from, address to, uint256 tokenID) external payable {
-        _transfer(from, to, tokenID, "");   // standard fallback
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenID
+    ) external payable {
+        _transfer(from, to, tokenID, ""); // standard fallback
     }
 
     /**
@@ -77,18 +96,27 @@ abstract contract ERC721 is Base {
      * @param to : to address
      * @param tokenID : token
      */
-    function safeTransferFrom(address from, address to, uint256 tokenID) external payable {
-        _transfer(from, to, tokenID, "");   // standard fallback
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenID
+    ) external payable {
+        _transfer(from, to, tokenID, ""); // standard fallback
     }
 
-     /**
+    /**
      * @dev : safeTransferFrom() function with extra data
      * @param from : from address
      * @param to : to address
      * @param tokenID : token
      * @param data : extra data
      */
-    function safeTransferFrom(address from, address to, uint256 tokenID, bytes memory data) external payable {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenID,
+        bytes memory data
+    ) external payable {
         _transfer(from, to, tokenID, data); // standard fallback
     }
 
@@ -98,7 +126,12 @@ abstract contract ERC721 is Base {
      * @param to : address of receiver
      * @param tokenID : token
      */
-    function _transfer(address from, address to, uint256 tokenID, bytes memory data) internal {
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenID,
+        bytes memory data
+    ) internal {
         // cannot burn
         if (to == address(0)) {
             revert CannotBurn();
@@ -108,19 +141,31 @@ abstract contract ERC721 is Base {
             revert Unauthorized(_ownerOf[tokenID], from, tokenID);
         }
         // check permissions of <sender>
-        if (msg.sender != _ownerOf[tokenID] && !isApprovedForAll[from][msg.sender] && msg.sender != _approved[tokenID]) {
+        if (
+            msg.sender != _ownerOf[tokenID] &&
+            !isApprovedForAll[from][msg.sender] &&
+            msg.sender != _approved[tokenID]
+        ) {
             revert Unauthorized(msg.sender, from, tokenID);
         }
 
         delete _approved[tokenID]; // reset approved
-        _ownerOf[tokenID] = to;    // change ownership
-        unchecked {                // update balances
+        _ownerOf[tokenID] = to; // change ownership
+        unchecked {
+            // update balances
             _balanceOf[from]--;
             _balanceOf[to]++;
         }
         emit Transfer(from, to, tokenID);
         if (to.code.length > 0) {
-            try iERC721Receiver(to).onERC721Received(msg.sender, from, tokenID, data) returns (bytes4 retval) {
+            try
+                iERC721Receiver(to).onERC721Received(
+                    msg.sender,
+                    from,
+                    tokenID,
+                    data
+                )
+            returns (bytes4 retval) {
                 if (retval != iERC721Receiver.onERC721Received.selector) {
                     revert ERC721IncompatibleReceiver(to);
                 }

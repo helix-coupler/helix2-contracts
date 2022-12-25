@@ -33,10 +33,9 @@ contract BondRegistrar is ERC721 {
     event NewController(bytes32 indexed bondhash, address controller);
 
     /// Constants
-    mapping (address => mapping(address => bool)) Operators;
-    uint256 public defaultLifespan = 7_776_000_000;    // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[1];  // default base price
-
+    mapping(address => mapping(address => bool)) Operators;
+    uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
+    uint256 public basePrice = HELIX2.getPrices()[1]; // default base price
 
     /// Bond Registry
     iBOND public BONDS = iBOND(address(0x0));
@@ -54,14 +53,8 @@ contract BondRegistrar is ERC721 {
      * @param _alias : alias of bond
      */
     modifier isLegal(string memory _alias) {
-        require(
-            bytes(_alias).length < sizes[1], 
-            'ILLEGAL_LABEL'
-        ); /// check for oversized label <<< SIZE LIMIT
-        require(
-            !_alias.existsIn4(illegalBlocks), 
-            'ILLEGAL_CHARS'
-        ); /// check for forbidden characters
+        require(bytes(_alias).length < sizes[1], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -70,15 +63,10 @@ contract BondRegistrar is ERC721 {
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        address owner = NAMES.owner(BONDS.cation(bondhash));
         require(
-            block.timestamp < BONDS.expiry(bondhash), 
-            "BOND_EXPIRED"
-        ); // expiry check
-        address owner = NAMES.owner(
-            BONDS.cation(bondhash)
-        );
-        require(
-            owner == msg.sender || Operators[owner][msg.sender], 
+            owner == msg.sender || Operators[owner][msg.sender],
             "NOT_OWNER"
         );
         _;
@@ -108,41 +96,33 @@ contract BondRegistrar is ERC721 {
      * @param lifespan : duration of registration
      * @return hash of new bond
      */
-    function newBond( 
+    function newBond(
         string memory _alias,
-        bytes32 cation, 
+        bytes32 cation,
         bytes32 anion,
         uint lifespan
-    ) external 
-        payable 
-        isLegal(_alias)
-        returns(bytes32) 
-    {
+    ) external payable isLegal(_alias) returns (bytes32) {
         address _cation = NAMES.owner(cation);
-        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
-        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
+        require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
         bytes32 bondhash = keccak256(
-            abi.encodePacked(
-                cation, 
-                roothash[1],
-                aliashash
-            )
+            abi.encodePacked(cation, roothash[1], aliashash)
         );
-        BONDS.setCation(bondhash, cation);                      /// set new cation (= from)
-        BONDS.setAnion(bondhash, anion);                        /// set anion (= to)
-        BONDS.setExpiry(bondhash, block.timestamp + lifespan);  /// set new expiry
-        BONDS.setController(bondhash, _cation);                 /// set new controller
-        BONDS.setResolver(bondhash, defaultResolver);           /// set new resolver
-        BONDS.setAlias(bondhash, aliashash);                    /// set new alias
-        BONDS.setSecure(bondhash, false);                       /// set new secure flag
-        BONDS.unhookAll(bondhash);                              /// reset hooks
-        _ownerOf[uint256(bondhash)] = _cation;                  /// change ownership record
-        unchecked {                                             /// update balances
+        BONDS.setCation(bondhash, cation); /// set new cation (= from)
+        BONDS.setAnion(bondhash, anion); /// set anion (= to)
+        BONDS.setExpiry(bondhash, block.timestamp + lifespan); /// set new expiry
+        BONDS.setController(bondhash, _cation); /// set new controller
+        BONDS.setResolver(bondhash, defaultResolver); /// set new resolver
+        BONDS.setAlias(bondhash, aliashash); /// set new alias
+        BONDS.setSecure(bondhash, false); /// set new secure flag
+        BONDS.unhookAll(bondhash); /// reset hooks
+        _ownerOf[uint256(bondhash)] = _cation; /// change ownership record
+        unchecked {
+            /// update balances
             _balanceOf[_cation]++;
         }
         emit NewBond(bondhash, cation);
         return bondhash;
     }
-
 }

@@ -31,9 +31,9 @@ contract NameRegistrar is ERC721 {
     event NewResolver(bytes32 indexed namehash, address resolver);
 
     /// Constants
-    mapping (address => mapping(address => bool)) Operators;
-    uint256 public defaultLifespan = 7_776_000_000;    // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[0];  // default base price
+    mapping(address => mapping(address => bool)) Operators;
+    uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
+    uint256 public basePrice = HELIX2.getPrices()[0]; // default base price
 
     /// Name Registry
     iNAME public NAMES;
@@ -51,14 +51,8 @@ contract NameRegistrar is ERC721 {
      * @param label : label of name
      */
     modifier isLegal(string memory label) {
-        require(
-            bytes(label).length < sizes[0], 
-            'ILLEGAL_LABEL'
-        ); /// check for oversized label <<< SIZE LIMIT
-        require(
-            !label.existsIn4(illegalBlocks), 
-            'ILLEGAL_CHARS'
-        ); /// check for forbidden characters
+        require(bytes(label).length < sizes[0], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(!label.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -67,18 +61,15 @@ contract NameRegistrar is ERC721 {
      * @param label : label of name
      */
     modifier isAvailable(string memory label) {
-        uint _expiry =  NAMES.expiry(
+        uint _expiry = NAMES.expiry(
             keccak256(
                 abi.encodePacked(
-                    roothash[0], 
+                    roothash[0],
                     keccak256(abi.encodePacked(label))
                 )
             )
         );
-        require(
-            _expiry < block.timestamp, 
-            "NAME_EXISTS"
-        );
+        require(_expiry < block.timestamp, "NAME_EXISTS");
         _;
     }
 
@@ -87,12 +78,10 @@ contract NameRegistrar is ERC721 {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        require(
-            block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"
-        ); // expiry check
+        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
         address owner = NAMES.owner(namehash);
         require(
-            owner == msg.sender || Operators[owner][msg.sender], 
+            owner == msg.sender || Operators[owner][msg.sender],
             "NOT_OWNER"
         );
         _;
@@ -122,33 +111,25 @@ contract NameRegistrar is ERC721 {
      * @return hash of new name
      */
     function newName(
-        string memory label, 
-        address owner, 
+        string memory label,
+        address owner,
         uint lifespan
-    ) external 
-        payable
-        isLegal(label)
-        isAvailable(label)
-        returns(bytes32) 
-    {
-        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
-        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
+    ) external payable isLegal(label) isAvailable(label) returns (bytes32) {
+        require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
+        require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 namehash = keccak256(
-            abi.encodePacked(
-                keccak256(abi.encodePacked(label)),
-                roothash[0]
-            )
+            abi.encodePacked(keccak256(abi.encodePacked(label)), roothash[0])
         );
-        NAMES.setOwner(namehash, owner);                        /// set new owner
-        NAMES.setExpiry(namehash, block.timestamp + lifespan);  /// set new expiry
-        NAMES.setController(namehash, owner);                   /// set new controller
-        NAMES.setResolver(namehash, defaultResolver);           /// set new resolver
+        NAMES.setOwner(namehash, owner); /// set new owner
+        NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
+        NAMES.setController(namehash, owner); /// set new controller
+        NAMES.setResolver(namehash, defaultResolver); /// set new resolver
         _ownerOf[uint256(namehash)] = owner; // change ownership record
-        unchecked {                          // update balances
+        unchecked {
+            // update balances
             _balanceOf[owner]++;
         }
         emit NewName(namehash, owner);
         return namehash;
     }
-
 }

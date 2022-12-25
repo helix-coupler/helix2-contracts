@@ -28,29 +28,33 @@ abstract contract Helix2Names {
     event NewExpiry(bytes32 indexed namehash, uint expiry);
     event NewRecord(bytes32 indexed namehash, address resolver);
     event NewResolver(bytes32 indexed namehash, address resolver);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event ApprovalForAll(
+        address indexed owner,
+        address indexed operator,
+        bool approved
+    );
 
     /// Dev
     address public Dev;
 
     /// @dev : Name roothash
     bytes32 public roothash = HELIX2.getRoothash()[0];
-    uint256 public basePrice = HELIX2.getPrices()[0]; 
+    uint256 public basePrice = HELIX2.getPrices()[0];
 
     /// @dev : Helix2 Name struct
     struct Name {
-        address _owner;         /// Owner of Name
-        address _resolver;      /// Resolver of Name
-        address _controller;    /// Controller of Name
-        uint _expiry;           /// Expiry of Name
+        address _owner; /// Owner of Name
+        address _resolver; /// Resolver of Name
+        address _controller; /// Controller of Name
+        uint _expiry; /// Expiry of Name
     }
-    mapping (bytes32 => Name) public Names;
-    mapping (address => mapping(address => bool)) Operators;
+    mapping(bytes32 => Name) public Names;
+    mapping(address => mapping(address => bool)) Operators;
 
     /**
-    * @dev : Initialise a new HELIX2 Names Registry
-    * @notice : grants ownership of '0x0' to contract
-    */
+     * @dev : Initialise a new HELIX2 Names Registry
+     * @notice : grants ownership of '0x0' to contract
+     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
         Names[0x0]._owner = msg.sender;
@@ -60,10 +64,7 @@ abstract contract Helix2Names {
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        require(
-            msg.sender == Dev, 
-            "NOT_DEV"
-        );
+        require(msg.sender == Dev, "NOT_DEV");
         _;
     }
 
@@ -78,26 +79,19 @@ abstract contract Helix2Names {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 namehash) {
-        require(
-            block.timestamp < Names[namehash]._expiry, 
-            "NAME_EXPIRED"
-        ); // expiry check
-        require(
-            msg.sender == Names[namehash]._controller, 
-            'NOT_CONTROLLER'
-        );
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
+        require(msg.sender == Names[namehash]._controller, "NOT_CONTROLLER");
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 namehash) {
-        require(
-            block.timestamp < Names[namehash]._expiry, 
-            "NAME_EXPIRED"
-        ); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
         address _owner = Names[namehash]._owner;
         require(
-            _owner == msg.sender || Operators[_owner][msg.sender] || msg.sender == Names[namehash]._controller, 
+            _owner == msg.sender ||
+                Operators[_owner][msg.sender] ||
+                msg.sender == Names[namehash]._controller,
             "NOT_OWNER_OR_CONTROLLER"
         );
         _;
@@ -108,10 +102,7 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      */
     modifier isNotExpired(bytes32 namehash) {
-        require(
-            block.timestamp < Names[namehash]._expiry, 
-            "NAME_EXPIRED"
-        ); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
         _;
     }
 
@@ -120,13 +111,10 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        require(
-            block.timestamp < Names[namehash]._expiry, 
-            "NAME_EXPIRED"
-        ); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
         address _owner = Names[namehash]._owner;
         require(
-            _owner == msg.sender || Operators[_owner][msg.sender], 
+            _owner == msg.sender || Operators[_owner][msg.sender],
             "NOT_OWNER"
         );
         _;
@@ -137,7 +125,10 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _owner : new owner
      */
-    function setOwner(bytes32 namehash, address _owner) external onlyOwner(namehash) {
+    function setOwner(
+        bytes32 namehash,
+        address _owner
+    ) external onlyOwner(namehash) {
         Names[namehash]._owner = _owner;
         emit NewOwner(namehash, _owner);
     }
@@ -147,7 +138,10 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _controller : new controller
      */
-    function setController(bytes32 namehash, address _controller) external isOwnerOrController(namehash) {
+    function setController(
+        bytes32 namehash,
+        address _controller
+    ) external isOwnerOrController(namehash) {
         Names[namehash]._controller = _controller;
         emit NewController(namehash, _controller);
     }
@@ -157,7 +151,10 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _resolver : new resolver
      */
-    function setResolver(bytes32 namehash, address _resolver) external isOwnerOrController(namehash) {
+    function setResolver(
+        bytes32 namehash,
+        address _resolver
+    ) external isOwnerOrController(namehash) {
         Names[namehash]._resolver = _resolver;
         emit NewResolver(namehash, _resolver);
     }
@@ -167,16 +164,13 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 namehash, uint _expiry) external payable isOwnerOrController(namehash) {
-        require(
-            _expiry > Names[namehash]._expiry,
-            "BAD_EXPIRY"
-        );
+    function setExpiry(
+        bytes32 namehash,
+        uint _expiry
+    ) external payable isOwnerOrController(namehash) {
+        require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
         uint newDuration = _expiry - Names[namehash]._expiry;
-        require(
-            msg.value >= newDuration * basePrice,
-            'INSUFFICIENT_ETHER'
-        );
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
     }
@@ -186,7 +180,10 @@ abstract contract Helix2Names {
      * @param namehash : hash of name
      * @param _resolver : new record
      */
-    function setRecord(bytes32 namehash, address _resolver) external isOwnerOrController(namehash) {
+    function setRecord(
+        bytes32 namehash,
+        address _resolver
+    ) external isOwnerOrController(namehash) {
         Names[namehash]._resolver = _resolver;
         emit NewRecord(namehash, _resolver);
     }
@@ -196,7 +193,10 @@ abstract contract Helix2Names {
      * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(address operator, bool approved) external payable {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) external payable {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -206,9 +206,11 @@ abstract contract Helix2Names {
      * @param namehash hash of name to query
      * @return address of owner
      */
-    function owner(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
+    function owner(
+        bytes32 namehash
+    ) public view isNotExpired(namehash) returns (address) {
         address addr = Names[namehash]._owner;
-        if (addr == address(this) ) {
+        if (addr == address(this)) {
             return address(0x0);
         }
         return addr;
@@ -219,7 +221,9 @@ abstract contract Helix2Names {
      * @param namehash hash of name to query
      * @return address of controller
      */
-    function controller(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
+    function controller(
+        bytes32 namehash
+    ) public view isNotExpired(namehash) returns (address) {
         address _controller = Names[namehash]._controller;
         return _controller;
     }
@@ -232,14 +236,16 @@ abstract contract Helix2Names {
     function expiry(bytes32 namehash) public view returns (uint) {
         uint _expiry = Names[namehash]._expiry;
         return _expiry;
-    }    
+    }
 
     /**
      * @dev return resolver of a name
      * @param namehash hash of name to query
      * @return address of resolver
      */
-    function resolver(bytes32 namehash) public view isNotExpired(namehash) returns (address) {
+    function resolver(
+        bytes32 namehash
+    ) public view isNotExpired(namehash) returns (address) {
         address _resolver = Names[namehash]._resolver;
         return _resolver;
     }
@@ -259,7 +265,10 @@ abstract contract Helix2Names {
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(address _owner, address operator) external view returns (bool) {
+    function isApprovedForAll(
+        address _owner,
+        address operator
+    ) external view returns (bool) {
         return Operators[_owner][operator];
     }
 
@@ -267,7 +276,7 @@ abstract contract Helix2Names {
      * @dev : withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external payable {
-        (bool ok,) = Dev.call{value: address(this).balance}("");
+        (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }
 
@@ -276,6 +285,10 @@ abstract contract Helix2Names {
      * @param token : token to release
      */
     function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+        iERC20(token).transferFrom(
+            address(this),
+            Dev,
+            iERC20(token).balanceOf(address(this))
+        );
     }
 }

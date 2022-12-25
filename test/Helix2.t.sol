@@ -5,5 +5,6 @@ import "forge-std/Test.sol";
 
 contract Helix2Test is Test {
     function setUp() public {}
-    function test()  public {}
+
+    function test() public {}
 }

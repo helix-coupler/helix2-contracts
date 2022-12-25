@@ -35,9 +35,9 @@ contract PolyculeRegistrar is ERC721 {
     event NewController(bytes32 indexed polyculehash, address controller);
 
     /// Constants
-    mapping (address => mapping(address => bool)) Operators;
-    uint256 public defaultLifespan = 7_776_000_000;    // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[3];  // default base price
+    mapping(address => mapping(address => bool)) Operators;
+    uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
+    uint256 public basePrice = HELIX2.getPrices()[3]; // default base price
 
     /// Polycule Registry
     iPOLYCULE public POLYCULES = iPOLYCULE(address(0x0));
@@ -55,14 +55,8 @@ contract PolyculeRegistrar is ERC721 {
      * @param _alias : alias of polycule
      */
     modifier isLegal(string memory _alias) {
-        require(
-            bytes(_alias).length < sizes[1], 
-            'ILLEGAL_LABEL'
-        ); /// check for oversized label <<< SIZE LIMIT
-        require(
-            !_alias.existsIn4(illegalBlocks), 
-            'ILLEGAL_CHARS'
-        ); /// check for forbidden characters
+        require(bytes(_alias).length < sizes[1], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -72,10 +66,7 @@ contract PolyculeRegistrar is ERC721 {
      * @param _config : array of config addresses
      */
     modifier isLegalMap(bytes32[] memory _anion, address[] memory _config) {
-        require(
-            _anion.length == _config.length, 
-            'BAD_MAP'
-        );
+        require(_anion.length == _config.length, "BAD_MAP");
         _;
     }
 
@@ -85,14 +76,12 @@ contract PolyculeRegistrar is ERC721 {
      */
     modifier onlyCation(bytes32 polyculehash) {
         require(
-            block.timestamp < POLYCULES.expiry(polyculehash), 
+            block.timestamp < POLYCULES.expiry(polyculehash),
             "POLYCULE_EXPIRED"
         ); // expiry check
-        address cation = NAMES.owner(
-            POLYCULES.cation(polyculehash)
-        );
+        address cation = NAMES.owner(POLYCULES.cation(polyculehash));
         require(
-            cation == msg.sender || Operators[cation][msg.sender], 
+            cation == msg.sender || Operators[cation][msg.sender],
             "NOT_OWNER"
         );
         _;
@@ -116,9 +105,9 @@ contract PolyculeRegistrar is ERC721 {
 
     /**
      * @dev registers a new polycule
-     * @param _alias : label of polycule without suffix (maxLength = 32)
+     * @param _alias : alias of polycule without suffix
      * @param cation : cation to set for new polycule
-     * @param anion : array of target anions 
+     * @param anion : array of target anions
      * @param lifespan : duration of registration
      * @param config : array of contract config addresses
      * @param rules : rules for hooks
@@ -126,40 +115,37 @@ contract PolyculeRegistrar is ERC721 {
      */
     function newPolycule(
         string memory _alias,
-        bytes32 cation, 
+        bytes32 cation,
         bytes32[] memory anion,
         uint lifespan,
         address[] memory config,
         uint8[] memory rules
-    ) external 
-      payable
-      isLegal(_alias)
-      isLegalMap(anion, config)
-      returns(bytes32) 
+    )
+        external
+        payable
+        isLegal(_alias)
+        isLegalMap(anion, config)
+        returns (bytes32)
     {
         address _cation = NAMES.owner(cation);
-        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
-        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
+        require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
         bytes32 polyculehash = keccak256(
-            abi.encodePacked(
-                cation,
-                roothash[3], 
-                aliashash
-            )
+            abi.encodePacked(cation, roothash[3], aliashash)
         );
-        POLYCULES.setCation(polyculehash, cation);                       /// set new cation (= from)
-        POLYCULES.setAnions(polyculehash, anion, config, rules);         /// set anions (= to)
-        POLYCULES.setExpiry(polyculehash, block.timestamp + lifespan);   /// set new expiry
-        POLYCULES.setController(polyculehash, _cation);                  /// set new controller
-        POLYCULES.setResolver(polyculehash, defaultResolver);            /// set new resolver
-        POLYCULES.setAlias(polyculehash, aliashash);                     /// set new alias
-        _ownerOf[uint256(polyculehash)] = _cation;                       /// change ownership record
-        unchecked {                                                      /// update balances
+        POLYCULES.setCation(polyculehash, cation); /// set new cation (= from)
+        POLYCULES.setAnions(polyculehash, anion, config, rules); /// set anions (= to)
+        POLYCULES.setExpiry(polyculehash, block.timestamp + lifespan); /// set new expiry
+        POLYCULES.setController(polyculehash, _cation); /// set new controller
+        POLYCULES.setResolver(polyculehash, defaultResolver); /// set new resolver
+        POLYCULES.setAlias(polyculehash, aliashash); /// set new alias
+        _ownerOf[uint256(polyculehash)] = _cation; /// change ownership record
+        unchecked {
+            /// update balances
             _balanceOf[_cation]++;
         }
         emit NewPolycule(polyculehash, cation);
         return polyculehash;
     }
-
 }

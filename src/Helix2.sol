@@ -38,7 +38,7 @@ contract HELIX2 is ERC721 {
     event NewSubPrice(uint256 index, uint256 newPrice);
 
     /// @dev : Initialise Registers
-    
+
     iENS public ENS = iENS(ensRegistry);
     iNAME public NAMES = iNAME(helix2Registry[0]);
     iBOND public BONDS = iBOND(helix2Registry[1]);
@@ -82,5 +82,4 @@ contract HELIX2 is ERC721 {
         emit NewSubRegistry(index, newReg);
         helix2Registry[index] = newReg;
     }
-
 }

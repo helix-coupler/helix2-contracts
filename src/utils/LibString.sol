@@ -43,7 +43,10 @@ library LibString {
     /**
      * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.
      */
-    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
+    function toHexString(
+        uint256 value,
+        uint256 length
+    ) internal pure returns (string memory) {
         bytes memory buffer = new bytes(2 * length + 2);
         buffer[0] = "0";
         buffer[1] = "x";
@@ -71,45 +74,44 @@ library LibString {
         uint256 result = 0;
         unchecked {
             uint i = 128;
-            while (i > 1){
+            while (i > 1) {
                 i /= 2;
-                if (value >= 10**i) {
-                    value /= 10**i;
+                if (value >= 10 ** i) {
+                    value /= 10 ** i;
                     result += i;
                 }
             }
             //(uint i =64; i >=0))
-            if (value >= 10**64) {
-                value /= 10**64;
+            if (value >= 10 ** 64) {
+                value /= 10 ** 64;
                 result += 64;
             }
-            if (value >= 10**32) {
-                value /= 10**32;
+            if (value >= 10 ** 32) {
+                value /= 10 ** 32;
                 result += 32;
             }
-            if (value >= 10**16) {
-                value /= 10**16;
+            if (value >= 10 ** 16) {
+                value /= 10 ** 16;
                 result += 16;
             }
-            if (value >= 10**8) {
-                value /= 10**8;
+            if (value >= 10 ** 8) {
+                value /= 10 ** 8;
                 result += 8;
             }
-            if (value >= 10**4) {
-                value /= 10**4;
+            if (value >= 10 ** 4) {
+                value /= 10 ** 4;
                 result += 4;
             }
-            if (value >= 10**2) {
-                value /= 10**2;
+            if (value >= 10 ** 2) {
+                value /= 10 ** 2;
                 result += 2;
             }
-            if (value >= 10**1) {
+            if (value >= 10 ** 1) {
                 result += 1;
             }
         }
         return result;
     }
-
 
     /**
      * @dev Return the log in base 256, rounded down, of a positive value.
@@ -150,9 +152,15 @@ library LibString {
      * @param value : value to search
      * @return true or false
      */
-    function existsIn4(string calldata value, string[4] calldata array) public pure returns (bool) {
+    function existsIn4(
+        string calldata value,
+        string[4] calldata array
+    ) public pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
-            if (keccak256(abi.encodePacked(array[i])) == keccak256(abi.encodePacked(value))) {
+            if (
+                keccak256(abi.encodePacked(array[i])) ==
+                keccak256(abi.encodePacked(value))
+            ) {
                 return true;
             }
         }
@@ -165,7 +173,10 @@ library LibString {
      * @param value : value to search
      * @return true or false
      */
-    function existsIn(address value, address[] memory array) public pure returns (bool) {
+    function existsIn(
+        address value,
+        address[] memory array
+    ) public pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return true;
@@ -180,7 +191,10 @@ library LibString {
      * @param value : value to search
      * @return index
      */
-    function findIn(address value, address[] memory array) public pure returns (uint) {
+    function findIn(
+        address value,
+        address[] memory array
+    ) public pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return i;
@@ -195,7 +209,10 @@ library LibString {
      * @param value : value to search
      * @return true or false
      */
-    function existsIn(bytes32 value, bytes32[] memory array) public pure returns (bool) {
+    function existsIn(
+        bytes32 value,
+        bytes32[] memory array
+    ) public pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return true;
@@ -210,7 +227,10 @@ library LibString {
      * @param value : value to search
      * @return index
      */
-    function findIn(bytes32 value, bytes32[] memory array) public pure returns (uint) {
+    function findIn(
+        bytes32 value,
+        bytes32[] memory array
+    ) public pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return i;
@@ -218,5 +238,4 @@ library LibString {
         }
         return uint(0);
     }
-
 }

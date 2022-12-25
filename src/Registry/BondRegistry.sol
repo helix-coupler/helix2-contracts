@@ -37,34 +37,38 @@ abstract contract Helix2Bonds {
     event NewRecord(bytes32 indexed bondhash, address resolver);
     event NewSecureFlag(bytes32 indexed bondhash, bool secure);
     event NewResolver(bytes32 indexed bondhash, address resolver);
-    event ApprovalForAll(address indexed cation, address indexed operator, bool approved);
+    event ApprovalForAll(
+        address indexed cation,
+        address indexed operator,
+        bool approved
+    );
 
     /// Dev
     address public Dev;
 
     /// @dev : Bond roothash
     bytes32 public roothash = HELIX2.getRoothash()[1];
-    uint256 public basePrice = HELIX2.getPrices()[1]; 
+    uint256 public basePrice = HELIX2.getPrices()[1];
 
     /// @dev : Helix2 Bond struct
     struct Bond {
-        address[] _hooks;                     /// Hooks
-        mapping(address => uint8) _rules;     /// Rules for Hooks
-        bytes32 _cation;                      /// Source of Bond (= Owner)
-        bytes32 _anion;                       /// Target of Bond
-        bytes32 _alias;                       /// Hash of Bond
-        address _resolver;                    /// Resolver of Bond
-        address _controller;                  /// Controller of Bond
-        bool _secure;                         /// Mutuality Flag
-        uint _expiry;                         /// Expiry of Bond
+        address[] _hooks; /// Hooks
+        mapping(address => uint8) _rules; /// Rules for Hooks
+        bytes32 _cation; /// Source of Bond (= Owner)
+        bytes32 _anion; /// Target of Bond
+        bytes32 _alias; /// Hash of Bond
+        address _resolver; /// Resolver of Bond
+        address _controller; /// Controller of Bond
+        bool _secure; /// Mutuality Flag
+        uint _expiry; /// Expiry of Bond
     }
-    mapping (bytes32 => Bond) public Bonds;
-    mapping (address => mapping(address => bool)) Operators;
+    mapping(bytes32 => Bond) public Bonds;
+    mapping(address => mapping(address => bool)) Operators;
 
     /**
-    * @dev Initialise a new HELIX2 Bonds Registry
-    * @notice : grants ownership of '0x0' to contract
-    */
+     * @dev Initialise a new HELIX2 Bonds Registry
+     * @notice : grants ownership of '0x0' to contract
+     */
     constructor() {
         /// give ownership of '0x0' and <roothash> to Dev
         Bonds[0x0]._cation = roothash;
@@ -74,10 +78,7 @@ abstract contract Helix2Bonds {
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        require(
-            msg.sender == Dev, 
-            "NOT_DEV"
-        );
+        require(msg.sender == Dev, "NOT_DEV");
         _;
     }
 
@@ -92,27 +93,20 @@ abstract contract Helix2Bonds {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 bondhash) {
-        require(
-            block.timestamp < Bonds[bondhash]._expiry, 
-            'BOND_EXPIRED'
-        ); // expiry check
-        require(
-            msg.sender == Bonds[bondhash]._controller, 
-            'NOT_CONTROLLER'
-        );
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(msg.sender == Bonds[bondhash]._controller, "NOT_CONTROLLER");
         _;
     }
 
     /// @dev : Modifier to allow Cation or Controller
     modifier isCationOrController(bytes32 bondhash) {
-        require(
-            block.timestamp < Bonds[bondhash]._expiry, 
-            'BOND_EXPIRED'
-        ); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
-            _cation == msg.sender || Operators[_cation][msg.sender] || msg.sender == Bonds[bondhash]._controller, 
+            _cation == msg.sender ||
+                Operators[_cation][msg.sender] ||
+                msg.sender == Bonds[bondhash]._controller,
             "NOT_OWNER_OR_CONTROLLER"
         );
         _;
@@ -123,10 +117,7 @@ abstract contract Helix2Bonds {
      * @param bondhash : label of bond
      */
     modifier isNotExpired(bytes32 bondhash) {
-        require(
-            block.timestamp < Bonds[bondhash]._expiry, 
-            'BOND_EXPIRED'
-        ); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
         _;
     }
 
@@ -136,12 +127,10 @@ abstract contract Helix2Bonds {
      * @param newAnion : hash of new anion
      */
     function isNotDuplicateAnion(
-        bytes32 bondhash, 
+        bytes32 bondhash,
         bytes32 newAnion
-    ) public view 
-        returns (bool) 
-    {
-        bytes32 _anion =  Bonds[bondhash]._anion;
+    ) public view returns (bool) {
+        bytes32 _anion = Bonds[bondhash]._anion;
         return _anion != newAnion;
     }
 
@@ -151,11 +140,9 @@ abstract contract Helix2Bonds {
      * @param config : config to check
      */
     function isNotDuplicateHook(
-        bytes32 bondhash,  
-        address config 
-    ) public view 
-        returns (bool) 
-    {
+        bytes32 bondhash,
+        address config
+    ) public view returns (bool) {
         return !config.existsIn(Bonds[bondhash]._hooks);
     }
 
@@ -164,14 +151,11 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
-        require(
-            block.timestamp < Bonds[bondhash]._expiry, 
-            'BOND_EXPIRED'
-        ); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
-            _cation == msg.sender || Operators[_cation][msg.sender], 
+            _cation == msg.sender || Operators[_cation][msg.sender],
             "NOT_OWNER"
         );
         _;
@@ -182,7 +166,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _cation : new cation
      */
-    function setCation(bytes32 bondhash, bytes32 _cation) external onlyCation(bondhash) {
+    function setCation(
+        bytes32 bondhash,
+        bytes32 _cation
+    ) external onlyCation(bondhash) {
         Bonds[bondhash]._cation = _cation;
         emit NewCation(bondhash, _cation);
     }
@@ -192,7 +179,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _controller : new controller
      */
-    function setController(bytes32 bondhash, address _controller) external isCationOrController(bondhash) {
+    function setController(
+        bytes32 bondhash,
+        address _controller
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._controller = _controller;
         emit NewController(bondhash, _controller);
     }
@@ -202,7 +192,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of anion
      * @param _anion : address of anion
      */
-    function setAnion(bytes32 bondhash, bytes32 _anion) external isCationOrController(bondhash) {
+    function setAnion(
+        bytes32 bondhash,
+        bytes32 _anion
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._anion = _anion;
         emit NewAnion(bondhash, _anion);
     }
@@ -212,7 +205,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _alias : bash of alias
      */
-    function setAlias(bytes32 bondhash, bytes32 _alias) external isCationOrController(bondhash) {
+    function setAlias(
+        bytes32 bondhash,
+        bytes32 _alias
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._alias = _alias;
         emit NewAlias(bondhash, _alias);
     }
@@ -222,7 +218,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _secure : bool
      */
-    function setSecure(bytes32 bondhash, bool _secure) external isCationOrController(bondhash) {
+    function setSecure(
+        bytes32 bondhash,
+        bool _secure
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._secure = _secure;
         emit NewSecureFlag(bondhash, _secure);
     }
@@ -232,7 +231,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _resolver : new resolver
      */
-    function setResolver(bytes32 bondhash, address _resolver) external isCationOrController(bondhash) {
+    function setResolver(
+        bytes32 bondhash,
+        address _resolver
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewResolver(bondhash, _resolver);
     }
@@ -242,16 +244,13 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond
      * @param _expiry : new expiry
      */
-    function setExpiry(bytes32 bondhash, uint _expiry) external payable isCationOrController(bondhash) {
-        require(
-            _expiry > Bonds[bondhash]._expiry,
-            "BAD_EXPIRY"
-        );
+    function setExpiry(
+        bytes32 bondhash,
+        uint _expiry
+    ) external payable isCationOrController(bondhash) {
+        require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
         uint newDuration = _expiry - Bonds[bondhash]._expiry;
-        require(
-            msg.value >= newDuration * basePrice,
-            'INSUFFICIENT_ETHER'
-        );
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Bonds[bondhash]._expiry = _expiry;
         emit NewExpiry(bondhash, _expiry);
     }
@@ -262,11 +261,9 @@ abstract contract Helix2Bonds {
      * @param _resolver : new record
      */
     function setRecord(
-        bytes32 bondhash, 
+        bytes32 bondhash,
         address _resolver
-    ) external 
-        isCationOrController(bondhash) 
-    {
+    ) external isCationOrController(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewRecord(bondhash, _resolver);
     }
@@ -277,17 +274,12 @@ abstract contract Helix2Bonds {
      * @param rule : rule for the hook
      * @param config : address of config contract
      */
-    function hook( 
-        bytes32 bondhash, 
+    function hook(
+        bytes32 bondhash,
         uint8 rule,
         address config
-    ) external 
-        onlyCation(bondhash)
-    {
-        require(
-            isNotDuplicateHook(bondhash, config),
-            "HOOK_EXISTS"
-        );
+    ) external onlyCation(bondhash) {
+        require(isNotDuplicateHook(bondhash, config), "HOOK_EXISTS");
         Bonds[bondhash]._hooks.push(config);
         Bonds[bondhash]._rules[config] = rule;
         emit Hooked(bondhash, config, rule);
@@ -299,17 +291,12 @@ abstract contract Helix2Bonds {
      * @param rule : rule for the hook
      * @param config : address of config contract
      */
-    function rehook( 
-        bytes32 bondhash, 
+    function rehook(
+        bytes32 bondhash,
         uint8 rule,
         address config
-    ) external 
-        onlyCation(bondhash)
-    {
-        require(
-            Bonds[bondhash]._rules[config] != rule,
-            'RULE_EXISTS'
-        );
+    ) external onlyCation(bondhash) {
+        require(Bonds[bondhash]._rules[config] != rule, "RULE_EXISTS");
         Bonds[bondhash]._rules[config] = rule;
         emit Rehooked(bondhash, config, rule);
     }
@@ -319,12 +306,10 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of the bond
      * @param config : contract address of config
      */
-    function unhook( 
-        bytes32 bondhash, 
+    function unhook(
+        bytes32 bondhash,
         address config
-    ) external 
-        onlyCation(bondhash)
-    {
+    ) external onlyCation(bondhash) {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
@@ -344,11 +329,7 @@ abstract contract Helix2Bonds {
      * @dev removes all hooks in a bond
      * @param bondhash : hash of the bond
      */
-    function unhookAll( 
-        bytes32 bondhash
-    ) external 
-        onlyCation(bondhash)
-    {
+    function unhookAll(bytes32 bondhash) external onlyCation(bondhash) {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Bonds[bondhash]._rules[_hooks[i]] = uint8(0);
@@ -374,7 +355,9 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return hash of cation
      */
-    function cation(bytes32 bondhash) public view isNotExpired(bondhash) returns (bytes32) {
+    function cation(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (bytes32) {
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         if (_cation == address(this)) {
@@ -388,7 +371,9 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return address of controller
      */
-    function controller(bytes32 bondhash) public view isNotExpired(bondhash) returns (address) {
+    function controller(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (address) {
         address _controller = Bonds[bondhash]._controller;
         return _controller;
     }
@@ -398,7 +383,9 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return hash of anion
      */
-    function anion(bytes32 bondhash) public view isNotExpired(bondhash) returns (bytes32) {
+    function anion(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (bytes32) {
         bytes32 _anion = Bonds[bondhash]._anion;
         return _anion;
     }
@@ -408,7 +395,9 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return mutuality state of the bond
      */
-    function secure(bytes32 bondhash) public view isNotExpired(bondhash) returns (bool) {
+    function secure(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (bool) {
         bool _secure = Bonds[bondhash]._secure;
         return _secure;
     }
@@ -418,7 +407,14 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return tuple of (hooks, rules)
      */
-    function hooks(bytes32 bondhash) public view isNotExpired(bondhash) returns (address[] memory, uint8[] memory) {
+    function hooks(
+        bytes32 bondhash
+    )
+        public
+        view
+        isNotExpired(bondhash)
+        returns (address[] memory, uint8[] memory)
+    {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         uint8[] memory _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
@@ -435,14 +431,16 @@ abstract contract Helix2Bonds {
     function expiry(bytes32 bondhash) public view returns (uint) {
         uint _expiry = Bonds[bondhash]._expiry;
         return _expiry;
-    }   
+    }
 
     /**
      * @dev return resolver of a bond
      * @param bondhash : hash of bond to query
      * @return address of resolver
      */
-    function resolver(bytes32 bondhash) public view isNotExpired(bondhash) returns (address) {
+    function resolver(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (address) {
         address _resolver = Bonds[bondhash]._resolver;
         return _resolver;
     }
@@ -455,14 +453,17 @@ abstract contract Helix2Bonds {
     function recordExists(bytes32 bondhash) public view returns (bool) {
         return block.timestamp < Bonds[bondhash]._expiry;
     }
-    
+
     /**
      * @dev check if an address is set as operator
      * @param _cation cation of bond to query
      * @param operator operator to check
      * @return true or false
      */
-    function isApprovedForAll(bytes32 _cation, address operator) external view returns (bool) {
+    function isApprovedForAll(
+        bytes32 _cation,
+        address operator
+    ) external view returns (bool) {
         address __cation = NAMES.owner(_cation);
         return Operators[__cation][operator];
     }
@@ -471,7 +472,7 @@ abstract contract Helix2Bonds {
      * @dev : withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external payable {
-        (bool ok,) = Dev.call{value: address(this).balance}("");
+        (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }
 
@@ -480,7 +481,10 @@ abstract contract Helix2Bonds {
      * @param token : token to release
      */
     function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(address(this), Dev, iERC20(token).balanceOf(address(this)));
+        iERC20(token).transferFrom(
+            address(this),
+            Dev,
+            iERC20(token).balanceOf(address(this))
+        );
     }
-
 }
