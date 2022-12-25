@@ -19,6 +19,8 @@ abstract contract Helix2Bonds {
     event NewDev(address Dev, address newDev);
     event NewBond(bytes32 indexed bondhash, bytes32 owner);
     event NewOwner(bytes32 indexed bondhash, bytes32 owner);
+    event NewTarget(bytes32 indexed bondhash, bytes32 target);
+    event NewAlias(bytes32 indexed bondhash, bytes32 _alias);
     event NewController(bytes32 indexed bondhash, address controller);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
@@ -35,7 +37,7 @@ abstract contract Helix2Bonds {
     struct Bond {
         mapping(bytes32 => mapping(uint8 => address)) _hooks;     /// Hooks with Rules
         bytes32 _owner;                                           /// Source of Bond (= Owner)
-        bytes32 _to;                                              /// Target of Bond
+        bytes32 _target;                                          /// Target of Bond
         bytes32 _alias;                                           /// Hash of Bond
         address _resolver;                                        /// Resolver of Bond
         address _controller;                                      /// Controller of Bond
@@ -128,6 +130,26 @@ abstract contract Helix2Bonds {
     }
 
     /**
+     * @dev : set new target of a bond
+     * @param bondhash : hash of targets
+     * @param _target : address of target
+     */
+    function setTarget(bytes32 bondhash, bytes32 _target) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._target = _target;
+        emit NewTarget(bondhash, _target);
+    }
+
+    /**
+     * @dev : set new alias for bond
+     * @param bondhash : hash of bond
+     * @param _alias : bash of alias
+     */
+    function setAlias(bytes32 bondhash, bytes32 _alias) external isOwnerOrController(bondhash) {
+        Bonds[bondhash]._alias = _alias;
+        emit NewAlias(bondhash, _alias);
+    }
+
+    /**
      * @dev : set resolver for a bond
      * @param bondhash : hash of bond
      * @param _resolver : new resolver
@@ -189,6 +211,16 @@ abstract contract Helix2Bonds {
     function controller(bytes32 bondhash) public view returns (address) {
         address _controller = Bonds[bondhash]._controller;
         return _controller;
+    }
+
+    /**
+     * @dev return target of a bond
+     * @param bondhash hash of bond to query
+     * @return hash of target
+     */
+    function target(bytes32 bondhash) public view returns (bytes32) {
+        bytes32 _target = Bonds[bondhash]._target;
+        return _target;
     }
 
     /**

@@ -12,6 +12,9 @@ interface iMOLECULE {
     // write functions
     function setOwner(bytes32 moleculehash, bytes32 owner) external;
     function setController(bytes32 moleculehash, address controller) external;
+    function setTarget(bytes32 moleculehash, bytes32[] calldata target) external;
+    function setAlias(bytes32 moleculehash, bytes32 _alias) external;
+    function setSecure(bytes32 moleculehash, bool secure) external;
     function setExpiry(bytes32 moleculehash, uint expiry) external;
     function setRecord(bytes32 moleculehash, address resolver) external;
     function setResolver(bytes32 moleculehash, address resolver) external;
@@ -21,6 +24,9 @@ interface iMOLECULE {
     // view functions
     function owner(bytes32 moleculehash) external view returns(bytes32);
     function controller(bytes32 moleculehash) external view returns(address);
+    function target(bytes32 moleculehash) external view returns(bytes32[] memory);
+    function _alias(bytes32 moleculehash) external view returns(bytes32);
+    function secure(bytes32 moleculehash) external view returns(bool);
     function expiry(bytes32 moleculehash) external view returns(uint);
     function resolver(bytes32 moleculehash) external view returns(address);
     function recordExists(bytes32 moleculehash) external view returns(bool);

@@ -50,7 +50,7 @@ contract PolyculeRegistrar is ERC721 {
      * @dev : verify polycule belongs to root
      * @param label : label of polycule
      */
-    modifier isNew(string calldata label) {
+    modifier isNew(string memory label) {
         address owner = NAMES.owner(
             POLYCULES.owner(
                 keccak256(
@@ -69,7 +69,7 @@ contract PolyculeRegistrar is ERC721 {
      * @dev : verify polycule belongs to root
      * @param label : label of polycule
      */
-    modifier isLegal(string calldata label) {
+    modifier isLegal(string memory label) {
         require(bytes(label).length > sizes[3], 'ILLEGAL_LABEL'); /// check for oversized label
         require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
         _;
@@ -79,7 +79,7 @@ contract PolyculeRegistrar is ERC721 {
      * @dev : verify polycule belongs to root
      * @param label : label of polycule
      */
-    modifier isNotExpired(string calldata label) {
+    modifier isNotExpired(string memory label) {
         bytes32 polyculehash = keccak256(
             abi.encodePacked(
                 roothash[3], 
@@ -128,8 +128,9 @@ contract PolyculeRegistrar is ERC721 {
      * @return hash of new polycule
      */
     function newPolycule(
-        string calldata label, 
+        string memory label, 
         bytes32 owner, 
+        bytes32[] calldata target,
         uint lifespan
     ) external
       payable 
@@ -139,9 +140,11 @@ contract PolyculeRegistrar is ERC721 {
       returns(bytes32) 
     {
         address _owner = NAMES.owner(owner);
-        require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
+        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 polyculehash = keccak256(abi.encodePacked(roothash[3], keccak256(abi.encodePacked(label))));
         POLYCULES.setOwner(polyculehash, owner);                        /// set new owner
+        POLYCULES.setTarget(polyculehash, target);                      /// set targets (= to)
         POLYCULES.setExpiry(polyculehash, block.timestamp + lifespan);  /// set new expiry
         POLYCULES.setController(polyculehash, _owner);                  /// set new controller
         POLYCULES.setResolver(polyculehash, defaultResolver);           /// set new resolver

@@ -12,6 +12,9 @@ interface iBOND {
     // write functions
     function setOwner(bytes32 bondhash, bytes32 owner) external;
     function setController(bytes32 bondhash, address controller) external;
+    function setTarget(bytes32 bondhash, bytes32 target) external;
+    function setAlias(bytes32 bondhash, bytes32 _alias) external;
+    function setSecure(bytes32 bondhash, bool secure) external;
     function setExpiry(bytes32 bondhash, uint expiry) external;
     function setRecord(bytes32 bondhash, address resolver) external;
     function setResolver(bytes32 bondhash, address resolver) external;
@@ -21,6 +24,9 @@ interface iBOND {
     // view functions
     function owner(bytes32 bondhash) external view returns(bytes32);
     function controller(bytes32 bondhash) external view returns(address);
+    function target(bytes32 bondhash) external view returns(bytes32);
+    function _alias(bytes32 bondhash) external view returns(bytes32);
+    function secure(bytes32 bondhash) external view returns(bool);
     function expiry(bytes32 bondhash) external view returns(uint);
     function resolver(bytes32 bondhash) external view returns(address);
     function recordExists(bytes32 bondhash) external view returns(bool);

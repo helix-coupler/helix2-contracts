@@ -19,6 +19,8 @@ abstract contract Helix2Polycules {
     event NewDev(address Dev, address newDev);
     event NewPolycule(bytes32 indexed polyculehash, bytes32 owner);
     event NewOwner(bytes32 indexed polyculehash, bytes32 owner);
+    event NewTarget(bytes32 indexed polyculehash, bytes32[] target);
+    event NewAlias(bytes32 indexed polyculehash, bytes32 _alias);
     event NewController(bytes32 indexed polyculehash, address controller);
     event NewExpiry(bytes32 indexed polyculehash, uint expiry);
     event NewRecord(bytes32 indexed polyculehash, address resolver);
@@ -33,13 +35,13 @@ abstract contract Helix2Polycules {
 
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
-        mapping(bytes32 => mapping(uint8 => address[])) _hooks;   /// Hooks (ordered) with Rules
+        mapping(bytes32 => mapping(uint8 => address[])) _hooks;   /// Hooks (ordered list) with Rules
         bytes32 _owner;                                           /// Source of Polycule (= Owner)
-        bytes32[] _to;                                            /// Targets of Polycule (ordered)
+        bytes32[] _target;                                        /// Targets of Polycule (ordered list)
         bytes32 _alias;                                           /// Hash of Polycule
         address _resolver;                                        /// Resolver of Polycule
         address _controller;                                      /// Controller of Polycule
-        bool[] _secure;                                           /// Mutuality Flags (ordered)
+        bool[] _secure;                                           /// Mutuality Flags (ordered list)
         uint _expiry;                                             /// Expiry of Polycule
     }
     mapping (bytes32 => Polycule) public Polycules;
@@ -117,6 +119,27 @@ abstract contract Helix2Polycules {
         emit NewOwner(polyculehash, _owner);
     }
 
+
+    /**
+     * @dev : set new target of a polycule
+     * @param polyculehash : hash of targets
+     * @param _target : address of target
+     */
+    function setTarget(bytes32 polyculehash, bytes32[] calldata _target) external isOwnerOrController(polyculehash) {
+        Polycules[polyculehash]._target = _target;
+        emit NewTarget(polyculehash, _target);
+    }
+
+    /**
+     * @dev : set new alias for polycule
+     * @param polyculehash : hash of polycule
+     * @param _alias : bash of alias
+     */
+    function setAlias(bytes32 polyculehash, bytes32 _alias) external isOwnerOrController(polyculehash) {
+        Polycules[polyculehash]._alias = _alias;
+        emit NewAlias(polyculehash, _alias);
+    }
+
     /**
      * @dev : set controller of a polycule
      * @param polyculehash : hash of polycule
@@ -189,6 +212,17 @@ abstract contract Helix2Polycules {
     function controller(bytes32 polyculehash) public view returns (address) {
         address _controller = Polycules[polyculehash]._controller;
         return _controller;
+    }
+
+
+    /**
+     * @dev return target of a polycule
+     * @param polyculehash hash of polycule to query
+     * @return hash of target
+     */
+    function target(bytes32 polyculehash) public view returns (bytes32[] memory) {
+        bytes32[] memory _target = Polycules[polyculehash]._target;
+        return _target;
     }
 
     /**

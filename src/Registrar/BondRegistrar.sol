@@ -51,7 +51,7 @@ contract BondRegistrar is ERC721 {
      * @dev : verify bond belongs to root
      * @param label : label of bond
      */
-    modifier isNew(string calldata label) {
+    modifier isNew(string memory label) {
         bytes32 _owner =  BONDS.owner(
             keccak256(
                 abi.encodePacked(
@@ -69,7 +69,7 @@ contract BondRegistrar is ERC721 {
      * @dev : verify bond belongs to root
      * @param label : label of bond
      */
-    modifier isLegal(string calldata label) {
+    modifier isLegal(string memory label) {
         require(bytes(label).length > sizes[1], 'ILLEGAL_LABEL'); /// check for oversized label
         require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
         _;
@@ -79,7 +79,7 @@ contract BondRegistrar is ERC721 {
      * @dev : verify bond belongs to root
      * @param label : label of bond
      */
-    modifier isNotExpired(string calldata label) {
+    modifier isNotExpired(string memory label) {
         bytes32 bondhash = keccak256(
             abi.encodePacked(
                 roothash[1], 
@@ -126,8 +126,9 @@ contract BondRegistrar is ERC721 {
      * @return hash of new bond
      */
     function newBond(
-        string calldata label, 
+        string memory label, 
         bytes32 owner, 
+        bytes32 target,
         uint lifespan
     ) external 
       payable
@@ -137,9 +138,11 @@ contract BondRegistrar is ERC721 {
       returns(bytes32) 
     {
         address _owner = NAMES.owner(owner);
-        require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
+        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 bondhash = keccak256(abi.encodePacked(roothash[1], keccak256(abi.encodePacked(label))));
-        BONDS.setOwner(bondhash, owner);                        /// set new owner
+        BONDS.setOwner(bondhash, owner);                        /// set new owner (= from)
+        BONDS.setTarget(bondhash, target);                      /// set target (= to)
         BONDS.setExpiry(bondhash, block.timestamp + lifespan);  /// set new expiry
         BONDS.setController(bondhash, _owner);                  /// set new controller
         BONDS.setResolver(bondhash, defaultResolver);           /// set new resolver

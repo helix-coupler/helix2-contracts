@@ -50,7 +50,7 @@ contract MoleculeRegistrar is ERC721 {
      * @dev : verify molecule belongs to root
      * @param label : label of molecule
      */
-    modifier isNew(string calldata label) {
+    modifier isNew(string memory label) {
         bytes32 _owner =  MOLECULES.owner(
             keccak256(
                 abi.encodePacked(
@@ -68,7 +68,7 @@ contract MoleculeRegistrar is ERC721 {
      * @dev : verify molecule belongs to root
      * @param label : label of molecule
      */
-    modifier isLegal(string calldata label) {
+    modifier isLegal(string memory label) {
         require(bytes(label).length > sizes[2], 'ILLEGAL_LABEL'); /// check for oversized label
         require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
         _;
@@ -78,7 +78,7 @@ contract MoleculeRegistrar is ERC721 {
      * @dev : verify molecule belongs to root
      * @param label : label of molecule
      */
-    modifier isNotExpired(string calldata label) {
+    modifier isNotExpired(string memory label) {
         bytes32 moleculehash = keccak256(
             abi.encodePacked(
                 roothash[2], 
@@ -125,8 +125,9 @@ contract MoleculeRegistrar is ERC721 {
      * @return hash of new molecule
      */
     function newMolecule(
-        string calldata label, 
+        string memory label, 
         bytes32 owner, 
+        bytes32[] calldata target,
         uint lifespan
     ) external 
       payable
@@ -136,9 +137,11 @@ contract MoleculeRegistrar is ERC721 {
       returns(bytes32) 
     {
         address _owner = NAMES.owner(owner);
-        require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
+        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 moleculehash = keccak256(abi.encodePacked(roothash[2], keccak256(abi.encodePacked(label))));
-        MOLECULES.setOwner(moleculehash, owner);                        /// set new owner
+        MOLECULES.setOwner(moleculehash, owner);                        /// set new owner (= from)
+        MOLECULES.setTarget(moleculehash, target);                      /// set targets (= to)
         MOLECULES.setExpiry(moleculehash, block.timestamp + lifespan);  /// set new expiry
         MOLECULES.setController(moleculehash, _owner);                  /// set new controller
         MOLECULES.setResolver(moleculehash, defaultResolver);           /// set new resolver

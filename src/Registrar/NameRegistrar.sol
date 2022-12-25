@@ -48,7 +48,7 @@ contract NameRegistrar is ERC721 {
      * @dev : verify name belongs to root
      * @param label : label of name
      */
-    modifier isNew(string calldata label) {
+    modifier isNew(string memory label) {
         address owner =  NAMES.owner(
             keccak256(
                 abi.encodePacked(
@@ -65,7 +65,7 @@ contract NameRegistrar is ERC721 {
      * @dev : verify name belongs to root
      * @param label : label of name
      */
-    modifier isLegal(string calldata label) {
+    modifier isLegal(string memory label) {
         require(bytes(label).length > sizes[0], 'ILLEGAL_LABEL'); /// check for oversized label
         require(!label.existsIn(illegalBlocks), 'ILLEGAL_CHARS'); /// check for forbidden characters
         _;
@@ -75,7 +75,7 @@ contract NameRegistrar is ERC721 {
      * @dev : verify name belongs to root
      * @param label : label of name
      */
-    modifier isNotExpired(string calldata label) {
+    modifier isNotExpired(string memory label) {
         bytes32 namehash = keccak256(
             abi.encodePacked(
                 roothash[0], 
@@ -120,7 +120,7 @@ contract NameRegistrar is ERC721 {
      * @return hash of new name
      */
     function newName(
-        string calldata label, 
+        string memory label, 
         address owner, 
         uint lifespan
     ) external 
@@ -130,7 +130,8 @@ contract NameRegistrar is ERC721 {
       isNotExpired(label) 
       returns(bytes32) 
     {
-        require(msg.value >= basePrice, 'INSUFFICIENT_ETHER');
+        require(lifespan >= defaultLifespan, 'LIFESPAN_TOO_SHORT');
+        require(msg.value >= basePrice * lifespan, 'INSUFFICIENT_ETHER');
         bytes32 namehash = keccak256(abi.encodePacked(roothash[0], keccak256(abi.encodePacked(label))));
         NAMES.setOwner(namehash, owner);                        /// set new owner
         NAMES.setExpiry(namehash, block.timestamp + lifespan);  /// set new expiry

@@ -40,12 +40,12 @@ abstract contract Base {
         0x0000000000000000000000000000000000000004  /// Polycule Registry
     ];
 
-    /// @dev : Helix2 base prices
+    /// @dev : Helix2 base prices per second (Wei/second value)
     uint256[4] public prices = [
-        0.00005 ether, /// Name Base Price
-        0.00005 ether, /// Bond Base Price
-        0.00005 ether, /// Molecule Base Price
-        0.00005 ether  /// Polycule Base Price
+        0.0000000000002 ether, /// Name Base Price (= 200 Kwei/second)
+        0.0000000000002 ether, /// Bond Base Price (= 200 Kwei/second)
+        0.0000000000002 ether, /// Molecule Base Price (= 200 Kwei/second)
+        0.0000000000002 ether  /// Polycule Base Price (= 200 Kwei/second)
     ];
 
     /// @dev : Pause/Resume contract

@@ -19,6 +19,8 @@ abstract contract Helix2Molecules {
     event NewDev(address Dev, address newDev);
     event NewMolecule(bytes32 indexed moleculehash, bytes32 owner);
     event NewOwner(bytes32 indexed moleculehash, bytes32 owner);
+    event NewTarget(bytes32 indexed moleculehash, bytes32[] target);
+    event NewAlias(bytes32 indexed moleculehash, bytes32 _alias);
     event NewController(bytes32 indexed moleculehash, address controller);
     event NewExpiry(bytes32 indexed moleculehash, uint expiry);
     event NewRecord(bytes32 indexed moleculehash, address resolver);
@@ -35,7 +37,7 @@ abstract contract Helix2Molecules {
     struct Molecule {
         mapping(bytes32 => mapping(uint8 => address)) _hooks;     /// Hooks with Rules
         bytes32 _owner;                                           /// Source of Molecule (= Owner)
-        bytes32[] _to;                                            /// Targets of Molecule
+        bytes32[] _target;                                        /// Targets of Molecule
         bytes32 _alias;                                           /// Hash of Molecule
         address _resolver;                                        /// Resolver of Molecule
         address _controller;                                      /// Controller of Molecule
@@ -117,6 +119,27 @@ abstract contract Helix2Molecules {
         emit NewOwner(moleculehash, _owner);
     }
 
+
+    /**
+     * @dev : set new target of a polycule
+     * @param polyculehash : hash of targets
+     * @param _target : address of target
+     */
+    function setTarget(bytes32 polyculehash, bytes32[] calldata _target) external isOwnerOrController(polyculehash) {
+        Molecules[polyculehash]._target = _target;
+        emit NewTarget(polyculehash, _target);
+    }
+
+    /**
+     * @dev : set new alias for molecule
+     * @param moleculehash : hash of molecule
+     * @param _alias : bash of alias
+     */
+    function setAlias(bytes32 moleculehash, bytes32 _alias) external isOwnerOrController(moleculehash) {
+        Molecules[moleculehash]._alias = _alias;
+        emit NewAlias(moleculehash, _alias);
+    }
+
     /**
      * @dev : set controller of a molecule
      * @param moleculehash : hash of molecule
@@ -189,6 +212,17 @@ abstract contract Helix2Molecules {
     function controller(bytes32 moleculehash) public view returns (address) {
         address _controller = Molecules[moleculehash]._controller;
         return _controller;
+    }
+
+
+    /**
+     * @dev return target of a molecule
+     * @param moleculehash hash of molecule to query
+     * @return hash of target
+     */
+    function target(bytes32 moleculehash) public view returns (bytes32[] memory) {
+        bytes32[] memory _target = Molecules[moleculehash]._target;
+        return _target;
     }
 
     /**
