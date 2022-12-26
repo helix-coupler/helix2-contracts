@@ -16,8 +16,6 @@ contract NameRegistrar is ERC721 {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
-
     /// @dev : Contract metadata
     string public constant name = "Helix2 Name Service";
     string public constant symbol = "HNS";
@@ -33,16 +31,26 @@ contract NameRegistrar is ERC721 {
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[0]; // default base price
+    uint256 public basePrice; // default base price
 
     /// Name Registry
     iNAME public NAMES;
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
 
-    constructor(address _registry) {
+    /**
+     * @dev : Initialise a new HELIX2 Names Registrar
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     * @param _registry : address of HELIX2 Name Registry
+     */
+    constructor(address _registry, address _helix2) {
         NAMES = iNAME(_registry);
+        HELIX2 = iHELIX2(_helix2);
+        basePrice = HELIX2.getPrices()[0];
         Dev = msg.sender;
     }
 

@@ -11,7 +11,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-abstract contract Helix2Molecules {
+contract Helix2Molecules {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -19,40 +19,43 @@ abstract contract Helix2Molecules {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
-    iNAME public NAMES = iNAME(HELIX2.getRegistry()[2]);
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
+    /// Name Registry
+    iNAME public NAMES;
 
     /// @dev : Helix2 Molecule events
     event NewDev(address Dev, address newDev);
-    event NewMolecule(bytes32 indexed moleculehash, bytes32 cation);
-    event Hooked(bytes32 indexed moleculehash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed moleculehash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed moleculehash, address config);
-    event UnhookedAll(bytes32 indexed moleculehash);
-    event NewCation(bytes32 indexed moleculehash, bytes32 cation);
-    event NewAnion(bytes32 indexed moleculehash, bytes32 anion);
-    event NewAnions(bytes32 indexed moleculehash, bytes32[] anion);
-    event PopAnion(bytes32 indexed moleculehash, bytes32 anion);
-    event NewAlias(bytes32 indexed moleculehash, bytes32 _alias);
-    event NewController(bytes32 indexed moleculehash, address controller);
-    event NewExpiry(bytes32 indexed moleculehash, uint expiry);
-    event NewRecord(bytes32 indexed moleculehash, address resolver);
-    event NewSecureFlag(bytes32 indexed moleculehash, bool secure);
-    event NewResolver(bytes32 indexed moleculehash, address resolver);
+    event NewMolecule(bytes32 indexed molyhash, bytes32 cation);
+    event Hooked(bytes32 indexed molyhash, address config, uint8 rule);
+    event Rehooked(bytes32 indexed molyhash, address config, uint8 rule);
+    event Unhooked(bytes32 indexed molyhash, address config);
+    event UnhookedAll(bytes32 indexed molyhash);
+    event NewCation(bytes32 indexed molyhash, bytes32 cation);
+    event NewAnion(bytes32 indexed molyhash, bytes32 anion);
+    event NewAnions(bytes32 indexed molyhash, bytes32[] anion);
+    event PopAnion(bytes32 indexed molyhash, bytes32 anion);
+    event NewAlias(bytes32 indexed molyhash, bytes32 _alias);
+    event NewController(bytes32 indexed molyhash, address controller);
+    event NewExpiry(bytes32 indexed molyhash, uint expiry);
+    event NewRecord(bytes32 indexed molyhash, address resolver);
+    event NewCovalence(bytes32 indexed molyhash, bool covalence);
+    event NewResolver(bytes32 indexed molyhash, address resolver);
     event ApprovalForAll(
         address indexed cation,
         address indexed operator,
         bool approved
     );
 
-    error AnionNotFound(bytes32 polyculehash, bytes32 anion);
+    error AnionNotFound(bytes32 moleculehash, bytes32 anion);
 
     /// Dev
     address public Dev;
 
     /// @dev : Molecule roothash
-    bytes32 public roothash = HELIX2.getRoothash()[2];
-    uint256 public basePrice = HELIX2.getPrices()[2];
+    bytes32 public roothash;
+    uint256 public basePrice;
+    uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
@@ -63,21 +66,53 @@ abstract contract Helix2Molecules {
         bytes32 _alias; /// Hash of Molecule
         address _resolver; /// Resolver of Molecule
         address _controller; /// Controller of Molecule
-        bool _secure; /// Mutuality Flag
+        bool _covalence; /// Mutuality Flag
         uint _expiry; /// Expiry of Molecule
     }
     mapping(bytes32 => Molecule) public Molecules;
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev Initialise a new HELIX2 Molecules Registry
-     * @notice : grants ownership of '0x0' to contract
+     * @dev : sets permissions for 0x0 and roothash
+     * @notice : consider changing msg.sender → address(this)
      */
-    constructor() {
-        /// give ownership of '0x0' and <roothash> to Dev
-        Molecules[0x0]._cation = roothash;
+    function catalyse() internal {
+        // 0x0
+        Molecules[0x0]._rules[address(0x0)] = uint8(0);
+        Molecules[0x0]._hooks = [address(0x0)];
+        Molecules[0x0]._cation = bytes32(0x0);
+        Molecules[0x0]._anion = [bytes32(0x0)];
+        Molecules[0x0]._alias = bytes32(0x0);
+        Molecules[0x0]._covalence = true;
+        Molecules[0x0]._expiry = theEnd;
+        Molecules[0x0]._controller = msg.sender;
+        Molecules[0x0]._resolver = msg.sender;
+        // root
+        Molecules[0x0]._rules[address(0x0)] = uint8(0);
+        Molecules[0x0]._hooks = [address(0x0)];
         Molecules[roothash]._cation = roothash;
+        Molecules[roothash]._anion = [roothash];
+        Molecules[roothash]._alias = roothash;
+        Molecules[roothash]._covalence = true;
+        Molecules[roothash]._expiry = theEnd;
+        Molecules[roothash]._controller = msg.sender;
+        Molecules[roothash]._resolver = msg.sender;
+    }
+
+    /**
+     * @dev Initialise a new HELIX2 Molecules Registry
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     * @param _registry : address of HELIX2 Name Registry
+     */
+    constructor(address _registry, address _helix2) {
         Dev = msg.sender;
+        HELIX2 = iHELIX2(_helix2);
+        NAMES = iNAME(_registry);
+        roothash = HELIX2.getRoothash()[2];
+        basePrice = HELIX2.getPrices()[2];
+        /// give ownership of '0x0' and <roothash> to Dev
+        catalyse();
     }
 
     /// @dev : Modifier to allow only dev
@@ -96,30 +131,30 @@ abstract contract Helix2Molecules {
     }
 
     /// @dev : Modifier to allow only Controller
-    modifier onlyController(bytes32 moleculehash) {
+    modifier onlyController(bytes32 molyhash) {
         require(
-            block.timestamp < Molecules[moleculehash]._expiry,
+            block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
         ); // expiry check
         require(
-            msg.sender == Molecules[moleculehash]._controller,
+            msg.sender == Molecules[molyhash]._controller,
             "NOT_CONTROLLER"
         );
         _;
     }
 
     /// @dev : Modifier to allow Cation or Controller
-    modifier isCationOrController(bytes32 moleculehash) {
+    modifier isCationOrController(bytes32 molyhash) {
         require(
-            block.timestamp < Molecules[moleculehash]._expiry,
+            block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
         ); // expiry check
-        bytes32 __cation = Molecules[moleculehash]._cation;
+        bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
             _cation == msg.sender ||
                 Operators[_cation][msg.sender] ||
-                msg.sender == Molecules[moleculehash]._controller,
+                msg.sender == Molecules[molyhash]._controller,
             "NOT_OWNER_OR_CONTROLLER"
         );
         _;
@@ -127,11 +162,11 @@ abstract contract Helix2Molecules {
 
     /**
      * @dev : verify molecule is not expired
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      */
-    modifier isNotExpired(bytes32 moleculehash) {
+    modifier isNotExpired(bytes32 molyhash) {
         require(
-            block.timestamp < Molecules[moleculehash]._expiry,
+            block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
         ); // expiry check
         _;
@@ -139,38 +174,38 @@ abstract contract Helix2Molecules {
 
     /**
      * @dev : check if new config is a duplicate
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param config : config to check
      */
     function isNotDuplicateHook(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         address config
     ) public view returns (bool) {
-        return !config.existsIn(Molecules[moleculehash]._hooks);
+        return !config.existsIn(Molecules[molyhash]._hooks);
     }
 
     /**
      * @dev : check if new anion is a duplicate
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _anion : anion to check
      */
     function isNotDuplicateAnion(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32 _anion
     ) public view returns (bool) {
-        return !_anion.existsIn(Molecules[moleculehash]._anion);
+        return !_anion.existsIn(Molecules[molyhash]._anion);
     }
 
     /**
      * @dev : verify ownership of molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      */
-    modifier onlyCation(bytes32 moleculehash) {
+    modifier onlyCation(bytes32 molyhash) {
         require(
-            block.timestamp < Molecules[moleculehash]._expiry,
+            block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
         ); // expiry check
-        bytes32 __cation = Molecules[moleculehash]._cation;
+        bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
             _cation == msg.sender || Operators[_cation][msg.sender],
@@ -181,219 +216,219 @@ abstract contract Helix2Molecules {
 
     /**
      * @dev : set cation of a molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _cation : new cation
      */
     function setCation(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32 _cation
-    ) external onlyCation(moleculehash) {
-        Molecules[moleculehash]._cation = _cation;
-        emit NewCation(moleculehash, _cation);
+    ) external onlyCation(molyhash) {
+        Molecules[molyhash]._cation = _cation;
+        emit NewCation(molyhash, _cation);
     }
 
     /**
      * @dev : set controller of a molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _controller : new controller
      */
     function setController(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         address _controller
-    ) external isCationOrController(moleculehash) {
-        Molecules[moleculehash]._controller = _controller;
-        emit NewController(moleculehash, _controller);
+    ) external isCationOrController(molyhash) {
+        Molecules[molyhash]._controller = _controller;
+        emit NewController(molyhash, _controller);
     }
 
     /**
      * @dev : adds one anion to the molecule
-     * @param moleculehash : hash of target molecule
+     * @param molyhash : hash of target molecule
      * @param _anion : hash of new anion
      */
     function addAnion(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32 _anion
-    ) external isCationOrController(moleculehash) {
-        require(isNotDuplicateAnion(moleculehash, _anion), "ANION_EXISTS");
-        Molecules[moleculehash]._anion.push(_anion);
-        emit NewAnion(moleculehash, _anion);
+    ) external isCationOrController(molyhash) {
+        require(isNotDuplicateAnion(molyhash, _anion), "ANION_EXISTS");
+        Molecules[molyhash]._anion.push(_anion);
+        emit NewAnion(molyhash, _anion);
     }
 
     /**
      * @dev : adds new array of anions to the molecule
      * @notice : will overwrite pre-existing anions
-     * @param moleculehash : hash of target molecule
+     * @param molyhash : hash of target molecule
      * @param _anion : array of new anions
      */
     function setAnions(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32[] memory _anion
-    ) external isCationOrController(moleculehash) {
+    ) external isCationOrController(molyhash) {
         for (uint i = 0; i < _anion.length; i++) {
-            if (_anion[i].existsIn(Molecules[moleculehash]._anion)) {
-                Molecules[moleculehash]._anion.push(_anion[i]);
+            if (_anion[i].existsIn(Molecules[molyhash]._anion)) {
+                Molecules[molyhash]._anion.push(_anion[i]);
             }
         }
-        emit NewAnions(moleculehash, _anion);
+        emit NewAnions(molyhash, _anion);
     }
 
     /**
      * @dev : pops an anion from the molecule
-     * @param moleculehash : hash of target molecule
+     * @param molyhash : hash of target molecule
      * @param __anion : hash of anion to remove
      */
     function popAnion(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32 __anion
-    ) external isCationOrController(moleculehash) {
-        bytes32[] memory _anion = Molecules[moleculehash]._anion;
+    ) external isCationOrController(molyhash) {
+        bytes32[] memory _anion = Molecules[molyhash]._anion;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
-            delete Molecules[moleculehash]._anion[index];
-            emit PopAnion(moleculehash, __anion);
+            delete Molecules[molyhash]._anion[index];
+            emit PopAnion(molyhash, __anion);
         } else {
-            revert AnionNotFound(moleculehash, __anion);
+            revert AnionNotFound(molyhash, __anion);
         }
     }
 
     /**
      * @dev : set new alias for molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _alias : bash of alias
      */
     function setAlias(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         bytes32 _alias
-    ) external isCationOrController(moleculehash) {
-        Molecules[moleculehash]._alias = _alias;
-        emit NewAlias(moleculehash, _alias);
+    ) external isCationOrController(molyhash) {
+        Molecules[molyhash]._alias = _alias;
+        emit NewAlias(molyhash, _alias);
     }
 
     /**
      * @dev : set new mutuality flag for molecule
-     * @param moleculehash : hash of molecule
-     * @param _secure : bool
+     * @param molyhash : hash of molecule
+     * @param _covalence : bool
      */
-    function setSecure(
-        bytes32 moleculehash,
-        bool _secure
-    ) external isCationOrController(moleculehash) {
-        Molecules[moleculehash]._secure = _secure;
-        emit NewSecureFlag(moleculehash, _secure);
+    function setCovalence(
+        bytes32 molyhash,
+        bool _covalence
+    ) external isCationOrController(molyhash) {
+        Molecules[molyhash]._covalence = _covalence;
+        emit NewCovalence(molyhash, _covalence);
     }
 
     /**
      * @dev : set resolver for a molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _resolver : new resolver
      */
     function setResolver(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         address _resolver
-    ) external isCationOrController(moleculehash) {
-        Molecules[moleculehash]._resolver = _resolver;
-        emit NewResolver(moleculehash, _resolver);
+    ) external isCationOrController(molyhash) {
+        Molecules[molyhash]._resolver = _resolver;
+        emit NewResolver(molyhash, _resolver);
     }
 
     /**
      * @dev : set expiry for a molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _expiry : new expiry
      */
     function setExpiry(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         uint _expiry
-    ) external payable isCationOrController(moleculehash) {
-        require(_expiry > Molecules[moleculehash]._expiry, "BAD_EXPIRY");
-        uint newDuration = _expiry - Molecules[moleculehash]._expiry;
+    ) external payable isCationOrController(molyhash) {
+        require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
+        uint newDuration = _expiry - Molecules[molyhash]._expiry;
         require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-        Molecules[moleculehash]._expiry = _expiry;
-        emit NewExpiry(moleculehash, _expiry);
+        Molecules[molyhash]._expiry = _expiry;
+        emit NewExpiry(molyhash, _expiry);
     }
 
     /**
      * @dev : set record for a molecule
-     * @param moleculehash : hash of molecule
+     * @param molyhash : hash of molecule
      * @param _resolver : new record
      */
     function setRecord(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         address _resolver
-    ) external isCationOrController(moleculehash) {
-        Molecules[moleculehash]._resolver = _resolver;
-        emit NewRecord(moleculehash, _resolver);
+    ) external isCationOrController(molyhash) {
+        Molecules[molyhash]._resolver = _resolver;
+        emit NewRecord(molyhash, _resolver);
     }
 
     /**
      * @dev adds a new hook with rule
-     * @param moleculehash : hash of the molecule
+     * @param molyhash : hash of the molecule
      * @param rule : rule for the hook
      * @param config : address of config contract
      */
     function hook(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         uint8 rule,
         address config
-    ) external onlyCation(moleculehash) {
-        require(isNotDuplicateHook(moleculehash, config), "HOOK_EXISTS");
-        Molecules[moleculehash]._hooks.push(config);
-        Molecules[moleculehash]._rules[config] = rule;
-        emit Hooked(moleculehash, config, rule);
+    ) external onlyCation(molyhash) {
+        require(isNotDuplicateHook(molyhash, config), "HOOK_EXISTS");
+        Molecules[molyhash]._hooks.push(config);
+        Molecules[molyhash]._rules[config] = rule;
+        emit Hooked(molyhash, config, rule);
     }
 
     /**
      * @dev rehooks a hook to a new rule
-     * @param moleculehash : hash of the molecule
+     * @param molyhash : hash of the molecule
      * @param rule : rule for the new hook
      * @param config : address of config contract
      */
     function rehook(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         uint8 rule,
         address config
-    ) external onlyCation(moleculehash) {
-        require(Molecules[moleculehash]._rules[config] != rule, "RULE_EXISTS");
-        Molecules[moleculehash]._rules[config] = rule;
-        emit Rehooked(moleculehash, config, rule);
+    ) external onlyCation(molyhash) {
+        require(Molecules[molyhash]._rules[config] != rule, "RULE_EXISTS");
+        Molecules[molyhash]._rules[config] = rule;
+        emit Rehooked(molyhash, config, rule);
     }
 
     /**
      * @dev removes a hook in a molecule
-     * @param moleculehash : hash of the molecule
+     * @param molyhash : hash of the molecule
      * @param config : contract address of config
      */
     function unhook(
-        bytes32 moleculehash,
+        bytes32 molyhash,
         address config
-    ) external onlyCation(moleculehash) {
-        address[] memory _hooks = Molecules[moleculehash]._hooks;
+    ) external onlyCation(molyhash) {
+        address[] memory _hooks = Molecules[molyhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
             if (index == uint(0)) {
-                emit Unhooked(moleculehash, address(0));
+                emit Unhooked(molyhash, address(0));
             } else {
-                Molecules[moleculehash]._rules[config] = uint8(0);
-                emit Unhooked(moleculehash, config);
-                delete Molecules[moleculehash]._hooks[index];
+                Molecules[molyhash]._rules[config] = uint8(0);
+                emit Unhooked(molyhash, config);
+                delete Molecules[molyhash]._hooks[index];
             }
         } else {
-            emit Unhooked(moleculehash, address(0));
+            emit Unhooked(molyhash, address(0));
         }
     }
 
     /**
      * @dev removes all hooks in a molecule
-     * @param moleculehash : hash of the molecule
+     * @param molyhash : hash of the molecule
      */
-    function unhookAll(bytes32 moleculehash) external onlyCation(moleculehash) {
-        address[] memory _hooks = Molecules[moleculehash]._hooks;
+    function unhookAll(bytes32 molyhash) external onlyCation(molyhash) {
+        address[] memory _hooks = Molecules[molyhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
-            Molecules[moleculehash]._rules[_hooks[i]] = uint8(0);
-            emit Unhooked(moleculehash, _hooks[i]);
+            Molecules[molyhash]._rules[_hooks[i]] = uint8(0);
+            emit Unhooked(molyhash, _hooks[i]);
         }
-        delete Molecules[moleculehash]._hooks;
-        emit UnhookedAll(moleculehash);
-        Molecules[moleculehash]._hooks.push(address(0));
+        delete Molecules[molyhash]._hooks;
+        emit UnhookedAll(molyhash);
+        Molecules[molyhash]._hooks.push(address(0));
     }
 
     /**
@@ -408,13 +443,13 @@ abstract contract Helix2Molecules {
 
     /**
      * @dev return cation of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return hash of cation
      */
     function cation(
-        bytes32 moleculehash
-    ) public view isNotExpired(moleculehash) returns (bytes32) {
-        bytes32 __cation = Molecules[moleculehash]._cation;
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (bytes32) {
+        bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         if (_cation == address(this)) {
             return roothash;
@@ -424,90 +459,90 @@ abstract contract Helix2Molecules {
 
     /**
      * @dev return controller of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return address of controller
      */
     function controller(
-        bytes32 moleculehash
-    ) public view isNotExpired(moleculehash) returns (address) {
-        address _controller = Molecules[moleculehash]._controller;
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (address) {
+        address _controller = Molecules[molyhash]._controller;
         return _controller;
     }
 
     /**
      * @dev shows mutuality state of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return mutuality state of the molecule
      */
-    function secure(
-        bytes32 moleculehash
-    ) public view isNotExpired(moleculehash) returns (bool) {
-        bool _secure = Molecules[moleculehash]._secure;
-        return _secure;
+    function covalence(
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (bool) {
+        bool _covalence = Molecules[molyhash]._covalence;
+        return _covalence;
     }
 
     /**
      * @dev return hooks of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return tuple of (hooks, rules)
      */
     function hooks(
-        bytes32 moleculehash
+        bytes32 molyhash
     )
         public
         view
-        isNotExpired(moleculehash)
+        isNotExpired(molyhash)
         returns (address[] memory, uint8[] memory)
     {
-        address[] memory _hooks = Molecules[moleculehash]._hooks;
+        address[] memory _hooks = Molecules[molyhash]._hooks;
         uint8[] memory _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
-            _rules[i] = Molecules[moleculehash]._rules[_hooks[i]];
+            _rules[i] = Molecules[molyhash]._rules[_hooks[i]];
         }
         return (_hooks, _rules);
     }
 
     /**
      * @dev return anions of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return array of anions
      */
     function anion(
-        bytes32 moleculehash
-    ) public view isNotExpired(moleculehash) returns (bytes32[] memory) {
-        bytes32[] memory _anion = Molecules[moleculehash]._anion;
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (bytes32[] memory) {
+        bytes32[] memory _anion = Molecules[molyhash]._anion;
         return _anion;
     }
 
     /**
      * @dev return expiry of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return expiry
      */
-    function expiry(bytes32 moleculehash) public view returns (uint) {
-        uint _expiry = Molecules[moleculehash]._expiry;
+    function expiry(bytes32 molyhash) public view returns (uint) {
+        uint _expiry = Molecules[molyhash]._expiry;
         return _expiry;
     }
 
     /**
      * @dev return resolver of a molecule
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return address of resolver
      */
     function resolver(
-        bytes32 moleculehash
-    ) public view isNotExpired(moleculehash) returns (address) {
-        address _resolver = Molecules[moleculehash]._resolver;
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (address) {
+        address _resolver = Molecules[molyhash]._resolver;
         return _resolver;
     }
 
     /**
      * @dev check if a molecule is registered
-     * @param moleculehash : hash of molecule to query
+     * @param molyhash : hash of molecule to query
      * @return true or false
      */
-    function recordExists(bytes32 moleculehash) public view returns (bool) {
-        return block.timestamp < Molecules[moleculehash]._expiry;
+    function recordExists(bytes32 molyhash) public view returns (bool) {
+        return block.timestamp < Molecules[molyhash]._expiry;
     }
 
     /**

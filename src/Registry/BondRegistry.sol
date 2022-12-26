@@ -11,7 +11,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Bond Base
  */
-abstract contract Helix2Bonds {
+contract Helix2Bonds {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -19,8 +19,10 @@ abstract contract Helix2Bonds {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
-    iNAME public NAMES = iNAME(HELIX2.getRegistry()[1]);
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
+    /// Name Registry
+    iNAME public NAMES;
 
     /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
@@ -35,7 +37,7 @@ abstract contract Helix2Bonds {
     event NewController(bytes32 indexed bondhash, address controller);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
-    event NewSecureFlag(bytes32 indexed bondhash, bool secure);
+    event NewCovalence(bytes32 indexed bondhash, bool covalence);
     event NewResolver(bytes32 indexed bondhash, address resolver);
     event ApprovalForAll(
         address indexed cation,
@@ -47,8 +49,9 @@ abstract contract Helix2Bonds {
     address public Dev;
 
     /// @dev : Bond roothash
-    bytes32 public roothash = HELIX2.getRoothash()[1];
-    uint256 public basePrice = HELIX2.getPrices()[1];
+    bytes32 public roothash;
+    uint256 public basePrice;
+    uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Bond struct
     struct Bond {
@@ -59,21 +62,49 @@ abstract contract Helix2Bonds {
         bytes32 _alias; /// Hash of Bond
         address _resolver; /// Resolver of Bond
         address _controller; /// Controller of Bond
-        bool _secure; /// Mutuality Flag
+        bool _covalence; /// Mutuality Flag
         uint _expiry; /// Expiry of Bond
     }
     mapping(bytes32 => Bond) public Bonds;
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev Initialise a new HELIX2 Bonds Registry
-     * @notice : grants ownership of '0x0' to contract
+     * @dev : sets permissions for 0x0 and roothash
+     * @notice : consider changing msg.sender → address(this)
      */
-    constructor() {
-        /// give ownership of '0x0' and <roothash> to Dev
-        Bonds[0x0]._cation = roothash;
+    function catalyse() internal {
+        // 0x0
+        Bonds[0x0]._cation = bytes32(0x0);
+        Bonds[0x0]._anion = bytes32(0x0);
+        Bonds[0x0]._alias = bytes32(0x0);
+        Bonds[0x0]._covalence = true;
+        Bonds[0x0]._expiry = theEnd;
+        Bonds[0x0]._controller = msg.sender;
+        Bonds[0x0]._resolver = msg.sender;
+        // root
         Bonds[roothash]._cation = roothash;
+        Bonds[roothash]._anion = roothash;
+        Bonds[roothash]._alias = roothash;
+        Bonds[roothash]._covalence = true;
+        Bonds[roothash]._expiry = theEnd;
+        Bonds[roothash]._controller = msg.sender;
+        Bonds[roothash]._resolver = msg.sender;
+    }
+
+    /**
+     * @dev Initialise a new HELIX2 Bonds Registry
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     * @param _registry : address of HELIX2 Name Registry
+     */
+    constructor(address _registry, address _helix2) {
         Dev = msg.sender;
+        HELIX2 = iHELIX2(_helix2);
+        NAMES = iNAME(_registry);
+        roothash = HELIX2.getRoothash()[1];
+        basePrice = HELIX2.getPrices()[1];
+        /// give ownership of '0x0' and <roothash> to Dev
+        catalyse();
     }
 
     /// @dev : Modifier to allow only dev
@@ -216,14 +247,14 @@ abstract contract Helix2Bonds {
     /**
      * @dev : set new mutuality flag for bond
      * @param bondhash : hash of bond
-     * @param _secure : bool
+     * @param _covalence : bool
      */
-    function setSecure(
+    function setCovalence(
         bytes32 bondhash,
-        bool _secure
+        bool _covalence
     ) external isCationOrController(bondhash) {
-        Bonds[bondhash]._secure = _secure;
-        emit NewSecureFlag(bondhash, _secure);
+        Bonds[bondhash]._covalence = _covalence;
+        emit NewCovalence(bondhash, _covalence);
     }
 
     /**
@@ -395,11 +426,11 @@ abstract contract Helix2Bonds {
      * @param bondhash : hash of bond to query
      * @return mutuality state of the bond
      */
-    function secure(
+    function covalence(
         bytes32 bondhash
     ) public view isNotExpired(bondhash) returns (bool) {
-        bool _secure = Bonds[bondhash]._secure;
-        return _secure;
+        bool _covalence = Bonds[bondhash]._covalence;
+        return _covalence;
     }
 
     /**

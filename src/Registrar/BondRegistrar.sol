@@ -17,9 +17,6 @@ contract BondRegistrar is ERC721 {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
-    iNAME public NAMES = iNAME(HELIX2.getRegistry()[1]);
-
     /// @dev : Contract metadata
     string public constant bond = "Helix2 Bond Service";
     string public constant symbol = "HBS";
@@ -35,16 +32,30 @@ contract BondRegistrar is ERC721 {
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[1]; // default base price
+    uint256 public basePrice; // default base price
 
+    /// Name Registry
+    iNAME public NAMES;
     /// Bond Registry
-    iBOND public BONDS = iBOND(address(0x0));
+    iBOND public BONDS;
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
 
-    constructor(address _registry) {
-        BONDS = iBOND(_registry);
+    /**
+     * @dev : Initialise a new HELIX2 Bonds Registrar
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     * @param _registry : address of HELIX2 Name Registry
+     * @param __registry : address of HELIX2 Bond Registry
+     */
+    constructor(address __registry, address _registry, address _helix2) {
+        HELIX2 = iHELIX2(_helix2);
+        NAMES = iNAME(_registry);
+        BONDS = iBOND(__registry);
+        basePrice = HELIX2.getPrices()[1];
         Dev = msg.sender;
     }
 
@@ -115,7 +126,7 @@ contract BondRegistrar is ERC721 {
         BONDS.setController(bondhash, _cation); /// set new controller
         BONDS.setResolver(bondhash, defaultResolver); /// set new resolver
         BONDS.setAlias(bondhash, aliashash); /// set new alias
-        BONDS.setSecure(bondhash, false); /// set new secure flag
+        BONDS.setCovalence(bondhash, false); /// set new covalence flag
         BONDS.unhookAll(bondhash); /// reset hooks
         _ownerOf[uint256(bondhash)] = _cation; /// change ownership record
         unchecked {

@@ -19,34 +19,45 @@ contract PolyculeRegistrar is ERC721 {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
-    iNAME public NAMES = iNAME(HELIX2.getRegistry()[3]);
-
     /// @dev : Contract metadata
     string public constant polycule = "Helix2 Polycule Service";
-    string public constant symbol = "HMS";
+    string public constant symbol = "HPS";
 
     /// @dev : Helix2 Polycule events
-    event NewPolycule(bytes32 indexed polyculehash, bytes32 cation);
-    event NewCation(bytes32 indexed polyculehash, bytes32 cation);
-    event NewExpiry(bytes32 indexed polyculehash, uint expiry);
-    event NewRecord(bytes32 indexed polyculehash, address resolver);
-    event NewResolver(bytes32 indexed polyculehash, address resolver);
-    event NewController(bytes32 indexed polyculehash, address controller);
+    event NewPolycule(bytes32 indexed polyhash, bytes32 cation);
+    event NewCation(bytes32 indexed polyhash, bytes32 cation);
+    event NewExpiry(bytes32 indexed polyhash, uint expiry);
+    event NewRecord(bytes32 indexed polyhash, address resolver);
+    event NewResolver(bytes32 indexed polyhash, address resolver);
+    event NewController(bytes32 indexed polyhash, address controller);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
-    uint256 public basePrice = HELIX2.getPrices()[3]; // default base price
+    uint256 public basePrice; // default base price
 
-    /// Polycule Registry
-    iPOLYCULE public POLYCULES = iPOLYCULE(address(0x0));
+    /// Name Registry
+    iNAME public NAMES;
+    /// Molecule Registry
+    iPOLYCULE public POLYCULES;
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
 
-    constructor(address _registry) {
-        POLYCULES = iPOLYCULE(_registry);
+    /**
+     * @dev : Initialise a new HELIX2 Polycules Registrar
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     * @param _registry : address of HELIX2 Name Registry
+     * @param __registry : address of HELIX2 Polycule Registry
+     */
+    constructor(address __registry, address _registry, address _helix2) {
+        HELIX2 = iHELIX2(_helix2);
+        NAMES = iNAME(_registry);
+        POLYCULES = iPOLYCULE(__registry);
+        basePrice = HELIX2.getPrices()[3];
         Dev = msg.sender;
     }
 
@@ -72,14 +83,14 @@ contract PolyculeRegistrar is ERC721 {
 
     /**
      * @dev : verify ownership of polycule
-     * @param polyculehash : hash of polycule
+     * @param polyhash : hash of polycule
      */
-    modifier onlyCation(bytes32 polyculehash) {
+    modifier onlyCation(bytes32 polyhash) {
         require(
-            block.timestamp < POLYCULES.expiry(polyculehash),
+            block.timestamp < POLYCULES.expiry(polyhash),
             "POLYCULE_EXPIRED"
         ); // expiry check
-        address cation = NAMES.owner(POLYCULES.cation(polyculehash));
+        address cation = NAMES.owner(POLYCULES.cation(polyhash));
         require(
             cation == msg.sender || Operators[cation][msg.sender],
             "NOT_OWNER"
@@ -131,21 +142,21 @@ contract PolyculeRegistrar is ERC721 {
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
-        bytes32 polyculehash = keccak256(
+        bytes32 polyhash = keccak256(
             abi.encodePacked(cation, roothash[3], aliashash)
         );
-        POLYCULES.setCation(polyculehash, cation); /// set new cation (= from)
-        POLYCULES.setAnions(polyculehash, anion, config, rules); /// set anions (= to)
-        POLYCULES.setExpiry(polyculehash, block.timestamp + lifespan); /// set new expiry
-        POLYCULES.setController(polyculehash, _cation); /// set new controller
-        POLYCULES.setResolver(polyculehash, defaultResolver); /// set new resolver
-        POLYCULES.setAlias(polyculehash, aliashash); /// set new alias
-        _ownerOf[uint256(polyculehash)] = _cation; /// change ownership record
+        POLYCULES.setCation(polyhash, cation); /// set new cation (= from)
+        POLYCULES.setAnions(polyhash, anion, config, rules); /// set anions (= to)
+        POLYCULES.setExpiry(polyhash, block.timestamp + lifespan); /// set new expiry
+        POLYCULES.setController(polyhash, _cation); /// set new controller
+        POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
+        POLYCULES.setAlias(polyhash, aliashash); /// set new alias
+        _ownerOf[uint256(polyhash)] = _cation; /// change ownership record
         unchecked {
             /// update balances
             _balanceOf[_cation]++;
         }
-        emit NewPolycule(polyculehash, cation);
-        return polyculehash;
+        emit NewPolycule(polyhash, cation);
+        return polyhash;
     }
 }

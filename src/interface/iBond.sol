@@ -18,7 +18,7 @@ interface iBOND {
 
     function setAlias(bytes32 bondhash, bytes32 _alias) external;
 
-    function setSecure(bytes32 bondhash, bool secure) external;
+    function setCovalence(bytes32 bondhash, bool covalence) external;
 
     function setExpiry(bytes32 bondhash, uint expiry) external;
 
@@ -47,7 +47,7 @@ interface iBOND {
 
     function _alias(bytes32 bondhash) external view returns (bytes32);
 
-    function secure(bytes32 bondhash) external view returns (bool);
+    function covalence(bytes32 bondhash) external view returns (bool);
 
     function expiry(bytes32 bondhash) external view returns (uint);
 

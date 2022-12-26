@@ -1,6 +1,9 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
+/// ONLY FOR TESTING
+import "forge-std/console2.sol";
+
 import "src/Interface/iName.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iERC721.sol";
@@ -10,7 +13,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-abstract contract Helix2Names {
+contract Helix2Names {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -18,7 +21,8 @@ abstract contract Helix2Names {
     using LibString for string[];
     using LibString for string;
 
-    iHELIX2 public HELIX2 = iHELIX2(address(0x0));
+    /// HELIX2 Manager
+    iHELIX2 public HELIX2;
 
     /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
@@ -37,9 +41,10 @@ abstract contract Helix2Names {
     /// Dev
     address public Dev;
 
-    /// @dev : Name roothash
-    bytes32 public roothash = HELIX2.getRoothash()[0];
-    uint256 public basePrice = HELIX2.getPrices()[0];
+    /// Constants
+    bytes32 public roothash;
+    uint256 public basePrice;
+    uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Name struct
     struct Name {
@@ -52,14 +57,34 @@ abstract contract Helix2Names {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev : Initialise a new HELIX2 Names Registry
-     * @notice : grants ownership of '0x0' to contract
+     * @dev : sets permissions for 0x0 and roothash
+     * @notice : consider changing msg.sender → address(this)
      */
-    constructor() {
-        /// give ownership of '0x0' and <roothash> to Dev
+    function catalyse() internal onlyDev {
+        // 0x0
         Names[0x0]._owner = msg.sender;
+        Names[0x0]._expiry = theEnd;
+        Names[0x0]._controller = msg.sender;
+        Names[0x0]._resolver = msg.sender;
+        // root
         Names[roothash]._owner = msg.sender;
+        Names[roothash]._expiry = theEnd;
+        Names[roothash]._controller = msg.sender;
+        Names[roothash]._resolver = msg.sender;
+    }
+
+    /**
+     * @dev : Initialise a new HELIX2 Names Registry
+     * @notice : constructor notes
+     * @param _helix2 : address of HELIX2 Manager
+     */
+    constructor(address _helix2) {
         Dev = msg.sender;
+        HELIX2 = iHELIX2(_helix2);
+        roothash = HELIX2.getRoothash()[0];
+        basePrice = HELIX2.getPrices()[0];
+        /// give ownership of '0x0' and <roothash> to Dev
+        catalyse();
     }
 
     /// @dev : Modifier to allow only dev
