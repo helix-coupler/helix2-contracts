@@ -11,7 +11,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Polycule Base
  */
-contract Helix2Polycules {
+contract Helix2PolyculeRegistry {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -90,15 +90,18 @@ contract Helix2Polycules {
         Polycules[0x0]._controller = msg.sender;
         Polycules[0x0]._resolver = msg.sender;
         // root
-        Polycules[roothash]._rules[address(0x0)] = uint8(0);
-        Polycules[roothash]._hooks = [address(0x0)];
-        Polycules[roothash]._cation = roothash;
-        Polycules[roothash]._anion = [roothash];
-        Polycules[roothash]._alias = roothash;
-        Polycules[roothash]._covalence = true;
-        Polycules[roothash]._expiry = theEnd;
-        Polycules[roothash]._controller = msg.sender;
-        Polycules[roothash]._resolver = msg.sender;
+        bytes32[4] memory hashes = HELIX2.getRoothash();
+        for (uint i = 0; i < hashes.length; i++) {
+            Polycules[hashes[i]]._rules[address(0x0)] = uint8(0);
+            Polycules[hashes[i]]._hooks = [address(0x0)];
+            Polycules[hashes[i]]._cation = hashes[i];
+            Polycules[hashes[i]]._anion = [hashes[i]];
+            Polycules[hashes[i]]._alias = hashes[i];
+            Polycules[hashes[i]]._covalence = true;
+            Polycules[hashes[i]]._expiry = theEnd;
+            Polycules[hashes[i]]._controller = msg.sender;
+            Polycules[hashes[i]]._resolver = msg.sender;
+        }
     }
 
     /**
@@ -569,11 +572,23 @@ contract Helix2Polycules {
     }
 
     /**
+     * @dev shows alias of a polycule
+     * @param polyhash : hash of polycule to query
+     * @return alias of the polycule
+     */
+    function alias_(
+        bytes32 polyhash
+    ) public view isNotExpired(polyhash) returns (bytes32) {
+        bytes32 _alias = Polycules[polyhash]._alias;
+        return _alias;
+    }
+
+    /**
      * @dev return hooks of a polycule
      * @param polyhash : hash of polycule to query
      * @return tuple of (hooks, rules)
      */
-    function hooks(
+    function hooksWithRules(
         bytes32 polyhash
     )
         public

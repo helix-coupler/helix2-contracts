@@ -58,11 +58,15 @@ interface iPOLYCULE {
 
     function anion(bytes32 polyhash) external view returns (bytes32[] memory);
 
-    function _alias(bytes32 polyhash) external view returns (bytes32);
+    function alias_(bytes32 polyhash) external view returns (bytes32);
 
     function covalence(bytes32 polyhash) external view returns (bool);
 
     function expiry(bytes32 polyhash) external view returns (uint);
+
+    function hooksWithRules(
+        bytes32 polyhash
+    ) external view returns (address[] memory, uint8[] memory);
 
     function resolver(bytes32 polyhash) external view returns (address);
 

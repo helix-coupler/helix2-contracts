@@ -10,7 +10,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-contract NameRegistrar is ERC721 {
+contract Helix2NameRegistrar is ERC721 {
     using LibString for address[];
     using LibString for address;
     using LibString for string[];

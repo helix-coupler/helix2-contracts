@@ -45,11 +45,15 @@ interface iBOND {
 
     function anion(bytes32 bondhash) external view returns (bytes32);
 
-    function _alias(bytes32 bondhash) external view returns (bytes32);
+    function alias_(bytes32 bondhash) external view returns (bytes32);
 
     function covalence(bytes32 bondhash) external view returns (bool);
 
     function expiry(bytes32 bondhash) external view returns (uint);
+
+    function hooksWithRules(
+        bytes32 bondhash
+    ) external view returns (address[] memory, uint8[] memory);
 
     function resolver(bytes32 bondhash) external view returns (address);
 

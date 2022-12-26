@@ -11,7 +11,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Bond Base
  */
-contract Helix2Bonds {
+contract Helix2BondRegistry {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -74,6 +74,8 @@ contract Helix2Bonds {
      */
     function catalyse() internal {
         // 0x0
+        Bonds[0x0]._rules[address(0x0)] = uint8(0);
+        Bonds[0x0]._hooks = [address(0x0)];
         Bonds[0x0]._cation = bytes32(0x0);
         Bonds[0x0]._anion = bytes32(0x0);
         Bonds[0x0]._alias = bytes32(0x0);
@@ -82,13 +84,18 @@ contract Helix2Bonds {
         Bonds[0x0]._controller = msg.sender;
         Bonds[0x0]._resolver = msg.sender;
         // root
-        Bonds[roothash]._cation = roothash;
-        Bonds[roothash]._anion = roothash;
-        Bonds[roothash]._alias = roothash;
-        Bonds[roothash]._covalence = true;
-        Bonds[roothash]._expiry = theEnd;
-        Bonds[roothash]._controller = msg.sender;
-        Bonds[roothash]._resolver = msg.sender;
+        bytes32[4] memory hashes = HELIX2.getRoothash();
+        for (uint i = 0; i < hashes.length; i++) {
+            Bonds[hashes[i]]._rules[address(0x0)] = uint8(0);
+            Bonds[hashes[i]]._hooks = [address(0x0)];
+            Bonds[hashes[i]]._cation = hashes[i];
+            Bonds[hashes[i]]._anion = hashes[i];
+            Bonds[hashes[i]]._alias = hashes[i];
+            Bonds[hashes[i]]._covalence = true;
+            Bonds[hashes[i]]._expiry = theEnd;
+            Bonds[hashes[i]]._controller = msg.sender;
+            Bonds[hashes[i]]._resolver = msg.sender;
+        }
     }
 
     /**
@@ -434,11 +441,23 @@ contract Helix2Bonds {
     }
 
     /**
+     * @dev shows alias of a bond
+     * @param bondhash : hash of bond to query
+     * @return alias of the bond
+     */
+    function alias_(
+        bytes32 bondhash
+    ) public view isNotExpired(bondhash) returns (bytes32) {
+        bytes32 _alias = Bonds[bondhash]._alias;
+        return _alias;
+    }
+
+    /**
      * @dev return hooks of a bond
      * @param bondhash : hash of bond to query
      * @return tuple of (hooks, rules)
      */
-    function hooks(
+    function hooksWithRules(
         bytes32 bondhash
     )
         public

@@ -11,7 +11,7 @@ import "src/Interface/iHelix2.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-contract MoleculeRegistrar is ERC721 {
+contract Helix2MoleculeRegistrar is ERC721 {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];

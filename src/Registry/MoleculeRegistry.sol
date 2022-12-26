@@ -11,7 +11,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Molecule Base
  */
-contract Helix2Molecules {
+contract Helix2MoleculeRegistry {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -88,15 +88,18 @@ contract Helix2Molecules {
         Molecules[0x0]._controller = msg.sender;
         Molecules[0x0]._resolver = msg.sender;
         // root
-        Molecules[0x0]._rules[address(0x0)] = uint8(0);
-        Molecules[0x0]._hooks = [address(0x0)];
-        Molecules[roothash]._cation = roothash;
-        Molecules[roothash]._anion = [roothash];
-        Molecules[roothash]._alias = roothash;
-        Molecules[roothash]._covalence = true;
-        Molecules[roothash]._expiry = theEnd;
-        Molecules[roothash]._controller = msg.sender;
-        Molecules[roothash]._resolver = msg.sender;
+        bytes32[4] memory hashes = HELIX2.getRoothash();
+        for (uint i = 0; i < hashes.length; i++) {
+            Molecules[hashes[i]]._rules[address(0x0)] = uint8(0);
+            Molecules[hashes[i]]._hooks = [address(0x0)];
+            Molecules[hashes[i]]._cation = hashes[i];
+            Molecules[hashes[i]]._anion = [hashes[i]];
+            Molecules[hashes[i]]._alias = hashes[i];
+            Molecules[hashes[i]]._covalence = true;
+            Molecules[hashes[i]]._expiry = theEnd;
+            Molecules[hashes[i]]._controller = msg.sender;
+            Molecules[hashes[i]]._resolver = msg.sender;
+        }
     }
 
     /**
@@ -482,11 +485,23 @@ contract Helix2Molecules {
     }
 
     /**
+     * @dev shows alias of a molecule
+     * @param molyhash : hash of molecule to query
+     * @return alias of the molecule
+     */
+    function alias_(
+        bytes32 molyhash
+    ) public view isNotExpired(molyhash) returns (bytes32) {
+        bytes32 _alias = Molecules[molyhash]._alias;
+        return _alias;
+    }
+
+    /**
      * @dev return hooks of a molecule
      * @param molyhash : hash of molecule to query
      * @return tuple of (hooks, rules)
      */
-    function hooks(
+    function hooksWithRules(
         bytes32 molyhash
     )
         public

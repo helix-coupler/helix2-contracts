@@ -11,7 +11,7 @@ import "src/Interface/iHelix2.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Bond Base
  */
-contract BondRegistrar is ERC721 {
+contract Helix2BondRegistrar is ERC721 {
     using LibString for address[];
     using LibString for address;
     using LibString for string[];

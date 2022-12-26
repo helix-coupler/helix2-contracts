@@ -13,7 +13,7 @@ import "src/Utils/LibString.sol";
  * @author sshmatrix (BeenSick Labs)
  * @title Helix2 Name Base
  */
-contract Helix2Names {
+contract Helix2NameRegistry {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -67,10 +67,13 @@ contract Helix2Names {
         Names[0x0]._controller = msg.sender;
         Names[0x0]._resolver = msg.sender;
         // root
-        Names[roothash]._owner = msg.sender;
-        Names[roothash]._expiry = theEnd;
-        Names[roothash]._controller = msg.sender;
-        Names[roothash]._resolver = msg.sender;
+        bytes32[4] memory hashes = HELIX2.getRoothash();
+        for (uint i = 0; i < hashes.length; i++) {
+            Names[hashes[i]]._owner = msg.sender;
+            Names[hashes[i]]._expiry = theEnd;
+            Names[hashes[i]]._controller = msg.sender;
+            Names[hashes[i]]._resolver = msg.sender;
+        }
     }
 
     /**
