@@ -2,7 +2,8 @@
 pragma solidity >0.8.0 <0.9.0;
 
 import "src/Names/iName.sol";
-import "src/Names/iNameResolver.sol";
+import "src/Bonds/iBond.sol";
+import "src/Bonds/iBondResolver.sol";
 import "src/Interface/iENS.sol";
 import "src/Interface/iHelix2.sol";
 
@@ -11,7 +12,7 @@ import "src/Interface/iHelix2.sol";
  * @notice : sshmatrix (BeenSick Labs)
  */
 
-abstract contract NameResolverBase {
+abstract contract BondResolverBase {
     /// Events
     error OnlyDev(address _dev, address _you);
 
@@ -26,6 +27,7 @@ abstract contract NameResolverBase {
     /// @dev : Helix2 Contract Interface
     iHELIX2 public HELIX2;
     iNAME public NAMES;
+    iBOND public BONDS;
     mapping(bytes4 => bool) public supportsInterface;
 
     /**
@@ -60,7 +62,7 @@ abstract contract NameResolverBase {
 /**
  * @dev : Helix2 Resolver
  */
-contract NameResolver is NameResolverBase {
+contract BondResolver is BondResolverBase {
     struct PublicKey {
         bytes32 x;
         bytes32 y;
@@ -71,18 +73,18 @@ contract NameResolver is NameResolverBase {
     mapping(bytes32 => PublicKey) public pubkey;
 
     event NewTextRecord(
-        bytes32 indexed namehash,
+        bytes32 indexed bondhash,
         string indexed key,
         string value
     );
-    event NewAddr(bytes32 indexed namehash, address addr);
+    event NewAddr(bytes32 indexed bondhash, address addr);
     event NewAddr2(
-        bytes32 indexed namehash,
+        bytes32 indexed bondhash,
         uint256 coinType,
         bytes newAddress
     );
-    event NewContenthash(bytes32 indexed namehash, bytes _contenthash);
-    event NewPubkey(bytes32 indexed namehash, bytes32 x, bytes32 y);
+    event NewContenthash(bytes32 indexed bondhash, bytes _contenthash);
+    event NewPubkey(bytes32 indexed bondhash, bytes32 x, bytes32 y);
 
     /// @notice : encoder: https://gist.github.com/sshmatrix/6ed02d73e439a5773c5a2aa7bd0f90f9
     /// @dev : default contenthash (encoded from IPNS hash)
@@ -93,23 +95,23 @@ contract NameResolver is NameResolverBase {
 
     constructor(address _helix2) {
         HELIX2 = iHELIX2(_helix2);
-        supportsInterface[iNameResolver.addr.selector] = true;
-        supportsInterface[iNameResolver.addr2.selector] = true;
-        supportsInterface[iNameResolver.contenthash.selector] = true;
-        supportsInterface[iNameResolver.pubkey.selector] = true;
-        supportsInterface[iNameResolver.text.selector] = true;
+        supportsInterface[iBondResolver.addr.selector] = true;
+        supportsInterface[iBondResolver.addr2.selector] = true;
+        supportsInterface[iBondResolver.contenthash.selector] = true;
+        supportsInterface[iBondResolver.pubkey.selector] = true;
+        supportsInterface[iBondResolver.text.selector] = true;
         _contenthash[
             bytes32(0)
         ] = hex"e5010172002408011220a7448dcfc00e746c22e238de5c1e3b6fb97bae0949e47741b4e0ae8e929abd4f";
     }
 
     /**
-     * @dev : verifies ownership of namehash
-     * @param namehash : hash of name
+     * @dev : verifies ownership of bondhash
+     * @param bondhash : hash of bond
      */
-    modifier onlyOwner(bytes32 namehash) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
-        require(msg.sender == NAMES.owner(namehash), "NOT_AUTHORISED");
+    modifier onlyOwner(bytes32 bondhash) {
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        require(msg.sender == NAMES.owner(BONDS.cation(bondhash)), "NOT_AUTHORISED");
         _;
     }
 
@@ -123,117 +125,117 @@ contract NameResolver is NameResolverBase {
 
     /**
      * @dev : returns default contenhash if no contenthash set
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      */
     function contenthash(
-        bytes32 namehash
+        bytes32 bondhash
     ) public view returns (bytes memory _hash) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
-        _hash = _contenthash[namehash];
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        _hash = _contenthash[bondhash];
         if (_hash.length == 0) {
             _hash = _contenthash[bytes32(0)];
         }
     }
 
     /**
-     * @dev : defaults to owner if no address is set for Ethereum [60]
-     * @param namehash : hash of name
+     * @dev : defaults to address of cation if no address is set for Ethereum [60]
+     * @param bondhash : hash of bond
      * @return : resolved address
      */
-    function addr(bytes32 namehash) external view returns (address payable) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
-        bytes memory _addr = _addrs[namehash][60];
+    function addr(bytes32 bondhash) external view returns (address payable) {
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        bytes memory _addr = _addrs[bondhash][60];
         if (_addr.length == 0) {
-            return payable(NAMES.owner(namehash));
+            return payable(NAMES.owner(BONDS.cation(bondhash)));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
      * @dev : queries text records
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      * @param key : key to query
      * @return value of text record
      */
     function text(
-        bytes32 namehash,
+        bytes32 bondhash,
         string calldata key
     ) external view returns (string memory value) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
-        return _text[namehash][key];
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        return _text[bondhash][key];
     }
 
     /**
-     * @dev : resolves address for <coin>; if no ethereum address [60] is set, resolve to owner
-     * @param namehash : hash of name
+     * @dev : resolves address for <coin>; if no ethereum address [60] is set, resolve to address of cation
+     * @param bondhash : hash of bond
      * @param coinType : <coin>
      * @return _addr : resolved address
      */
     function addr2(
-        bytes32 namehash,
+        bytes32 bondhash,
         uint256 coinType
     ) external view returns (address payable) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
-        bytes memory _addr = _addrs[namehash][coinType];
+        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        bytes memory _addr = _addrs[bondhash][coinType];
         if (_addr.length == 0 && coinType == 60) {
-            _addr = abi.encodePacked(NAMES.owner(namehash));
+            _addr = abi.encodePacked(NAMES.owner(BONDS.cation(bondhash)));
         }
         return payable(address(uint160(uint256(bytes32(_addr)))));
     }
 
     /**
      * @dev : changes contenthash
-     * @param namehash: namehash
+     * @param bondhash: bondhash
      * @param _hash: new contenthash
      */
     function setContenthash(
-        bytes32 namehash,
+        bytes32 bondhash,
         bytes memory _hash
-    ) external onlyOwner(namehash) {
-        _contenthash[namehash] = _hash;
-        emit NewContenthash(namehash, _hash);
+    ) external onlyOwner(bondhash) {
+        _contenthash[bondhash] = _hash;
+        emit NewContenthash(bondhash, _hash);
     }
 
     /**
      * @dev : changes address
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      * @param _addr : new address
      */
     function setAddress(
-        bytes32 namehash,
+        bytes32 bondhash,
         address _addr
-    ) external onlyOwner(namehash) {
-        _addrs[namehash][60] = abi.encodePacked(_addr);
-        emit NewAddr(namehash, _addr);
+    ) external onlyOwner(bondhash) {
+        _addrs[bondhash][60] = abi.encodePacked(_addr);
+        emit NewAddr(bondhash, _addr);
     }
 
     /**
      * @dev : changes address for <coin>
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      * @param coinType : <coin>
      */
     function setAddressCoin(
-        bytes32 namehash,
+        bytes32 bondhash,
         uint256 coinType,
         bytes memory _addr
-    ) external onlyOwner(namehash) {
-        _addrs[namehash][coinType] = _addr;
-        emit NewAddr2(namehash, coinType, _addr);
+    ) external onlyOwner(bondhash) {
+        _addrs[bondhash][coinType] = _addr;
+        emit NewAddr2(bondhash, coinType, _addr);
     }
 
     /**
      * @dev : changes public key record
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      * @param x : x-coordinate on elliptic curve
      * @param y : y-coordinate on elliptic curve
      */
     function setPubkey(
-        bytes32 namehash,
+        bytes32 bondhash,
         bytes32 x,
         bytes32 y
-    ) external onlyOwner(namehash) {
-        pubkey[namehash] = PublicKey(x, y);
-        emit NewPubkey(namehash, x, y);
+    ) external onlyOwner(bondhash) {
+        pubkey[bondhash] = PublicKey(x, y);
+        emit NewPubkey(bondhash, x, y);
     }
 
     /**
@@ -251,16 +253,16 @@ contract NameResolver is NameResolverBase {
 
     /**
      * @dev : changes text record
-     * @param namehash : hash of name
+     * @param bondhash : hash of bond
      * @param key : key to change
      * @param value : value to set
      */
     function setText(
-        bytes32 namehash,
+        bytes32 bondhash,
         string calldata key,
         string calldata value
-    ) external onlyOwner(namehash) {
-        _text[namehash][key] = value;
-        emit NewTextRecord(namehash, key, value);
+    ) external onlyOwner(bondhash) {
+        _text[bondhash][key] = value;
+        emit NewTextRecord(bondhash, key, value);
     }
 }

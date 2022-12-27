@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-/// ONLY FOR TESTING
-import "forge-std/console2.sol";
-
 import "src/Names/Base.sol";
 import "src/Names/iName.sol";
 import "src/Names/iERC721.sol";
 
 /**
- * @dev : Helix2 ERC721
+ * @dev : Helix2 ERC721 Wrapper
  */
 abstract contract ERC721 is BaseRegistrar {
-    /// @dev : ERC721 events
-    mapping(uint256 => address) internal _ownerOf;
     mapping(address => uint256) internal _balanceOf;
-    mapping(uint256 => address) public _approved;
     mapping(address => mapping(address => bool)) public isApprovedForAll;
 
+    /// @dev : Modifier to allow Registry
+    modifier isRegistry() {
+        require(msg.sender == HELIX2.getRegistry()[0], "NOT_REGISTRY");
+        _;
+    }
+
+    /// @dev : ERC721 events
     error CannotBurn();
     error ERC721IncompatibleReceiver(address to);
     error Unauthorized(address operator, address owner, uint256 tokenID);
@@ -42,8 +43,10 @@ abstract contract ERC721 is BaseRegistrar {
      * @param tokenID : token ID
      */
     function ownerOf(uint256 tokenID) public view returns (address) {
-        require(_ownerOf[tokenID] != address(0), "INVALID_TOKENID");
-        return _ownerOf[tokenID];
+        bytes32 _namehash = bytes32(tokenID);
+        require(block.timestamp < NAMES.expiry(_namehash), "INVALID_TOKENID");
+        address _owner = NAMES.owner(_namehash);
+        return _owner;
     }
 
     /**
@@ -51,37 +54,47 @@ abstract contract ERC721 is BaseRegistrar {
      * @param wallet : wallet address
      */
     function balanceOf(address wallet) public view returns (uint256) {
-        require(wallet != address(0), "ZERO_ADDRESS");
         return _balanceOf[wallet];
     }
 
     /**
+     * @dev : updates the balance of wallet by 1
+     * @param wallet : wallet address
+     * @param balance : new balance
+     */
+    function setBalance(address wallet, uint256 balance) external isRegistry {
+        _balanceOf[wallet] = balance;
+    }
+
+    /**
      * @dev : sets Controller for one token
-     * @param controller : operator address to be set as Controller
+     * @param operator : operator address to be set as Controller
      * @param tokenID : token ID
      */
-    function approve(address controller, uint256 tokenID) external payable {
+    function approve(address operator, uint256 tokenID) external {
+        bytes32 _namehash = bytes32(tokenID);
+        require(block.timestamp < NAMES.expiry(_namehash), "INVALID_TOKENID");
+        address _owner = NAMES.owner(_namehash);
+        address _controller = NAMES.controller(_namehash);
         if (
-            msg.sender != _ownerOf[tokenID] &&
-            !isApprovedForAll[_ownerOf[tokenID]][msg.sender]
+            msg.sender != _owner &&
+            msg.sender != _controller &&
+            !isApprovedForAll[_owner][msg.sender]
         ) {
-            revert Unauthorized(msg.sender, _ownerOf[tokenID], tokenID);
+            revert Unauthorized(msg.sender, _owner, tokenID);
         }
-        _approved[tokenID] = controller;
-        address nameRegistrar = HELIX2.getRegistry()[0];
-        NAMES = iNAME(nameRegistrar);
-        NAMES.setControllerERC721(bytes32(tokenID), controller); // change controller record in registry <<< SWITCH TO setController()
-        emit Approval(msg.sender, controller, tokenID);
+        NAMES.setControllerERC721(bytes32(tokenID), operator); // change operator record in Registry
+        emit Approval(msg.sender, operator, tokenID);
     }
 
     /**
      * @dev : sets Controller (for an owner)
-     * @param controller : operator address to be set as Controller
+     * @param operator : operator address to be set as Controller
      * @param flag : bool to set
      */
-    function setApprovalForAll(address controller, bool flag) external payable {
-        isApprovedForAll[msg.sender][controller] = flag;
-        emit ApprovalForAll(msg.sender, controller, flag);
+    function setApprovalForAll(address operator, bool flag) external {
+        isApprovedForAll[msg.sender][operator] = flag;
+        emit ApprovalForAll(msg.sender, operator, flag);
     }
 
     /**
@@ -94,7 +107,7 @@ abstract contract ERC721 is BaseRegistrar {
         address from,
         address to,
         uint256 tokenID
-    ) external payable {
+    ) external {
         _transfer(from, to, tokenID, ""); // standard fallback
     }
 
@@ -108,7 +121,7 @@ abstract contract ERC721 is BaseRegistrar {
         address from,
         address to,
         uint256 tokenID
-    ) external payable {
+    ) external {
         _transfer(from, to, tokenID, ""); // standard fallback
     }
 
@@ -124,8 +137,8 @@ abstract contract ERC721 is BaseRegistrar {
         address to,
         uint256 tokenID,
         bytes memory data
-    ) external payable {
-        _transfer(from, to, tokenID, data); // standard fallback
+    ) external {
+        _transfer(from, to, tokenID, data);
     }
 
     /**
@@ -140,23 +153,22 @@ abstract contract ERC721 is BaseRegistrar {
         uint256 tokenID,
         bytes memory data
     ) internal {
+        bytes32 _namehash = bytes32(tokenID);
+        require(block.timestamp < NAMES.expiry(_namehash), "INVALID_TOKENID");
+        address _owner = NAMES.owner(_namehash);
         // cannot burn
         if (to == address(0)) {
             revert CannotBurn();
         }
         // check ownership of <from>
-        if (_ownerOf[tokenID] != from) {
-            revert Unauthorized(_ownerOf[tokenID], from, tokenID);
+        if (_owner != from) {
+            revert Unauthorized(_owner, from, tokenID);
         }
         // check permissions of <sender>
-        if (msg.sender != _ownerOf[tokenID]) {
+        if (msg.sender != _owner) {
             revert Unauthorized(msg.sender, from, tokenID);
         }
-        delete _approved[tokenID]; // reset approved
-        _ownerOf[tokenID] = to; // change ownership
-        address nameRegistrar = HELIX2.getRegistry()[0];
-        NAMES = iNAME(nameRegistrar);
-        NAMES.setOwnerERC721(bytes32(tokenID), to); // change ownership record in registry <<< SWITCH TO setOwner()
+        NAMES.setOwnerERC721(bytes32(tokenID), to); // change ownership record in registry
         unchecked {
             // update balances
             _balanceOf[from]--;

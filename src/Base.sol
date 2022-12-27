@@ -36,6 +36,9 @@ abstract contract Base {
     /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[4] public sizes = [32, 32, 32, 32];
 
+    /// @dev : Lifespans in seconds for each struct in order [<name>, <bond>, <molecule>, <polycule>]
+    uint256[4] public lifespans = [1, 1, 1, 1];
+
     /// @dev : Root Identifier
     bytes32[4] public roothash = [
         keccak256(abi.encodePacked(bytes32(0), keccak256("."))), /// Name Roothash
@@ -49,10 +52,10 @@ abstract contract Base {
 
     /// @dev : Helix2 Registry array
     address[4] public helix2Registry = [
-        0x0000000000000000000000000000000000000001, /// Name Registry
-        0x0000000000000000000000000000000000000002, /// Bond Registry
-        0x0000000000000000000000000000000000000003, /// Molecule Registry
-        0x0000000000000000000000000000000000000004 /// Polycule Registry
+        address(0), /// Name Registry
+        address(0), /// Bond Registry
+        address(0), /// Molecule Registry
+        address(0) /// Polycule Registry
     ];
 
     /// @dev : Initialise Registers
@@ -64,10 +67,10 @@ abstract contract Base {
 
     /// @dev : Helix2 Registrar array
     address[4] public helix2Registrar = [
-        0x0000000000000000000000000000000000000001, /// Name Registry
-        0x0000000000000000000000000000000000000002, /// Bond Registry
-        0x0000000000000000000000000000000000000003, /// Molecule Registry
-        0x0000000000000000000000000000000000000004 /// Polycule Registry
+        address(0), /// Name Registry
+        address(0), /// Bond Registry
+        address(0), /// Molecule Registry
+        address(0) /// Polycule Registry
     ];
 
     /// @dev : Helix2 base prices per second (Wei/second value)
@@ -134,6 +137,13 @@ abstract contract Base {
      */
     function getSizes() public view returns (uint256[4] memory) {
         return sizes;
+    }
+
+    /**
+     * @dev : returns lifespans array
+     */
+    function getLifespans() public view returns (uint256[4] memory) {
+        return lifespans;
     }
 
     /**

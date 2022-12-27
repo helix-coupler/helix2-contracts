@@ -14,6 +14,8 @@ interface iNAME {
 
     function setOwner(bytes32 namehash, address owner) external;
 
+    function setBalance(address owner, uint256 balance) external;
+
     function setOwnerERC721(bytes32 namehash, address owner) external;
 
     function setController(bytes32 namehash, address controller) external;

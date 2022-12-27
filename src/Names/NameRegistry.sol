@@ -1,10 +1,8 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-/// ONLY FOR TESTING
-import "forge-std/console2.sol";
-
 import "src/Names/iName.sol";
+import "src/Names/iERC721.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Utils/LibString.sol";
 
@@ -20,8 +18,10 @@ contract Helix2NameRegistry {
     using LibString for string[];
     using LibString for string;
 
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
+    iNAME public _NAME_;
+    iERC721 public ERC721;
 
     /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
@@ -32,6 +32,16 @@ contract Helix2NameRegistry {
     event NewExpiry(bytes32 indexed namehash, uint expiry);
     event NewRecord(bytes32 indexed namehash, address resolver);
     event NewResolver(bytes32 indexed namehash, address resolver);
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenID
+    );
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 indexed tokenID
+    );
     event ApprovalForAll(
         address indexed owner,
         address indexed operator,
@@ -188,7 +198,10 @@ contract Helix2NameRegistry {
      * @param _owner : new owner
      */
     function register(bytes32 namehash, address _owner) external isRegistrar {
+        require(_owner != address(0), "CANNOT_BURN");
+        emit Transfer(address(0), _owner, uint256(namehash));
         Names[namehash]._owner = _owner;
+        emit NewOwner(namehash, _owner);
         emit NewRegistration(namehash, _owner);
     }
 
@@ -201,6 +214,13 @@ contract Helix2NameRegistry {
         bytes32 namehash,
         address _owner
     ) external onlyOwner(namehash) {
+        require(_owner != address(0), "CANNOT_BURN");
+        address owner_ = Names[namehash]._owner;
+        _NAME_ = iNAME(HELIX2.getRegistrar()[0]);
+        ERC721 = iERC721(HELIX2.getRegistrar()[0]);
+        _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
+        _NAME_.setBalance(_owner, ERC721.balanceOf(_owner) + 1);
+        emit Transfer(owner_, _owner, uint256(namehash));
         Names[namehash]._owner = _owner;
         emit NewOwner(namehash, _owner);
     }
@@ -214,6 +234,7 @@ contract Helix2NameRegistry {
         bytes32 namehash,
         address _owner
     ) external isRegistrar {
+        require(_owner != address(0), "CANNOT_BURN");
         Names[namehash]._owner = _owner;
         emit NewOwner(namehash, _owner);
     }
@@ -227,6 +248,7 @@ contract Helix2NameRegistry {
         bytes32 namehash,
         address _controller
     ) external isAuthorised(namehash) {
+        emit Approval(Names[namehash]._owner, _controller, uint256(namehash));
         Names[namehash]._controller = _controller;
         emit NewController(namehash, _controller);
     }
@@ -269,8 +291,15 @@ contract Helix2NameRegistry {
         require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
         registrar = HELIX2.getRegistrar()[0];
         if (msg.sender != registrar) {
+            // when renewal is a registration
             uint newDuration = _expiry - Names[namehash]._expiry;
             require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+            address owner_ = Names[namehash]._owner;
+            /// @notice : Balance of previous owner is updated only when the 
+            /// expired name is re-registered by someone else, aka, an
+            /// expired name is accounted to its previous owner until it is renewed
+            /// (by owner) or re-registered (by others)
+            _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
         }
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
@@ -297,7 +326,7 @@ contract Helix2NameRegistry {
     function setApprovalForAll(
         address operator,
         bool approved
-    ) external payable {
+    ) external {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -376,7 +405,7 @@ contract Helix2NameRegistry {
     /**
      * @dev : withdraw ether to Dev, anyone can trigger
      */
-    function withdrawEther() external payable {
+    function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }

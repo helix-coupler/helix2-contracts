@@ -41,6 +41,14 @@ contract Helix2NamesTest is Test {
     bytes32 public roothash;
     address public defaultResolver;
 
+    /// Global test variables
+    address public pill = address(0xc0de4c0ca19e);
+    string public label = "vitalik";
+    uint256 public lifespan = 500;
+    bytes32 public namehash;
+    address public taker = address(0xc0de4c0cac01a);
+    uint256 public tokenID;
+
     constructor() {
         deployer = address(this);
 
@@ -71,120 +79,188 @@ contract Helix2NamesTest is Test {
 
     /// Register a name
     function testRegisterName() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        _NAME_.newName{value: basePrice * _lifespan}(label, pill, _lifespan);
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
+        assertEq(_NAME_.balanceOf(pill), 1);
+    }
+
+    /// >>> TO DO
+    /// Register a name, let it expire, and verify records
+    function testExpiration() public {
+        // register test name
+        lifespan = 1;
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
     }
 
     /// Register a name and verify records
     function testVerifyRecords() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        uint256 _block = block.timestamp;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
         roothash = HELIX2_.getRoothash()[0];
-        bytes32 __namehash = keccak256(
+        bytes32 _namehash = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
         );
-        assertEq(_namehash, __namehash);
-        assertEq(NAMES.owner(_namehash), pill);
-        assertEq(NAMES.controller(_namehash), pill);
-        assertEq(NAMES.resolver(_namehash), defaultResolver);
-        assertEq(NAMES.expiry(_namehash), _block + _lifespan);
+        assertEq(namehash, _namehash);
+        assertEq(NAMES.owner(namehash), pill);
+        assertEq(NAMES.controller(namehash), pill);
+        assertEq(NAMES.resolver(namehash), defaultResolver);
+        assertEq(NAMES.expiry(namehash), block.timestamp + lifespan);
     }
 
     /// Register a name and change Ownership record
     function testOwnerCanChangeOwner() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
-        address taker = address(0xc0de4c0cac01a);
         vm.prank(pill);
-        NAMES.setOwner(_namehash, taker);
-        assertEq(NAMES.owner(_namehash), taker);
+        NAMES.setOwner(namehash, taker);
+        assertEq(NAMES.owner(namehash), taker);
+        assertEq(_NAME_.ownerOf(uint256(namehash)), taker);
+        assertEq(_NAME_.balanceOf(pill), 0);
+        assertEq(_NAME_.balanceOf(taker), 1);
     }
 
     /// Register a name and change Controller record as Owner
     function testOwnerCanSetController() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
-        address taker = address(0xc0de4c0cac01a);
         vm.prank(pill);
-        NAMES.setController(_namehash, taker);
-        assertEq(NAMES.controller(_namehash), taker);
+        NAMES.setController(namehash, taker);
+        assertEq(NAMES.controller(namehash), taker);
     }
 
     /// Register a name and change Controller record as Controller
     function testControllerCanSetController() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
-        address taker = address(0xc0de4c0cac01a);
         vm.prank(pill);
-        NAMES.setController(_namehash, taker);
-        assertEq(NAMES.controller(_namehash), taker);
+        NAMES.setController(namehash, taker);
+        assertEq(NAMES.controller(namehash), taker);
         vm.prank(taker);
-        NAMES.setController(_namehash, pill);
-        assertEq(NAMES.controller(_namehash), pill);
+        NAMES.setController(namehash, pill);
+        assertEq(NAMES.controller(namehash), pill);
     }
 
     /// Register a name and transfer to new owner via ERC721 interface
     function testOwnerCanTransferERC721() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
-        uint256 tokenID = uint256(_namehash);
-        address taker = address(0xc0de4c0cac01a);
+        tokenID = uint256(namehash);
         assertEq(_NAME_.ownerOf(tokenID), pill);
+        assertEq(_NAME_.balanceOf(pill), 1);
+        assertEq(_NAME_.balanceOf(taker), 0);
         vm.prank(pill);
         _NAME_.safeTransferFrom(pill, taker, tokenID);
         assertEq(_NAME_.ownerOf(tokenID), taker);
-        assertEq(NAMES.owner(_namehash), taker);
+        assertEq(NAMES.owner(namehash), taker);
+        assertEq(_NAME_.balanceOf(pill), 0);
+        assertEq(_NAME_.balanceOf(taker), 1);
     }
 
-    /// Register a name and transfer to new owner via ERC721 interface
+    /// Register a name and set another address as controller
     function testOwnerCanApproveERC721() public {
-        address pill = address(0xc0de4c0ca19e);
-        string memory label = "vitalik";
-        uint256 _lifespan = 500;
-        bytes32 _namehash = _NAME_.newName{value: basePrice * _lifespan}(
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
-            _lifespan
+            lifespan
         );
-        uint256 tokenID = uint256(_namehash);
-        address taker = address(0xc0de4c0cac01a);
-        assertEq(_NAME_.ownerOf(tokenID), pill);
+        tokenID = uint256(namehash);
         vm.prank(pill);
-        _NAME_.safeTransferFrom(pill, taker, tokenID);
-        assertEq(_NAME_.ownerOf(tokenID), taker);
-        assertEq(NAMES.owner(_namehash), taker);
+        _NAME_.approve(taker, tokenID);
+        assertEq(NAMES.controller(namehash), taker);
+    }
+
+    /// Register a name and verify controller can set new controller
+    function testControllerCanApproveERC721() public {
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
+        vm.prank(pill);
+        NAMES.setController(namehash, taker);
+        vm.prank(taker);
+        _NAME_.approve(pill, tokenID);
+        assertEq(NAMES.controller(namehash), pill);
+    }
+
+    /// Register a name and attempt to make unauthorised calls
+    function testCannotMakeUnauthorisedCalls() public {
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
+        vm.prank(taker);
+        vm.expectRevert(abi.encodePacked("NOT_OWNER"));
+        NAMES.setOwner(namehash, taker);
+        vm.prank(taker);
+        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
+        NAMES.setController(namehash, taker);
+        vm.prank(taker);
+        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
+        NAMES.setRecord(namehash, taker);
+        vm.prank(taker);
+        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
+        NAMES.setExpiry(namehash, block.timestamp + 100);
+    }
+
+    /// >>> TO DO
+    /// Register a name, let it expire, and attempt to renew it
+    function testRenewalByOwner() public {
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
+        
+    }
+
+    /// >>> TO DO
+    /// Attempt to register an expired name (accounted to someone else's balance)
+    function testClaimExpiredName() public {
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        tokenID = uint256(namehash);
     }
 }

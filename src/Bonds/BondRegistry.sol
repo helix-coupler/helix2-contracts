@@ -566,7 +566,7 @@ contract Helix2BondRegistry {
     /**
      * @dev : withdraw ether to Dev, anyone can trigger
      */
-    function withdrawEther() external payable {
+    function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }

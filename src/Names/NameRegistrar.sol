@@ -21,7 +21,7 @@ contract Helix2NameRegistrar is ERC721 {
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
-    uint256 public defaultLifespan = 60; // default registration duration: 90 days
+    uint256 public defaultLifespan; // minimum registration duration: 90 days
     uint256 public basePrice; // default base price
     uint256 public sizeLimit; // name length limit
     string[4] public illegalBlocks; // illegal blocks
@@ -37,6 +37,7 @@ contract Helix2NameRegistrar is ERC721 {
         HELIX2 = iHELIX2(_helix2);
         basePrice = HELIX2.getPrices()[0];
         sizeLimit = HELIX2.getSizes()[0];
+        defaultLifespan = HELIX2.getLifespans()[0];
         illegalBlocks = HELIX2.getIllegalBlocks();
         Dev = msg.sender;
     }
@@ -108,6 +109,7 @@ contract Helix2NameRegistrar is ERC721 {
         address owner,
         uint lifespan
     ) external payable isLegal(label) isAvailable(label) returns (bytes32) {
+        require(owner != address(0), "CANNOT_BURN");
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 roothash = HELIX2.getRoothash()[0];
@@ -118,7 +120,6 @@ contract Helix2NameRegistrar is ERC721 {
         NAMES.setController(namehash, owner); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
         NAMES.setResolver(namehash, defaultResolver); /// set new resolver
-        _ownerOf[uint256(namehash)] = owner; // change ownership record
         unchecked {
             // update balances
             _balanceOf[owner]++;

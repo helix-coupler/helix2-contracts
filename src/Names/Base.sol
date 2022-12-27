@@ -43,6 +43,13 @@ abstract contract BaseRegistrar {
     }
 
     /**
+     * @dev : Toggle if contract is active or paused, only Dev can toggle
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
      * @dev : transfer contract ownership to new Dev
      * @param newDev : new Dev
      */

@@ -32,7 +32,7 @@ contract Helix2PolyculeRegistrar {
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
-    uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
+    uint256 public defaultLifespan; // default registration duration: 90 days
     uint256 public basePrice; // default base price
     uint256 public sizeLimit; // name length limit
     string[4] public illegalBlocks; // illegal blocks
@@ -78,6 +78,7 @@ contract Helix2PolyculeRegistrar {
         POLYCULES = iPOLYCULE(__registry);
         basePrice = HELIX2.getPrices()[3];
         sizeLimit = HELIX2.getSizes()[3];
+        defaultLifespan = HELIX2.getLifespans()[3];
         illegalBlocks = HELIX2.getIllegalBlocks();
         Dev = msg.sender;
     }

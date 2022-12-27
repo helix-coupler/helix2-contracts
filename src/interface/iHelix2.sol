@@ -23,6 +23,8 @@ interface iHELIX2 {
 
     function getSizes() external view returns (uint256[4] memory);
 
+    function getLifespans() external view returns (uint256[4] memory);
+
     function getContract() external view returns (address);
 
     // write functions
