@@ -10,6 +10,8 @@ interface iPOLYCULE {
     /// REGISTRY
     /// @dev : HELIX2 Polycules external functions
     // write functions
+    function register(bytes32 polyhash, bytes32 cation) external;
+
     function setCation(bytes32 polyhash, bytes32 cation) external;
 
     function setController(bytes32 polyhash, address controller) external;

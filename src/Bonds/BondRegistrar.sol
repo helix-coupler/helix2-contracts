@@ -1,21 +1,23 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/ERC721.sol";
-import "src/Interface/iBond.sol";
-import "src/Utils/LibString.sol";
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
+import "src/Bonds/iBond.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Utils/LibString.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
- * @title Helix2 Bond Base
+ * @title Helix2 Bond Registrar
  */
-contract Helix2BondRegistrar is ERC721 {
+contract Helix2BondRegistrar {
     using LibString for address[];
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+
+    /// Dev
+    address public Dev;
 
     /// @dev : Contract metadata
     string public constant bond = "Helix2 Bond Service";
@@ -23,26 +25,43 @@ contract Helix2BondRegistrar is ERC721 {
 
     /// @dev : Helix2 Bond events
     event NewBond(bytes32 indexed bondhash, bytes32 cation);
-    event NewCation(bytes32 indexed bondhash, bytes32 cation);
-    event NewExpiry(bytes32 indexed bondhash, uint expiry);
-    event NewRecord(bytes32 indexed bondhash, address resolver);
-    event NewResolver(bytes32 indexed bondhash, address resolver);
-    event NewController(bytes32 indexed bondhash, address controller);
+    event NewDev(address Dev, address newDev);
+    error OnlyDev(address _dev, address _you);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
     uint256 public basePrice; // default base price
+    uint256 public sizeLimit; // name length limit
+    string[4] public illegalBlocks; // illegal blocks
 
-    /// Name Registry
-    iNAME public NAMES;
-    /// Bond Registry
-    iBOND public BONDS;
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
+    iNAME public NAMES;
+    iBOND public BONDS;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
+
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        if (msg.sender != Dev) {
+            revert OnlyDev(Dev, msg.sender);
+        }
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
+    }
 
     /**
      * @dev : Initialise a new HELIX2 Bonds Registrar
@@ -56,6 +75,8 @@ contract Helix2BondRegistrar is ERC721 {
         NAMES = iNAME(_registry);
         BONDS = iBOND(__registry);
         basePrice = HELIX2.getPrices()[1];
+        sizeLimit = HELIX2.getSizes()[1];
+        illegalBlocks = HELIX2.getIllegalBlocks();
         Dev = msg.sender;
     }
 
@@ -64,7 +85,7 @@ contract Helix2BondRegistrar is ERC721 {
      * @param _alias : alias of bond
      */
     modifier isLegal(string memory _alias) {
-        require(bytes(_alias).length < sizes[1], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
         require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
@@ -117,8 +138,9 @@ contract Helix2BondRegistrar is ERC721 {
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 roothash = HELIX2.getRoothash()[1];
         bytes32 bondhash = keccak256(
-            abi.encodePacked(cation, roothash[1], aliashash)
+            abi.encodePacked(cation, roothash, aliashash)
         );
         BONDS.setCation(bondhash, cation); /// set new cation (= from)
         BONDS.setAnion(bondhash, anion); /// set anion (= to)
@@ -128,11 +150,6 @@ contract Helix2BondRegistrar is ERC721 {
         BONDS.setAlias(bondhash, aliashash); /// set new alias
         BONDS.setCovalence(bondhash, false); /// set new covalence flag
         BONDS.unhookAll(bondhash); /// reset hooks
-        _ownerOf[uint256(bondhash)] = _cation; /// change ownership record
-        unchecked {
-            /// update balances
-            _balanceOf[_cation]++;
-        }
         emit NewBond(bondhash, cation);
         return bondhash;
     }

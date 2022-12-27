@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Base.sol";
-import "src/Interface/iERC721.sol";
+/// ONLY FOR TESTING
+import "forge-std/console2.sol";
+
+import "src/Names/Base.sol";
+import "src/Names/iName.sol";
+import "src/Names/iERC721.sol";
 
 /**
- * @dev : Helix2 ERC721 Base
+ * @dev : Helix2 ERC721
  */
-abstract contract ERC721 is Base {
+abstract contract ERC721 is BaseRegistrar {
+    /// @dev : ERC721 events
     mapping(uint256 => address) internal _ownerOf;
     mapping(address => uint256) internal _balanceOf;
     mapping(uint256 => address) public _approved;
@@ -57,12 +62,15 @@ abstract contract ERC721 is Base {
      */
     function approve(address controller, uint256 tokenID) external payable {
         if (
-            msg.sender != _ownerOf[tokenID] ||
+            msg.sender != _ownerOf[tokenID] &&
             !isApprovedForAll[_ownerOf[tokenID]][msg.sender]
         ) {
             revert Unauthorized(msg.sender, _ownerOf[tokenID], tokenID);
         }
         _approved[tokenID] = controller;
+        address nameRegistrar = HELIX2.getRegistry()[0];
+        NAMES = iNAME(nameRegistrar);
+        NAMES.setControllerERC721(bytes32(tokenID), controller); // change controller record in registry <<< SWITCH TO setController()
         emit Approval(msg.sender, controller, tokenID);
     }
 
@@ -141,16 +149,14 @@ abstract contract ERC721 is Base {
             revert Unauthorized(_ownerOf[tokenID], from, tokenID);
         }
         // check permissions of <sender>
-        if (
-            msg.sender != _ownerOf[tokenID] &&
-            !isApprovedForAll[from][msg.sender] &&
-            msg.sender != _approved[tokenID]
-        ) {
+        if (msg.sender != _ownerOf[tokenID]) {
             revert Unauthorized(msg.sender, from, tokenID);
         }
-
         delete _approved[tokenID]; // reset approved
         _ownerOf[tokenID] = to; // change ownership
+        address nameRegistrar = HELIX2.getRegistry()[0];
+        NAMES = iNAME(nameRegistrar);
+        NAMES.setOwnerERC721(bytes32(tokenID), to); // change ownership record in registry <<< SWITCH TO setOwner()
         unchecked {
             // update balances
             _balanceOf[from]--;

@@ -4,9 +4,8 @@ pragma solidity >0.8.0 <0.9.0;
 /// ONLY FOR TESTING
 import "forge-std/console2.sol";
 
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
 import "src/Interface/iHelix2.sol";
-import "src/Interface/iERC721.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -28,6 +27,7 @@ contract Helix2NameRegistry {
     event NewDev(address Dev, address newDev);
     event NewName(bytes32 indexed namehash, address owner);
     event NewOwner(bytes32 indexed namehash, address owner);
+    event NewRegistration(bytes32 indexed namehash, address owner);
     event NewController(bytes32 indexed namehash, address controller);
     event NewExpiry(bytes32 indexed namehash, uint expiry);
     event NewRecord(bytes32 indexed namehash, address resolver);
@@ -41,9 +41,13 @@ contract Helix2NameRegistry {
     /// Dev
     address public Dev;
 
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
     /// Constants
     bytes32 public roothash;
     uint256 public basePrice;
+    address public registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Name struct
@@ -125,11 +129,41 @@ contract Helix2NameRegistry {
         _;
     }
 
+    /// @dev : Modifier to allow Registrar
+    modifier isRegistrar() {
+        registrar = HELIX2.getRegistrar()[0];
+        require(msg.sender == registrar, "NOT_REGISTRAR");
+        _;
+    }
+
+    /// @dev : Modifier to allow Owner, Controller or Registrar
+    modifier isAuthorised(bytes32 namehash) {
+        registrar = HELIX2.getRegistrar()[0];
+        address _owner = Names[namehash]._owner;
+        require(
+            msg.sender == registrar ||
+                _owner == msg.sender ||
+                Operators[_owner][msg.sender] ||
+                msg.sender == Names[namehash]._controller,
+            "NOT_AUTHORISED"
+        );
+        _;
+    }
+
     /**
-     * @dev : check if name is not expired
+     * @dev : check if name is available
      * @param namehash : hash of name
      */
-    modifier isNotExpired(bytes32 namehash) {
+    modifier isAvailable(bytes32 namehash) {
+        require(block.timestamp >= Names[namehash]._expiry, "NAME_EXISTS"); // expiry check
+        _;
+    }
+
+    /**
+     * @dev : check if name is already registered
+     * @param namehash : hash of name
+     */
+    modifier isOwned(bytes32 namehash) {
         require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
         _;
     }
@@ -149,6 +183,16 @@ contract Helix2NameRegistry {
     }
 
     /**
+     * @dev : register owner of new name
+     * @param namehash : hash of name
+     * @param _owner : new owner
+     */
+    function register(bytes32 namehash, address _owner) external isRegistrar {
+        Names[namehash]._owner = _owner;
+        emit NewRegistration(namehash, _owner);
+    }
+
+    /**
      * @dev : set owner of a name
      * @param namehash : hash of name
      * @param _owner : new owner
@@ -162,6 +206,19 @@ contract Helix2NameRegistry {
     }
 
     /**
+     * @dev : set owner of a name due to ERC721 transfer() call
+     * @param namehash : hash of name
+     * @param _owner : new owner
+     */
+    function setOwnerERC721(
+        bytes32 namehash,
+        address _owner
+    ) external isRegistrar {
+        Names[namehash]._owner = _owner;
+        emit NewOwner(namehash, _owner);
+    }
+
+    /**
      * @dev : set controller of a name
      * @param namehash : hash of name
      * @param _controller : new controller
@@ -169,7 +226,20 @@ contract Helix2NameRegistry {
     function setController(
         bytes32 namehash,
         address _controller
-    ) external isOwnerOrController(namehash) {
+    ) external isAuthorised(namehash) {
+        Names[namehash]._controller = _controller;
+        emit NewController(namehash, _controller);
+    }
+
+    /**
+     * @dev : set controller of a name due to ERC721 approve() call
+     * @param namehash : hash of name
+     * @param _controller : new controller
+     */
+    function setControllerERC721(
+        bytes32 namehash,
+        address _controller
+    ) external isRegistrar {
         Names[namehash]._controller = _controller;
         emit NewController(namehash, _controller);
     }
@@ -182,7 +252,7 @@ contract Helix2NameRegistry {
     function setResolver(
         bytes32 namehash,
         address _resolver
-    ) external isOwnerOrController(namehash) {
+    ) external isAuthorised(namehash) {
         Names[namehash]._resolver = _resolver;
         emit NewResolver(namehash, _resolver);
     }
@@ -195,10 +265,13 @@ contract Helix2NameRegistry {
     function setExpiry(
         bytes32 namehash,
         uint _expiry
-    ) external payable isOwnerOrController(namehash) {
+    ) external payable isAuthorised(namehash) {
         require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
-        uint newDuration = _expiry - Names[namehash]._expiry;
-        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        registrar = HELIX2.getRegistrar()[0];
+        if (msg.sender != registrar) {
+            uint newDuration = _expiry - Names[namehash]._expiry;
+            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        }
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
     }
@@ -211,7 +284,7 @@ contract Helix2NameRegistry {
     function setRecord(
         bytes32 namehash,
         address _resolver
-    ) external isOwnerOrController(namehash) {
+    ) external isAuthorised(namehash) {
         Names[namehash]._resolver = _resolver;
         emit NewRecord(namehash, _resolver);
     }
@@ -236,7 +309,7 @@ contract Helix2NameRegistry {
      */
     function owner(
         bytes32 namehash
-    ) public view isNotExpired(namehash) returns (address) {
+    ) public view isOwned(namehash) returns (address) {
         address addr = Names[namehash]._owner;
         if (addr == address(this)) {
             return address(0x0);
@@ -251,7 +324,7 @@ contract Helix2NameRegistry {
      */
     function controller(
         bytes32 namehash
-    ) public view isNotExpired(namehash) returns (address) {
+    ) public view isOwned(namehash) returns (address) {
         address _controller = Names[namehash]._controller;
         return _controller;
     }
@@ -273,7 +346,7 @@ contract Helix2NameRegistry {
      */
     function resolver(
         bytes32 namehash
-    ) public view isNotExpired(namehash) returns (address) {
+    ) public view isOwned(namehash) returns (address) {
         address _resolver = Names[namehash]._resolver;
         return _resolver;
     }
@@ -306,17 +379,5 @@ contract Helix2NameRegistry {
     function withdrawEther() external payable {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
-    }
-
-    /**
-     * @dev : to be used in case some tokens get locked in the contract
-     * @param token : token to release
-     */
-    function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(
-            address(this),
-            Dev,
-            iERC20(token).balanceOf(address(this))
-        );
     }
 }

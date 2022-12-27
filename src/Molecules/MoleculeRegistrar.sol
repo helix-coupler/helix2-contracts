@@ -1,17 +1,16 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/ERC721.sol";
-import "src/Interface/iMolecule.sol";
-import "src/Utils/LibString.sol";
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
+import "src/Molecules/iMolecule.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Utils/LibString.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
- * @title Helix2 Molecule Base
+ * @title Helix2 Molecule Registrar
  */
-contract Helix2MoleculeRegistrar is ERC721 {
+contract Helix2MoleculeRegistrar {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -19,32 +18,52 @@ contract Helix2MoleculeRegistrar is ERC721 {
     using LibString for string[];
     using LibString for string;
 
+    /// Dev
+    address public Dev;
+
     /// @dev : Contract metadata
     string public constant molecule = "Helix2 Molecule Service";
     string public constant symbol = "HMS";
 
     /// @dev : Helix2 Molecule events
     event NewMolecule(bytes32 indexed molyhash, bytes32 cation);
-    event NewCation(bytes32 indexed molyhash, bytes32 cation);
-    event NewExpiry(bytes32 indexed molyhash, uint expiry);
-    event NewRecord(bytes32 indexed molyhash, address resolver);
-    event NewResolver(bytes32 indexed molyhash, address resolver);
-    event NewController(bytes32 indexed molyhash, address controller);
+    event NewDev(address Dev, address newDev);
+    error OnlyDev(address _dev, address _you);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
     uint256 public basePrice; // default base price
+    uint256 public sizeLimit; // name length limit
+    string[4] public illegalBlocks; // illegal blocks
 
-    /// Name Registry
-    iNAME public NAMES;
-    /// Molecule Registry
-    iMOLECULE public MOLECULES;
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
+    iNAME public NAMES;
+    iMOLECULE public MOLECULES;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
+
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        if (msg.sender != Dev) {
+            revert OnlyDev(Dev, msg.sender);
+        }
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
+    }
 
     /**
      * @dev : Initialise a new HELIX2 Molecules Registrar
@@ -58,6 +77,8 @@ contract Helix2MoleculeRegistrar is ERC721 {
         NAMES = iNAME(_registry);
         MOLECULES = iMOLECULE(__registry);
         basePrice = HELIX2.getPrices()[2];
+        sizeLimit = HELIX2.getSizes()[2];
+        illegalBlocks = HELIX2.getIllegalBlocks();
         Dev = msg.sender;
     }
 
@@ -66,7 +87,7 @@ contract Helix2MoleculeRegistrar is ERC721 {
      * @param _alias : alias of molecule
      */
     modifier isLegal(string memory _alias) {
-        require(bytes(_alias).length < sizes[1], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
         require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
@@ -122,8 +143,9 @@ contract Helix2MoleculeRegistrar is ERC721 {
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 roothash = HELIX2.getRoothash()[2];
         bytes32 molyhash = keccak256(
-            abi.encodePacked(cation, roothash[2], aliashash)
+            abi.encodePacked(cation, roothash, aliashash)
         );
         MOLECULES.setCation(molyhash, cation); /// set new cation (= from)
         MOLECULES.setAnions(molyhash, anion); /// set anions (= to)
@@ -133,11 +155,6 @@ contract Helix2MoleculeRegistrar is ERC721 {
         MOLECULES.setAlias(molyhash, aliashash); /// set new alias
         MOLECULES.setCovalence(molyhash, false); /// set new covalence flag
         MOLECULES.unhookAll(molyhash); /// reset hooks
-        _ownerOf[uint256(molyhash)] = _cation; /// change ownership record
-        unchecked {
-            /// update balances
-            _balanceOf[_cation]++;
-        }
         emit NewMolecule(molyhash, cation);
         return molyhash;
     }

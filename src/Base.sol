@@ -1,7 +1,22 @@
 // SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Interface/iERC721.sol";
+/// @dev : Helix2 Structs
+import "src/Names/NameRegistry.sol";
+import "src/Bonds/BondRegistry.sol";
+import "src/Molecules/MoleculeRegistry.sol";
+import "src/Polycules/PolyculeRegistry.sol";
+
+/// @dev : Helix2 Interfaces
+import "src/Interface/iHelix2.sol";
+import "src/Names/iName.sol";
+import "src/Bonds/iBond.sol";
+import "src/Molecules/iMolecule.sol";
+import "src/Polycules/iPolycule.sol";
+//import "src/interface/iResolver.sol";
+
+/// @dev : Other Interfaces
+import "src/Interface/iENS.sol";
 
 /**
  * @author sshmatrix
@@ -40,6 +55,21 @@ abstract contract Base {
         0x0000000000000000000000000000000000000004 /// Polycule Registry
     ];
 
+    /// @dev : Initialise Registers
+    iENS public ENS = iENS(ensRegistry);
+    iNAME public NAMES = iNAME(helix2Registry[0]);
+    iBOND public BONDS = iBOND(helix2Registry[1]);
+    iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
+    iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
+
+    /// @dev : Helix2 Registrar array
+    address[4] public helix2Registrar = [
+        0x0000000000000000000000000000000000000001, /// Name Registry
+        0x0000000000000000000000000000000000000002, /// Bond Registry
+        0x0000000000000000000000000000000000000003, /// Molecule Registry
+        0x0000000000000000000000000000000000000004 /// Polycule Registry
+    ];
+
     /// @dev : Helix2 base prices per second (Wei/second value)
     uint256[4] public prices = [
         0.0000000000002 ether, /// Name Base Price (= 200 Kwei/second)
@@ -55,9 +85,6 @@ abstract contract Base {
 
     constructor() {
         Dev = msg.sender;
-        supportsInterface[type(iERC165).interfaceId] = true;
-        supportsInterface[type(iERC721).interfaceId] = true;
-        supportsInterface[type(iERC721Metadata).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -96,15 +123,17 @@ abstract contract Base {
     }
 
     /**
-     * @dev : to be used in case some tokens get locked in the contract
-     * @param token : token to release
+     * @dev : returns illegal blocks list
      */
-    function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(
-            address(this),
-            Dev,
-            iERC20(token).balanceOf(address(this))
-        );
+    function getIllegalBlocks() public view returns (string[4] memory) {
+        return illegalBlocks;
+    }
+
+    /**
+     * @dev : returns illegal sizes list
+     */
+    function getSizes() public view returns (uint256[4] memory) {
+        return sizes;
     }
 
     /**
@@ -115,10 +144,17 @@ abstract contract Base {
     }
 
     /**
-     * @dev : returns Registry
+     * @dev : returns Registers
      */
     function getRegistry() public view returns (address[4] memory) {
         return helix2Registry;
+    }
+
+    /**
+     * @dev : returns Registrars
+     */
+    function getRegistrar() public view returns (address[4] memory) {
+        return helix2Registrar;
     }
 
     /**
@@ -126,6 +162,13 @@ abstract contract Base {
      */
     function getRoothash() public view returns (bytes32[4] memory) {
         return roothash;
+    }
+
+    /**
+     * @dev : returns contract address
+     */
+    function getContract() public view returns (address) {
+        return address(this);
     }
 
     /**

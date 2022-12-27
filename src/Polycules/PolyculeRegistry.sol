@@ -1,10 +1,9 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Interface/iPolycule.sol";
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
+import "src/Polycules/iPolycule.sol";
 import "src/Interface/iHelix2.sol";
-import "src/Interface/iERC721.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -19,9 +18,8 @@ contract Helix2PolyculeRegistry {
     using LibString for string[];
     using LibString for string;
 
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
-    /// Name Registry
     iNAME public NAMES;
 
     /// @dev : Helix2 Polycule events
@@ -34,6 +32,7 @@ contract Helix2PolyculeRegistry {
     event UnhookedAnion(bytes32 indexed polyhash, bytes32 anion);
     event UnhookedAll(bytes32 indexed polyhash);
     event NewCation(bytes32 indexed polyhash, bytes32 cation);
+    event NewRegistration(bytes32 indexed polyhash, bytes32 cation);
     event NewAnion(bytes32 indexed polyhash, bytes32 anion);
     event NewAnions(bytes32 indexed polyhash, bytes32[] anion);
     event PopAnion(bytes32 indexed polyhash, bytes32 anion);
@@ -54,9 +53,13 @@ contract Helix2PolyculeRegistry {
     /// Dev
     address public Dev;
 
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
     /// @dev : Polycule roothash
     bytes32 public roothash;
     uint256 public basePrice;
+    address public registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 POLYCULE struct
@@ -165,11 +168,49 @@ contract Helix2PolyculeRegistry {
         _;
     }
 
+    /// @dev : Modifier to allow Owner, Controller or Registrar
+    modifier isAuthorised(bytes32 polyhash) {
+        registrar = HELIX2.getRegistrar()[3];
+        require(
+            block.timestamp < Polycules[polyhash]._expiry,
+            "POLYCULE_EXPIRED"
+        ); // expiry check
+        bytes32 __cation = Polycules[polyhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(
+            msg.sender == registrar ||
+                _cation == msg.sender ||
+                Operators[_cation][msg.sender] ||
+                msg.sender == Polycules[polyhash]._controller,
+            "NOT_AUTHORISED"
+        );
+        _;
+    }
+
+    /// @dev : Modifier to allow Registrar
+    modifier isRegistrar() {
+        registrar = HELIX2.getRegistrar()[3];
+        require(msg.sender == registrar, "NOT_REGISTRAR");
+        _;
+    }
+
+    /**
+     * @dev : check if polycule is available
+     * @param polyhash : hash of polycule
+     */
+    modifier isAvailable(bytes32 polyhash) {
+        require(
+            block.timestamp >= Polycules[polyhash]._expiry,
+            "POLYCULE_EXISTS"
+        ); // expiry check
+        _;
+    }
+
     /**
      * @dev : verify polycule is not expired
      * @param polyhash : hash of polycule
      */
-    modifier isNotExpired(bytes32 polyhash) {
+    modifier isOwned(bytes32 polyhash) {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
@@ -236,6 +277,19 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
+     * @dev : register owner of new polycule
+     * @param polyhash : hash of polycule
+     * @param _cation : new cation
+     */
+    function register(
+        bytes32 polyhash,
+        bytes32 _cation
+    ) external isAvailable(polyhash) {
+        Polycules[polyhash]._cation = _cation;
+        emit NewRegistration(polyhash, _cation);
+    }
+
+    /**
      * @dev : set cation of a polycule
      * @param polyhash : hash of polycule
      * @param _cation : new cation
@@ -256,7 +310,7 @@ contract Helix2PolyculeRegistry {
     function setController(
         bytes32 polyhash,
         address _controller
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         Polycules[polyhash]._controller = _controller;
         emit NewController(polyhash, _controller);
     }
@@ -271,7 +325,7 @@ contract Helix2PolyculeRegistry {
         bytes32 _anion,
         address config,
         uint8 rule
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         require(isNotDuplicateAnion(polyhash, _anion), "ANION_EXISTS");
         require(isNotDuplicateHook(polyhash, config), "HOOK_EXISTS");
         require(Polycules[polyhash]._rules[config] != rule, "RULE_EXISTS");
@@ -295,7 +349,7 @@ contract Helix2PolyculeRegistry {
         bytes32[] memory _anion,
         address[] memory _config,
         uint8[] memory _rules
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         require(isLegalMap(_anion, _config), "BAD_MAP");
         for (uint i = 0; i < _anion.length; i++) {
             if (!_anion[i].existsIn(Polycules[polyhash]._anion)) {
@@ -316,7 +370,7 @@ contract Helix2PolyculeRegistry {
     function popAnion(
         bytes32 polyhash,
         bytes32 __anion
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         address[] memory _hooks = Polycules[polyhash]._hooks;
         if (__anion.existsIn(_anion)) {
@@ -338,7 +392,7 @@ contract Helix2PolyculeRegistry {
     function setAlias(
         bytes32 polyhash,
         bytes32 _alias
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         Polycules[polyhash]._alias = _alias;
         emit NewAlias(polyhash, _alias);
     }
@@ -352,7 +406,7 @@ contract Helix2PolyculeRegistry {
     function setCovalence(
         bytes32 polyhash,
         bool _covalence
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         Polycules[polyhash]._covalence = _covalence;
         emit NewCovalence(polyhash, _covalence);
     }
@@ -365,7 +419,7 @@ contract Helix2PolyculeRegistry {
     function setResolver(
         bytes32 polyhash,
         address _resolver
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         Polycules[polyhash]._resolver = _resolver;
         emit NewResolver(polyhash, _resolver);
     }
@@ -378,10 +432,13 @@ contract Helix2PolyculeRegistry {
     function setExpiry(
         bytes32 polyhash,
         uint _expiry
-    ) external payable isCationOrController(polyhash) {
+    ) external payable isAuthorised(polyhash) {
         require(_expiry > Polycules[polyhash]._expiry, "BAD_EXPIRY");
-        uint newDuration = _expiry - Polycules[polyhash]._expiry;
-        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        registrar = HELIX2.getRegistrar()[3];
+        if (msg.sender != registrar) {
+            uint newDuration = _expiry - Polycules[polyhash]._expiry;
+            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        }
         Polycules[polyhash]._expiry = _expiry;
         emit NewExpiry(polyhash, _expiry);
     }
@@ -394,7 +451,7 @@ contract Helix2PolyculeRegistry {
     function setRecord(
         bytes32 polyhash,
         address _resolver
-    ) external isCationOrController(polyhash) {
+    ) external isAuthorised(polyhash) {
         Polycules[polyhash]._resolver = _resolver;
         emit NewRecord(polyhash, _resolver);
     }
@@ -538,7 +595,7 @@ contract Helix2PolyculeRegistry {
      */
     function cation(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (bytes32) {
+    ) public view isOwned(polyhash) returns (bytes32) {
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         if (_cation == address(this)) {
@@ -554,7 +611,7 @@ contract Helix2PolyculeRegistry {
      */
     function controller(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (address) {
+    ) public view isOwned(polyhash) returns (address) {
         address _controller = Polycules[polyhash]._controller;
         return _controller;
     }
@@ -566,7 +623,7 @@ contract Helix2PolyculeRegistry {
      */
     function covalence(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (bool) {
+    ) public view isOwned(polyhash) returns (bool) {
         bool _covalence = Polycules[polyhash]._covalence;
         return _covalence;
     }
@@ -578,7 +635,7 @@ contract Helix2PolyculeRegistry {
      */
     function alias_(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (bytes32) {
+    ) public view isOwned(polyhash) returns (bytes32) {
         bytes32 _alias = Polycules[polyhash]._alias;
         return _alias;
     }
@@ -590,12 +647,7 @@ contract Helix2PolyculeRegistry {
      */
     function hooksWithRules(
         bytes32 polyhash
-    )
-        public
-        view
-        isNotExpired(polyhash)
-        returns (address[] memory, uint8[] memory)
-    {
+    ) public view isOwned(polyhash) returns (address[] memory, uint8[] memory) {
         address[] memory _hooks = Polycules[polyhash]._hooks;
         uint8[] memory _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
@@ -611,7 +663,7 @@ contract Helix2PolyculeRegistry {
      */
     function anion(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (bytes32[] memory) {
+    ) public view isOwned(polyhash) returns (bytes32[] memory) {
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         return _anion;
     }
@@ -633,7 +685,7 @@ contract Helix2PolyculeRegistry {
      */
     function resolver(
         bytes32 polyhash
-    ) public view isNotExpired(polyhash) returns (address) {
+    ) public view isOwned(polyhash) returns (address) {
         address _resolver = Polycules[polyhash]._resolver;
         return _resolver;
     }
@@ -667,17 +719,5 @@ contract Helix2PolyculeRegistry {
     function withdrawEther() external payable {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
-    }
-
-    /**
-     * @dev : to be used in case some tokens get locked in the contract
-     * @param token : token to release
-     */
-    function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(
-            address(this),
-            Dev,
-            iERC20(token).balanceOf(address(this))
-        );
     }
 }

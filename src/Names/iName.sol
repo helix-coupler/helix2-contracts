@@ -10,9 +10,15 @@ interface iNAME {
     /// REGISTRY
     /// @dev : HELIX2 Names external functions
     // write functions
+    function register(bytes32 namehash, address owner) external;
+
     function setOwner(bytes32 namehash, address owner) external;
 
+    function setOwnerERC721(bytes32 namehash, address owner) external;
+
     function setController(bytes32 namehash, address controller) external;
+
+    function setControllerERC721(bytes32 namehash, address controller) external;
 
     function setExpiry(bytes32 namehash, uint expiry) external;
 

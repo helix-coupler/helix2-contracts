@@ -1,17 +1,16 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/ERC721.sol";
-import "src/Interface/iPolycule.sol";
+import "src/Polycules/iPolycule.sol";
 import "src/Utils/LibString.sol";
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
 import "src/Interface/iHelix2.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
- * @title Helix2 Polycule Base
+ * @title Helix2 Polycule Registrar
  */
-contract Helix2PolyculeRegistrar is ERC721 {
+contract Helix2PolyculeRegistrar {
     using LibString for bytes32[];
     using LibString for bytes32;
     using LibString for address[];
@@ -19,32 +18,52 @@ contract Helix2PolyculeRegistrar is ERC721 {
     using LibString for string[];
     using LibString for string;
 
+    /// Dev
+    address public Dev;
+
     /// @dev : Contract metadata
     string public constant polycule = "Helix2 Polycule Service";
     string public constant symbol = "HPS";
 
     /// @dev : Helix2 Polycule events
     event NewPolycule(bytes32 indexed polyhash, bytes32 cation);
-    event NewCation(bytes32 indexed polyhash, bytes32 cation);
-    event NewExpiry(bytes32 indexed polyhash, uint expiry);
-    event NewRecord(bytes32 indexed polyhash, address resolver);
-    event NewResolver(bytes32 indexed polyhash, address resolver);
-    event NewController(bytes32 indexed polyhash, address controller);
+    event NewDev(address Dev, address newDev);
+    error OnlyDev(address _dev, address _you);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan = 7_776_000_000; // default registration duration: 90 days
     uint256 public basePrice; // default base price
+    uint256 public sizeLimit; // name length limit
+    string[4] public illegalBlocks; // illegal blocks
 
-    /// Name Registry
-    iNAME public NAMES;
-    /// Molecule Registry
-    iPOLYCULE public POLYCULES;
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
+    iNAME public NAMES;
+    iPOLYCULE public POLYCULES;
 
     /// @dev : Default resolver used by this contract
     address public defaultResolver;
+
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
+    /// @dev : Modifier to allow only dev
+    modifier onlyDev() {
+        if (msg.sender != Dev) {
+            revert OnlyDev(Dev, msg.sender);
+        }
+        _;
+    }
+
+    /**
+     * @dev : transfer contract ownership to new Dev
+     * @param newDev : new Dev
+     */
+    function changeDev(address newDev) external onlyDev {
+        emit NewDev(Dev, newDev);
+        Dev = newDev;
+    }
 
     /**
      * @dev : Initialise a new HELIX2 Polycules Registrar
@@ -58,6 +77,8 @@ contract Helix2PolyculeRegistrar is ERC721 {
         NAMES = iNAME(_registry);
         POLYCULES = iPOLYCULE(__registry);
         basePrice = HELIX2.getPrices()[3];
+        sizeLimit = HELIX2.getSizes()[3];
+        illegalBlocks = HELIX2.getIllegalBlocks();
         Dev = msg.sender;
     }
 
@@ -66,7 +87,7 @@ contract Helix2PolyculeRegistrar is ERC721 {
      * @param _alias : alias of polycule
      */
     modifier isLegal(string memory _alias) {
-        require(bytes(_alias).length < sizes[1], "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
         require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
@@ -142,8 +163,9 @@ contract Helix2PolyculeRegistrar is ERC721 {
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 roothash = HELIX2.getRoothash()[3];
         bytes32 polyhash = keccak256(
-            abi.encodePacked(cation, roothash[3], aliashash)
+            abi.encodePacked(cation, roothash, aliashash)
         );
         POLYCULES.setCation(polyhash, cation); /// set new cation (= from)
         POLYCULES.setAnions(polyhash, anion, config, rules); /// set anions (= to)
@@ -151,11 +173,6 @@ contract Helix2PolyculeRegistrar is ERC721 {
         POLYCULES.setController(polyhash, _cation); /// set new controller
         POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
         POLYCULES.setAlias(polyhash, aliashash); /// set new alias
-        _ownerOf[uint256(polyhash)] = _cation; /// change ownership record
-        unchecked {
-            /// update balances
-            _balanceOf[_cation]++;
-        }
         emit NewPolycule(polyhash, cation);
         return polyhash;
     }

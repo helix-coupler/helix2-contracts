@@ -7,25 +7,25 @@ import "test/GenAddr.sol";
 // Helix2 Manager Contract
 import "src/Helix2.sol";
 // Registrar
-import "src/Registrar/NameRegistrar.sol";
-import "src/Registrar/BondRegistrar.sol";
-import "src/Registrar/MoleculeRegistrar.sol";
-import "src/Registrar/PolyculeRegistrar.sol";
+import "src/Names/NameRegistrar.sol";
+import "src/Bonds/BondRegistrar.sol";
+import "src/Molecules/MoleculeRegistrar.sol";
+import "src/Polycules/PolyculeRegistrar.sol";
 // Registry
-import "src/Registry/NameRegistry.sol";
-import "src/Registry/BondRegistry.sol";
-import "src/Registry/MoleculeRegistry.sol";
-import "src/Registry/PolyculeRegistry.sol";
+import "src/Names/NameRegistry.sol";
+import "src/Bonds/BondRegistry.sol";
+import "src/Molecules/MoleculeRegistry.sol";
+import "src/Polycules/PolyculeRegistry.sol";
 // Resolver
-import "src/Resolver/NameResolver.sol";
+import "src/Names/NameResolver.sol";
 // Interface
-import "src/Interface/iName.sol";
-import "src/Interface/iBond.sol";
-import "src/Interface/iMolecule.sol";
-import "src/Interface/iPolycule.sol";
+import "src/Names/iName.sol";
+import "src/Bonds/iBond.sol";
+import "src/Molecules/iMolecule.sol";
+import "src/Polycules/iPolycule.sol";
+import "src/Names/iERC721.sol";
+import "src/Names/iNameResolver.sol";
 import "src/Interface/iHelix2.sol";
-import "src/Interface/iERC721.sol";
-import "src/Interface/iNameResolver.sol";
 import "src/Interface/iENS.sol";
 
 /**

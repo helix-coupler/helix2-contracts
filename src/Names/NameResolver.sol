@@ -1,11 +1,10 @@
 //SPDX-License-Identifier: WTFPL v6.9
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Interface/iNameResolver.sol";
+import "src/Names/iName.sol";
+import "src/Names/iNameResolver.sol";
 import "src/Interface/iENS.sol";
 import "src/Interface/iHelix2.sol";
-import "src/Interface/iERC721.sol";
-import "src/Interface/iName.sol";
 
 /**
  * @dev : Helix2 Resolver Base
@@ -45,16 +44,6 @@ abstract contract NameResolverBase {
     function withdrawEther() external payable {
         (bool ok, ) = HELIX2.isDev().call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
-    }
-
-    /**
-     * @dev : to be used in case some tokens get locked in the contract
-     * @param token : token to release
-     * @param value : token balance to withdraw
-     */
-    function withdrawToken(address token, uint256 value) external payable {
-        require(token != address(this), "RESOLVER_LOCKED");
-        iERC721(token).transferFrom(address(this), HELIX2.isDev(), value);
     }
 
     // @dev : Revert on fallback

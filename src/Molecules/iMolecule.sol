@@ -10,6 +10,8 @@ interface iMOLECULE {
     /// REGISTRY
     /// @dev : HELIX2 Molecules external functions
     // write functions
+    function register(bytes32 molyhash, bytes32 cation) external;
+
     function setCation(bytes32 molyhash, bytes32 cation) external;
 
     function setController(bytes32 molyhash, address controller) external;

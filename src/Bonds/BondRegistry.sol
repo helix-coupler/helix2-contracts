@@ -1,10 +1,9 @@
 //SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-import "src/Interface/iBond.sol";
-import "src/Interface/iName.sol";
+import "src/Names/iName.sol";
+import "src/Bonds/iBond.sol";
 import "src/Interface/iHelix2.sol";
-import "src/Interface/iERC721.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -19,9 +18,8 @@ contract Helix2BondRegistry {
     using LibString for string[];
     using LibString for string;
 
-    /// HELIX2 Manager
+    /// Interfaces
     iHELIX2 public HELIX2;
-    /// Name Registry
     iNAME public NAMES;
 
     /// @dev : Helix2 Bond events
@@ -32,6 +30,7 @@ contract Helix2BondRegistry {
     event Unhooked(bytes32 indexed bondhash, address config);
     event UnhookedAll(bytes32 indexed bondhash);
     event NewCation(bytes32 indexed bondhash, bytes32 cation);
+    event NewRegistration(bytes32 indexed bondhash, bytes32 cation);
     event NewAnion(bytes32 indexed bondhash, bytes32 anion);
     event NewAlias(bytes32 indexed bondhash, bytes32 _alias);
     event NewController(bytes32 indexed bondhash, address controller);
@@ -48,9 +47,13 @@ contract Helix2BondRegistry {
     /// Dev
     address public Dev;
 
+    /// @dev : Pause/Resume contract
+    bool public active = true;
+
     /// @dev : Bond roothash
     bytes32 public roothash;
     uint256 public basePrice;
+    address public registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Bond struct
@@ -150,11 +153,42 @@ contract Helix2BondRegistry {
         _;
     }
 
+    /// @dev : Modifier to allow Registrar
+    modifier isRegistrar() {
+        registrar = HELIX2.getRegistrar()[1];
+        require(msg.sender == registrar, "NOT_REGISTRAR");
+        _;
+    }
+
+    /// @dev : Modifier to allow Owner, Controller or Registrar
+    modifier isAuthorised(bytes32 bondhash) {
+        registrar = HELIX2.getRegistrar()[1];
+        bytes32 __cation = Bonds[bondhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(
+            msg.sender == registrar ||
+                _cation == msg.sender ||
+                Operators[_cation][msg.sender] ||
+                msg.sender == Bonds[bondhash]._controller,
+            "NOT_AUTHORISED"
+        );
+        _;
+    }
+
+    /**
+     * @dev : check if bond is available
+     * @param bondhash : hash of bond
+     */
+    modifier isAvailable(bytes32 bondhash) {
+        require(block.timestamp >= Bonds[bondhash]._expiry, "BOND_EXISTS"); // expiry check
+        _;
+    }
+
     /**
      * @dev : verify bond is not expired
      * @param bondhash : label of bond
      */
-    modifier isNotExpired(bytes32 bondhash) {
+    modifier isOwned(bytes32 bondhash) {
         require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
         _;
     }
@@ -200,6 +234,19 @@ contract Helix2BondRegistry {
     }
 
     /**
+     * @dev : register owner of new bond
+     * @param bondhash : hash of bond
+     * @param _cation : new cation
+     */
+    function register(
+        bytes32 bondhash,
+        bytes32 _cation
+    ) external isAvailable(bondhash) {
+        Bonds[bondhash]._cation = _cation;
+        emit NewRegistration(bondhash, _cation);
+    }
+
+    /**
      * @dev : set cation of a bond
      * @param bondhash : hash of bond
      * @param _cation : new cation
@@ -220,7 +267,7 @@ contract Helix2BondRegistry {
     function setController(
         bytes32 bondhash,
         address _controller
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._controller = _controller;
         emit NewController(bondhash, _controller);
     }
@@ -233,7 +280,7 @@ contract Helix2BondRegistry {
     function setAnion(
         bytes32 bondhash,
         bytes32 _anion
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._anion = _anion;
         emit NewAnion(bondhash, _anion);
     }
@@ -246,7 +293,7 @@ contract Helix2BondRegistry {
     function setAlias(
         bytes32 bondhash,
         bytes32 _alias
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._alias = _alias;
         emit NewAlias(bondhash, _alias);
     }
@@ -259,7 +306,7 @@ contract Helix2BondRegistry {
     function setCovalence(
         bytes32 bondhash,
         bool _covalence
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._covalence = _covalence;
         emit NewCovalence(bondhash, _covalence);
     }
@@ -272,7 +319,7 @@ contract Helix2BondRegistry {
     function setResolver(
         bytes32 bondhash,
         address _resolver
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewResolver(bondhash, _resolver);
     }
@@ -285,10 +332,13 @@ contract Helix2BondRegistry {
     function setExpiry(
         bytes32 bondhash,
         uint _expiry
-    ) external payable isCationOrController(bondhash) {
+    ) external payable isAuthorised(bondhash) {
         require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
-        uint newDuration = _expiry - Bonds[bondhash]._expiry;
-        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        registrar = HELIX2.getRegistrar()[1];
+        if (msg.sender != registrar) {
+            uint newDuration = _expiry - Bonds[bondhash]._expiry;
+            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        }
         Bonds[bondhash]._expiry = _expiry;
         emit NewExpiry(bondhash, _expiry);
     }
@@ -301,7 +351,7 @@ contract Helix2BondRegistry {
     function setRecord(
         bytes32 bondhash,
         address _resolver
-    ) external isCationOrController(bondhash) {
+    ) external isAuthorised(bondhash) {
         Bonds[bondhash]._resolver = _resolver;
         emit NewRecord(bondhash, _resolver);
     }
@@ -395,7 +445,7 @@ contract Helix2BondRegistry {
      */
     function cation(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (bytes32) {
+    ) public view isOwned(bondhash) returns (bytes32) {
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         if (_cation == address(this)) {
@@ -411,7 +461,7 @@ contract Helix2BondRegistry {
      */
     function controller(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (address) {
+    ) public view isOwned(bondhash) returns (address) {
         address _controller = Bonds[bondhash]._controller;
         return _controller;
     }
@@ -423,7 +473,7 @@ contract Helix2BondRegistry {
      */
     function anion(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (bytes32) {
+    ) public view isOwned(bondhash) returns (bytes32) {
         bytes32 _anion = Bonds[bondhash]._anion;
         return _anion;
     }
@@ -435,7 +485,7 @@ contract Helix2BondRegistry {
      */
     function covalence(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (bool) {
+    ) public view isOwned(bondhash) returns (bool) {
         bool _covalence = Bonds[bondhash]._covalence;
         return _covalence;
     }
@@ -447,7 +497,7 @@ contract Helix2BondRegistry {
      */
     function alias_(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (bytes32) {
+    ) public view isOwned(bondhash) returns (bytes32) {
         bytes32 _alias = Bonds[bondhash]._alias;
         return _alias;
     }
@@ -459,12 +509,7 @@ contract Helix2BondRegistry {
      */
     function hooksWithRules(
         bytes32 bondhash
-    )
-        public
-        view
-        isNotExpired(bondhash)
-        returns (address[] memory, uint8[] memory)
-    {
+    ) public view isOwned(bondhash) returns (address[] memory, uint8[] memory) {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         uint8[] memory _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
@@ -490,7 +535,7 @@ contract Helix2BondRegistry {
      */
     function resolver(
         bytes32 bondhash
-    ) public view isNotExpired(bondhash) returns (address) {
+    ) public view isOwned(bondhash) returns (address) {
         address _resolver = Bonds[bondhash]._resolver;
         return _resolver;
     }
@@ -524,17 +569,5 @@ contract Helix2BondRegistry {
     function withdrawEther() external payable {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
-    }
-
-    /**
-     * @dev : to be used in case some tokens get locked in the contract
-     * @param token : token to release
-     */
-    function withdrawToken(address token) external payable {
-        iERC20(token).transferFrom(
-            address(this),
-            Dev,
-            iERC20(token).balanceOf(address(this))
-        );
     }
 }

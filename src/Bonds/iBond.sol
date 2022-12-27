@@ -10,6 +10,8 @@ interface iBOND {
     /// REGISTRY
     /// @dev : HELIX2 Bonds external functions
     // write functions
+    function register(bytes32 bondhash, bytes32 cation) external;
+
     function setCation(bytes32 bondhash, bytes32 cation) external;
 
     function setController(bytes32 bondhash, address controller) external;
