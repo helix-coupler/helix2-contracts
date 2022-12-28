@@ -24,6 +24,8 @@ interface iNAME {
 
     function setExpiry(bytes32 namehash, uint expiry) external;
 
+    function renew(bytes32 namehash, uint expiry) external;
+
     function setRecord(bytes32 namehash, address resolver) external;
 
     function setResolver(bytes32 namehash, address resolver) external;

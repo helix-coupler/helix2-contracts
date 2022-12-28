@@ -116,6 +116,11 @@ contract Helix2NameRegistrar is ERC721 {
         bytes32 namehash = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
         );
+        address _owner = NAMES.owner(namehash);
+        /// @notice : Balance of previous owner is updated only when the
+        /// expired name is re-registered by someone else, aka, an
+        /// expired name is accounted to its previous owner until it is re-registered (!= renewed)
+        if (_owner != address(0)) _balanceOf[_owner]--;
         NAMES.register(namehash, owner); /// set new owner
         NAMES.setController(namehash, owner); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry

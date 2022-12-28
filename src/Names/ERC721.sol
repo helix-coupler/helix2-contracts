@@ -103,11 +103,7 @@ abstract contract ERC721 is BaseRegistrar {
      * @param to : to address
      * @param tokenID : token
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenID
-    ) external {
+    function transferFrom(address from, address to, uint256 tokenID) external {
         _transfer(from, to, tokenID, ""); // standard fallback
     }
 

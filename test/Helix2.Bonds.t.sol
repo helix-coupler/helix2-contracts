@@ -57,8 +57,8 @@ contract Helix2BondsTest is Test {
     string public white = "virgil";
     string public label = "virgin";
     uint256 public lifespan = 500;
-    bytes32 public _namehash;
-    bytes32 public namehash_;
+    bytes32 public _cation;
+    bytes32 public cation_;
     bytes32 public bondhash;
     uint256 public tokenID;
 
@@ -105,26 +105,33 @@ contract Helix2BondsTest is Test {
     /// Register a bond
     function testRegisterBond() public {
         // register two names
-        _namehash = _NAME_.newName{value: namePrice * lifespan}(
+        _cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
             pill,
             lifespan
         );
-        namehash_ = _NAME_.newName{value: namePrice * lifespan}(
+        cation_ = _NAME_.newName{value: namePrice * lifespan}(
             white,
             will,
             lifespan
         );
-        uint256 blackID = uint256(_namehash);
-        uint256 whiteID = uint256(namehash_);
+        roothash = HELIX2_.getRoothash()[1];
+        // expected hash of registered bond
+        bytes32 _bondhash = keccak256(
+            abi.encodePacked(
+                _cation,
+                roothash,
+                keccak256(abi.encodePacked(label))
+            )
+        );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
             label,
-            _namehash,
-            namehash_,
+            _cation,
+            cation_,
             lifespan
         );
-        console.logBytes32(bondhash);
+        assertEq(bondhash, _bondhash);
     }
 
     /*

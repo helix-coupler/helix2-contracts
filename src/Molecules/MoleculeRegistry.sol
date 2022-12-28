@@ -57,7 +57,7 @@ contract Helix2MoleculeRegistry {
     /// @dev : Molecule roothash
     bytes32 public roothash;
     uint256 public basePrice;
-    address public registrar;
+    address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 MOLECULE struct
@@ -151,18 +151,18 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        registrar = HELIX2.getRegistrar()[2];
-        require(msg.sender == registrar, "NOT_REGISTRAR");
+        Registrar = HELIX2.getRegistrar()[2];
+        require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 molyhash) {
-        registrar = HELIX2.getRegistrar()[2];
+        Registrar = HELIX2.getRegistrar()[2];
         bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
-            msg.sender == registrar ||
+            msg.sender == Registrar ||
                 _cation == msg.sender ||
                 Operators[_cation][msg.sender] ||
                 msg.sender == Molecules[molyhash]._controller,
@@ -376,8 +376,8 @@ contract Helix2MoleculeRegistry {
         uint _expiry
     ) external payable isAuthorised(molyhash) {
         require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
-        registrar = HELIX2.getRegistrar()[2];
-        if (msg.sender != registrar) {
+        Registrar = HELIX2.getRegistrar()[2];
+        if (msg.sender != Registrar) {
             uint newDuration = _expiry - Molecules[molyhash]._expiry;
             require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         }

@@ -53,7 +53,7 @@ contract Helix2BondRegistry {
     /// @dev : Bond roothash
     bytes32 public roothash;
     uint256 public basePrice;
-    address public registrar;
+    address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Bond struct
@@ -155,18 +155,18 @@ contract Helix2BondRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        registrar = HELIX2.getRegistrar()[1];
-        require(msg.sender == registrar, "NOT_REGISTRAR");
+        Registrar = HELIX2.getRegistrar()[1];
+        require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 bondhash) {
-        registrar = HELIX2.getRegistrar()[1];
+        Registrar = HELIX2.getRegistrar()[1];
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
-            msg.sender == registrar ||
+            msg.sender == Registrar ||
                 _cation == msg.sender ||
                 Operators[_cation][msg.sender] ||
                 msg.sender == Bonds[bondhash]._controller,
@@ -238,11 +238,10 @@ contract Helix2BondRegistry {
      * @param bondhash : hash of bond
      * @param _cation : new cation
      */
-    function register(
-        bytes32 bondhash,
-        bytes32 _cation
-    ) external isAvailable(bondhash) {
+    function register(bytes32 bondhash, bytes32 _cation) external isRegistrar {
+        require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Bonds[bondhash]._cation = _cation;
+        emit NewCation(bondhash, _cation);
         emit NewRegistration(bondhash, _cation);
     }
 
@@ -255,6 +254,7 @@ contract Helix2BondRegistry {
         bytes32 bondhash,
         bytes32 _cation
     ) external onlyCation(bondhash) {
+        require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Bonds[bondhash]._cation = _cation;
         emit NewCation(bondhash, _cation);
     }
@@ -334,8 +334,8 @@ contract Helix2BondRegistry {
         uint _expiry
     ) external payable isAuthorised(bondhash) {
         require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
-        registrar = HELIX2.getRegistrar()[1];
-        if (msg.sender != registrar) {
+        Registrar = HELIX2.getRegistrar()[1];
+        if (msg.sender != Registrar) {
             uint newDuration = _expiry - Bonds[bondhash]._expiry;
             require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         }
@@ -417,7 +417,7 @@ contract Helix2BondRegistry {
      * @dev removes all hooks in a bond
      * @param bondhash : hash of the bond
      */
-    function unhookAll(bytes32 bondhash) external onlyCation(bondhash) {
+    function unhookAll(bytes32 bondhash) external isAuthorised(bondhash) {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Bonds[bondhash]._rules[_hooks[i]] = uint8(0);

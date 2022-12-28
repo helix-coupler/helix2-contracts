@@ -143,7 +143,7 @@ contract Helix2BondRegistrar {
         bytes32 bondhash = keccak256(
             abi.encodePacked(cation, roothash, aliashash)
         );
-        BONDS.setCation(bondhash, cation); /// set new cation (= from)
+        BONDS.register(bondhash, cation); /// set new cation (= from)
         BONDS.setAnion(bondhash, anion); /// set anion (= to)
         BONDS.setExpiry(bondhash, block.timestamp + lifespan); /// set new expiry
         BONDS.setController(bondhash, _cation); /// set new controller

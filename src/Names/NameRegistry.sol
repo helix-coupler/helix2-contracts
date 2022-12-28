@@ -57,7 +57,7 @@ contract Helix2NameRegistry {
     /// Constants
     bytes32 public roothash;
     uint256 public basePrice;
-    address public registrar;
+    address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 Name struct
@@ -141,17 +141,17 @@ contract Helix2NameRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        registrar = HELIX2.getRegistrar()[0];
-        require(msg.sender == registrar, "NOT_REGISTRAR");
+        Registrar = HELIX2.getRegistrar()[0];
+        require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 namehash) {
-        registrar = HELIX2.getRegistrar()[0];
+        Registrar = HELIX2.getRegistrar()[0];
         address _owner = Names[namehash]._owner;
         require(
-            msg.sender == registrar ||
+            msg.sender == Registrar ||
                 _owner == msg.sender ||
                 Operators[_owner][msg.sender] ||
                 msg.sender == Names[namehash]._controller,
@@ -216,8 +216,9 @@ contract Helix2NameRegistry {
     ) external onlyOwner(namehash) {
         require(_owner != address(0), "CANNOT_BURN");
         address owner_ = Names[namehash]._owner;
-        _NAME_ = iNAME(HELIX2.getRegistrar()[0]);
-        ERC721 = iERC721(HELIX2.getRegistrar()[0]);
+        Registrar = HELIX2.getRegistrar()[0];
+        _NAME_ = iNAME(Registrar);
+        ERC721 = iERC721(Registrar);
         _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
         _NAME_.setBalance(_owner, ERC721.balanceOf(_owner) + 1);
         emit Transfer(owner_, _owner, uint256(namehash));
@@ -287,20 +288,25 @@ contract Helix2NameRegistry {
     function setExpiry(
         bytes32 namehash,
         uint _expiry
-    ) external payable isAuthorised(namehash) {
+    ) external isRegistrar() {
         require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
-        registrar = HELIX2.getRegistrar()[0];
-        if (msg.sender != registrar) {
-            // when renewal is a registration
-            uint newDuration = _expiry - Names[namehash]._expiry;
-            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-            address owner_ = Names[namehash]._owner;
-            /// @notice : Balance of previous owner is updated only when the 
-            /// expired name is re-registered by someone else, aka, an
-            /// expired name is accounted to its previous owner until it is renewed
-            /// (by owner) or re-registered (by others)
-            _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
-        }
+        Names[namehash]._expiry = _expiry;
+        emit NewExpiry(namehash, _expiry);
+    }
+
+    /**
+     * @dev : renew a name
+     * @param namehash : hash of name
+     * @param _expiry : new expiry
+     */
+    function renew(
+        bytes32 namehash,
+        uint _expiry
+    ) external payable isOwnerOrController(namehash) {
+        require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
+        Registrar = HELIX2.getRegistrar()[0];
+        uint newDuration = _expiry - Names[namehash]._expiry;
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
     }
@@ -323,10 +329,7 @@ contract Helix2NameRegistry {
      * @param operator : new operator
      * @param approved : state to set
      */
-    function setApprovalForAll(
-        address operator,
-        bool approved
-    ) external {
+    function setApprovalForAll(address operator, bool approved) external {
         Operators[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -338,7 +341,7 @@ contract Helix2NameRegistry {
      */
     function owner(
         bytes32 namehash
-    ) public view isOwned(namehash) returns (address) {
+    ) public view returns (address) {
         address addr = Names[namehash]._owner;
         if (addr == address(this)) {
             return address(0x0);

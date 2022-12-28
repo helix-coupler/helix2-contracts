@@ -111,7 +111,10 @@ contract BondResolver is BondResolverBase {
      */
     modifier onlyOwner(bytes32 bondhash) {
         require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
-        require(msg.sender == NAMES.owner(BONDS.cation(bondhash)), "NOT_AUTHORISED");
+        require(
+            msg.sender == NAMES.owner(BONDS.cation(bondhash)),
+            "NOT_AUTHORISED"
+        );
         _;
     }
 

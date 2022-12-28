@@ -44,7 +44,7 @@ contract Helix2NamesTest is Test {
     /// Global test variables
     address public pill = address(0xc0de4c0ca19e);
     string public label = "vitalik";
-    uint256 public lifespan = 500;
+    uint256 public lifespan = 50;
     bytes32 public namehash;
     address public taker = address(0xc0de4c0cac01a);
     uint256 public tokenID;
@@ -85,21 +85,40 @@ contract Helix2NamesTest is Test {
             pill,
             lifespan
         );
-        tokenID = uint256(namehash);
+        roothash = HELIX2_.getRoothash()[0];
+        // expected hash of registered name
+        bytes32 _namehash = keccak256(
+            abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
+        );
+        assertEq(namehash, _namehash);
         assertEq(_NAME_.balanceOf(pill), 1);
     }
 
-    /// >>> TO DO
     /// Register a name, let it expire, and verify records
     function testExpiration() public {
         // register test name
-        lifespan = 1;
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
             lifespan
         );
         tokenID = uint256(namehash);
+        vm.warp(block.timestamp + 10);
+        assertEq(NAMES.recordExists(namehash), true);
+        uint256 _expiry = NAMES.expiry(namehash);
+        vm.prank(pill);
+        vm.deal(pill, basePrice * 10);
+        vm.expectRevert(abi.encodePacked("BAD_EXPIRY"));
+        NAMES.renew{value: basePrice * 10}(namehash, 10);
+        vm.prank(pill);
+        vm.deal(pill, basePrice * 100);
+        NAMES.renew{value: basePrice * 100}(namehash, _expiry + 100);
+        vm.prank(pill);
+        NAMES.setController(namehash, taker);
+        vm.prank(pill);
+        NAMES.setRecord(namehash, taker);
+        vm.warp(block.timestamp + 200);
+        assertEq(NAMES.recordExists(namehash), false);
     }
 
     /// Register a name and verify records
@@ -181,9 +200,9 @@ contract Helix2NamesTest is Test {
         vm.prank(pill);
         _NAME_.safeTransferFrom(pill, taker, tokenID);
         assertEq(_NAME_.ownerOf(tokenID), taker);
-        assertEq(NAMES.owner(namehash), taker);
         assertEq(_NAME_.balanceOf(pill), 0);
         assertEq(_NAME_.balanceOf(taker), 1);
+        assertEq(NAMES.owner(namehash), taker);
     }
 
     /// Register a name and set another address as controller
@@ -234,12 +253,13 @@ contract Helix2NamesTest is Test {
         vm.prank(taker);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
         NAMES.setRecord(namehash, taker);
+        uint256 _expiry = NAMES.expiry(namehash);
+        vm.deal(taker, basePrice * 100);
         vm.prank(taker);
-        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        NAMES.setExpiry(namehash, block.timestamp + 100);
+        vm.expectRevert(abi.encodePacked("NOT_OWNER_OR_CONTROLLER"));
+        NAMES.renew{value: basePrice * 100}(namehash, _expiry + 100);
     }
 
-    /// >>> TO DO
     /// Register a name, let it expire, and attempt to renew it
     function testRenewalByOwner() public {
         // register test name
@@ -249,10 +269,16 @@ contract Helix2NamesTest is Test {
             lifespan
         );
         tokenID = uint256(namehash);
-        
+        vm.warp(block.timestamp + 60);
+        assertEq(NAMES.recordExists(namehash), false);
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            label,
+            pill,
+            lifespan
+        );
+        assertEq(NAMES.recordExists(namehash), true);
     }
 
-    /// >>> TO DO
     /// Attempt to register an expired name (accounted to someone else's balance)
     function testClaimExpiredName() public {
         // register test name
@@ -262,5 +288,12 @@ contract Helix2NamesTest is Test {
             lifespan
         );
         tokenID = uint256(namehash);
+        vm.warp(block.timestamp + 100);
+        assertEq(NAMES.recordExists(namehash), false);
+        uint256 _expiry = NAMES.expiry(namehash);
+        vm.prank(taker);
+        vm.deal(taker, basePrice * lifespan);
+        vm.expectRevert(abi.encodePacked("NAME_EXPIRED"));
+        NAMES.renew{value: basePrice * lifespan}(namehash, _expiry + lifespan);
     }
 }

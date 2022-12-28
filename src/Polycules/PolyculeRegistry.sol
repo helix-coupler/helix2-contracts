@@ -59,7 +59,7 @@ contract Helix2PolyculeRegistry {
     /// @dev : Polycule roothash
     bytes32 public roothash;
     uint256 public basePrice;
-    address public registrar;
+    address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     /// @dev : Helix2 POLYCULE struct
@@ -170,7 +170,7 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 polyhash) {
-        registrar = HELIX2.getRegistrar()[3];
+        Registrar = HELIX2.getRegistrar()[3];
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
@@ -178,7 +178,7 @@ contract Helix2PolyculeRegistry {
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
-            msg.sender == registrar ||
+            msg.sender == Registrar ||
                 _cation == msg.sender ||
                 Operators[_cation][msg.sender] ||
                 msg.sender == Polycules[polyhash]._controller,
@@ -189,8 +189,8 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        registrar = HELIX2.getRegistrar()[3];
-        require(msg.sender == registrar, "NOT_REGISTRAR");
+        Registrar = HELIX2.getRegistrar()[3];
+        require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
@@ -434,8 +434,8 @@ contract Helix2PolyculeRegistry {
         uint _expiry
     ) external payable isAuthorised(polyhash) {
         require(_expiry > Polycules[polyhash]._expiry, "BAD_EXPIRY");
-        registrar = HELIX2.getRegistrar()[3];
-        if (msg.sender != registrar) {
+        Registrar = HELIX2.getRegistrar()[3];
+        if (msg.sender != Registrar) {
             uint newDuration = _expiry - Polycules[polyhash]._expiry;
             require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         }
