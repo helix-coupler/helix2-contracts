@@ -31,7 +31,7 @@ abstract contract Base {
     address public Dev;
 
     /// @dev : Forbidden characters
-    string[4] public illegalBlocks = [".", "?", "!", "#"];
+    string[4] public illegalBlocks = [".", "-"];
 
     /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[4] public sizes = [32, 32, 32, 32];
@@ -42,9 +42,9 @@ abstract contract Base {
     /// @dev : Root Identifier
     bytes32[4] public roothash = [
         keccak256(abi.encodePacked(bytes32(0), keccak256("."))), /// Name Roothash
-        keccak256(abi.encodePacked(bytes32(0), keccak256("?"))), /// Bond Roothash
-        keccak256(abi.encodePacked(bytes32(0), keccak256("!"))), /// Molecule Roothash
-        keccak256(abi.encodePacked(bytes32(0), keccak256("#"))) /// Polycule Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("-"))), /// Bond Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("-"))), /// Molecule Roothash
+        keccak256(abi.encodePacked(bytes32(0), keccak256("-"))) /// Polycule Roothash
     ];
 
     /// @dev : ENS Registry
