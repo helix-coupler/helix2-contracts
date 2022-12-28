@@ -47,6 +47,7 @@ contract Helix2NamesTest is Test {
     uint256 public lifespan = 50;
     bytes32 public namehash;
     address public taker = address(0xc0de4c0cac01a);
+    address public faker = address(0xc0de4cafec0ca);
     uint256 public tokenID;
 
     constructor() {
@@ -169,8 +170,8 @@ contract Helix2NamesTest is Test {
         assertEq(NAMES.controller(namehash), taker);
     }
 
-    /// Register a name and change Controller record as Controller
-    function testControllerCanSetController() public {
+    /// Register a name, set new controller, and test controller's permissions
+    function testControllerCanControl() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -181,8 +182,13 @@ contract Helix2NamesTest is Test {
         NAMES.setController(namehash, taker);
         assertEq(NAMES.controller(namehash), taker);
         vm.prank(taker);
-        NAMES.setController(namehash, pill);
-        assertEq(NAMES.controller(namehash), pill);
+        NAMES.setController(namehash, faker);
+        vm.prank(faker);
+        NAMES.setRecord(namehash, address(0));
+        assertEq(NAMES.resolver(namehash), address(0));
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("NOT_OWNER"));
+        NAMES.setOwner(namehash, faker);
     }
 
     /// Register a name and transfer to new owner via ERC721 interface
@@ -260,8 +266,8 @@ contract Helix2NamesTest is Test {
         NAMES.renew{value: basePrice * 100}(namehash, _expiry + 100);
     }
 
-    /// Register a name, let it expire, and attempt to renew it
-    function testRenewalByOwner() public {
+    /// Register a name, let it expire, and then attempt to re-register it
+    function testRegisterExpiredName() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -280,7 +286,7 @@ contract Helix2NamesTest is Test {
     }
 
     /// Attempt to register an expired name (accounted to someone else's balance)
-    function testClaimExpiredName() public {
+    function testOnlyOwnerCanRenew() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -288,11 +294,17 @@ contract Helix2NamesTest is Test {
             lifespan
         );
         tokenID = uint256(namehash);
-        vm.warp(block.timestamp + 100);
-        assertEq(NAMES.recordExists(namehash), false);
+        assertEq(NAMES.recordExists(namehash), true);
         uint256 _expiry = NAMES.expiry(namehash);
-        vm.prank(taker);
-        vm.deal(taker, basePrice * lifespan);
+        vm.prank(pill);
+        vm.deal(pill, basePrice * lifespan);
+        NAMES.renew{value: basePrice * lifespan}(namehash, _expiry + lifespan);
+        assertEq(NAMES.expiry(namehash), _expiry + lifespan);
+        vm.warp(block.timestamp + 200);
+        assertEq(NAMES.recordExists(namehash), false);
+        _expiry = NAMES.expiry(namehash);
+        vm.prank(pill);
+        vm.deal(pill, basePrice * lifespan);
         vm.expectRevert(abi.encodePacked("NAME_EXPIRED"));
         NAMES.renew{value: basePrice * lifespan}(namehash, _expiry + lifespan);
     }

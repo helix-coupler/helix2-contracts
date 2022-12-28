@@ -28,6 +28,8 @@ interface iMOLECULE {
 
     function setExpiry(bytes32 molyhash, uint expiry) external;
 
+    function renew(bytes32 molyhash, uint expiry) external;
+
     function setRecord(bytes32 molyhash, address resolver) external;
 
     function setResolver(bytes32 molyhash, address resolver) external;

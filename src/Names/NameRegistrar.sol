@@ -48,7 +48,7 @@ contract Helix2NameRegistrar is ERC721 {
      */
     modifier isLegal(string memory label) {
         require(bytes(label).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
-        require(!label.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
+        require(!label.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 

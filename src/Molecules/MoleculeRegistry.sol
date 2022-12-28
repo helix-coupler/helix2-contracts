@@ -149,6 +149,20 @@ contract Helix2MoleculeRegistry {
         _;
     }
 
+    /// @dev : Modifier to allow Cation or Controller
+    modifier isCationOrController(bytes32 molyhash) {
+        require(block.timestamp < Molecules[molyhash]._expiry, "BOND_EXPIRED"); // expiry check
+        bytes32 __cation = Molecules[molyhash]._cation;
+        address _cation = NAMES.owner(__cation);
+        require(
+            _cation == msg.sender ||
+                Operators[_cation][msg.sender] ||
+                msg.sender == Molecules[molyhash]._controller,
+            "NOT_OWNER_OR_CONTROLLER"
+        );
+        _;
+    }
+
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
         Registrar = HELIX2.getRegistrar()[2];
@@ -371,16 +385,25 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of molecule
      * @param _expiry : new expiry
      */
-    function setExpiry(
+    function setExpiry(bytes32 molyhash, uint _expiry) external isRegistrar {
+        require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
+        Molecules[molyhash]._expiry = _expiry;
+        emit NewExpiry(molyhash, _expiry);
+    }
+
+    /**
+     * @dev : set expiry for a molecule
+     * @param molyhash : hash of molecule
+     * @param _expiry : new expiry
+     */
+    function renew(
         bytes32 molyhash,
         uint _expiry
-    ) external payable isAuthorised(molyhash) {
+    ) external payable isCationOrController(molyhash) {
         require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[2];
-        if (msg.sender != Registrar) {
-            uint newDuration = _expiry - Molecules[molyhash]._expiry;
-            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-        }
+        Registrar = HELIX2.getRegistrar()[1];
+        uint newDuration = _expiry - Molecules[molyhash]._expiry;
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Molecules[molyhash]._expiry = _expiry;
         emit NewExpiry(molyhash, _expiry);
     }

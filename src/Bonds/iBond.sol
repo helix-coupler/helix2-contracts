@@ -24,6 +24,8 @@ interface iBOND {
 
     function setExpiry(bytes32 bondhash, uint expiry) external;
 
+    function renew(bytes32 bondhash, uint expiry) external;
+
     function setRecord(bytes32 bondhash, address resolver) external;
 
     function setResolver(bytes32 bondhash, address resolver) external;

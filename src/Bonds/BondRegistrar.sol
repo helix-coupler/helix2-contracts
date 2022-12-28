@@ -87,7 +87,7 @@ contract Helix2BondRegistrar {
      */
     modifier isLegal(string memory _alias) {
         require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
-        require(!_alias.existsIn4(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
+        require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 

@@ -33,6 +33,8 @@ interface iPOLYCULE {
 
     function setExpiry(bytes32 polyhash, uint expiry) external;
 
+    function renew(bytes32 molyhash, uint expiry) external;
+
     function setRecord(bytes32 polyhash, address resolver) external;
 
     function setResolver(bytes32 polyhash, address resolver) external;

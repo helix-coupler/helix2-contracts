@@ -329,16 +329,25 @@ contract Helix2BondRegistry {
      * @param bondhash : hash of bond
      * @param _expiry : new expiry
      */
-    function setExpiry(
+    function setExpiry(bytes32 bondhash, uint _expiry) external isRegistrar {
+        require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
+        Bonds[bondhash]._expiry = _expiry;
+        emit NewExpiry(bondhash, _expiry);
+    }
+
+    /**
+     * @dev : set expiry for a bond
+     * @param bondhash : hash of bond
+     * @param _expiry : new expiry
+     */
+    function renew(
         bytes32 bondhash,
         uint _expiry
-    ) external payable isAuthorised(bondhash) {
+    ) external payable isCationOrController(bondhash) {
         require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
         Registrar = HELIX2.getRegistrar()[1];
-        if (msg.sender != Registrar) {
-            uint newDuration = _expiry - Bonds[bondhash]._expiry;
-            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-        }
+        uint newDuration = _expiry - Bonds[bondhash]._expiry;
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Bonds[bondhash]._expiry = _expiry;
         emit NewExpiry(bondhash, _expiry);
     }

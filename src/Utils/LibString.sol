@@ -152,9 +152,9 @@ library LibString {
      * @param value : value to search
      * @return true or false
      */
-    function existsIn4(
-        string calldata value,
-        string[4] calldata array
+    function existsIn(
+        string memory value,
+        string[4] memory array
     ) public pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (

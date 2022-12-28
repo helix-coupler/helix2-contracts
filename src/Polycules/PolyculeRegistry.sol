@@ -426,21 +426,30 @@ contract Helix2PolyculeRegistry {
 
     /**
      * @dev : set expiry for a polycule
-     * @param polyhash : hash of polycule
+     * @param molyhash : hash of polycule
      * @param _expiry : new expiry
      */
-    function setExpiry(
-        bytes32 polyhash,
+    function setExpiry(bytes32 molyhash, uint _expiry) external isRegistrar {
+        require(_expiry > Polycules[molyhash]._expiry, "BAD_EXPIRY");
+        Polycules[molyhash]._expiry = _expiry;
+        emit NewExpiry(molyhash, _expiry);
+    }
+
+    /**
+     * @dev : set expiry for a polycule
+     * @param molyhash : hash of polycule
+     * @param _expiry : new expiry
+     */
+    function renew(
+        bytes32 molyhash,
         uint _expiry
-    ) external payable isAuthorised(polyhash) {
-        require(_expiry > Polycules[polyhash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[3];
-        if (msg.sender != Registrar) {
-            uint newDuration = _expiry - Polycules[polyhash]._expiry;
-            require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-        }
-        Polycules[polyhash]._expiry = _expiry;
-        emit NewExpiry(polyhash, _expiry);
+    ) external payable isCationOrController(molyhash) {
+        require(_expiry > Polycules[molyhash]._expiry, "BAD_EXPIRY");
+        Registrar = HELIX2.getRegistrar()[1];
+        uint newDuration = _expiry - Polycules[molyhash]._expiry;
+        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        Polycules[molyhash]._expiry = _expiry;
+        emit NewExpiry(molyhash, _expiry);
     }
 
     /**

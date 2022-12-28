@@ -285,10 +285,7 @@ contract Helix2NameRegistry {
      * @param namehash : hash of name
      * @param _expiry : new expiry
      */
-    function setExpiry(
-        bytes32 namehash,
-        uint _expiry
-    ) external isRegistrar() {
+    function setExpiry(bytes32 namehash, uint _expiry) external isRegistrar {
         require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
         Names[namehash]._expiry = _expiry;
         emit NewExpiry(namehash, _expiry);
@@ -339,9 +336,7 @@ contract Helix2NameRegistry {
      * @param namehash hash of name to query
      * @return address of owner
      */
-    function owner(
-        bytes32 namehash
-    ) public view returns (address) {
+    function owner(bytes32 namehash) public view returns (address) {
         address addr = Names[namehash]._owner;
         if (addr == address(this)) {
             return address(0x0);

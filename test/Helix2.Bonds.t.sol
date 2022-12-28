@@ -53,13 +53,16 @@ contract Helix2BondsTest is Test {
     /// Global test variables
     address public pill = address(0xc0de4c0ca19e);
     string public black = "vitalik";
-    address public will = address(0xc0de4c0cac01a);
+    address public taker = address(0xc0de4c0cac01a);
     string public white = "virgil";
+    address public faker = address(0xc0de4d1ccc555);
+    string public brown = "nick";
     string public label = "virgin";
-    uint256 public lifespan = 500;
-    bytes32 public _cation;
-    bytes32 public cation_;
+    uint256 public lifespan = 50;
+    bytes32 public cation;
+    bytes32 public anion;
     bytes32 public bondhash;
+    bytes32 public fakehash;
     uint256 public tokenID;
 
     constructor() {
@@ -105,21 +108,21 @@ contract Helix2BondsTest is Test {
     /// Register a bond
     function testRegisterBond() public {
         // register two names
-        _cation = _NAME_.newName{value: namePrice * lifespan}(
+        cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
             pill,
             lifespan
         );
-        cation_ = _NAME_.newName{value: namePrice * lifespan}(
+        anion = _NAME_.newName{value: namePrice * lifespan}(
             white,
-            will,
+            taker,
             lifespan
         );
         roothash = HELIX2_.getRoothash()[1];
         // expected hash of registered bond
         bytes32 _bondhash = keccak256(
             abi.encodePacked(
-                _cation,
+                cation,
                 roothash,
                 keccak256(abi.encodePacked(label))
             )
@@ -127,187 +130,285 @@ contract Helix2BondsTest is Test {
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
             label,
-            _cation,
-            cation_,
+            cation,
+            anion,
             lifespan
         );
         assertEq(bondhash, _bondhash);
     }
 
-    /*
-    /// >>> TO DO
     /// Register a bond, let it expire, and verify records
     function testExpiration() public {
-        // register test bond
-        lifespan = 1;
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        tokenID = uint256(bondhash);
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        vm.warp(block.timestamp + 10);
+        assertEq(BONDS.recordExists(bondhash), true);
+        uint256 _expiry = BONDS.expiry(bondhash);
+        vm.prank(pill);
+        vm.deal(pill, bondPrice * 10);
+        vm.expectRevert(abi.encodePacked("BAD_EXPIRY"));
+        BONDS.renew{value: bondPrice * 10}(bondhash, 10);
+        vm.prank(pill);
+        vm.deal(pill, bondPrice * 100);
+        BONDS.renew{value: bondPrice * 100}(bondhash, _expiry + 100);
+        vm.prank(pill);
+        BONDS.setController(bondhash, taker);
+        vm.prank(pill);
+        BONDS.setRecord(bondhash, taker);
+        vm.warp(block.timestamp + 200);
+        assertEq(BONDS.recordExists(bondhash), false);
     }
 
     /// Register a bond and verify records
     function testVerifyRecords() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        roothash = HELIX2_.getRoothash()[0];
-        bytes32 _bondhash = keccak256(
-            abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
         );
-        assertEq(bondhash, _bondhash);
-        assertEq(BONDS.owner(bondhash), pill);
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        assertEq(NAMES.owner(BONDS.cation(bondhash)), pill);
+        assertEq(NAMES.owner(BONDS.anion(bondhash)), taker);
+        assertEq(BONDS.cation(bondhash), cation);
+        assertEq(BONDS.anion(bondhash), anion);
         assertEq(BONDS.controller(bondhash), pill);
         assertEq(BONDS.resolver(bondhash), defaultResolver);
         assertEq(BONDS.expiry(bondhash), block.timestamp + lifespan);
     }
 
-    /// Register a bond and change Ownership record
-    function testOwnerCanChangeOwner() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+    /// Register a bond and change Cationship record
+    function testCationCanChangeCation() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
         vm.prank(pill);
-        BONDS.setOwner(bondhash, will);
-        assertEq(BONDS.owner(bondhash), will);
-        assertEq(_BOND_.ownerOf(uint256(bondhash)), will);
-        assertEq(_BOND_.balanceOf(pill), 0);
-        assertEq(_BOND_.balanceOf(will), 1);
+        BONDS.setCation(bondhash, fakehash);
+        assertEq(NAMES.owner(BONDS.cation(bondhash)), faker);
     }
 
-    /// Register a bond and change Controller record as Owner
-    function testOwnerCanSetController() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+    /// Register a bond and set new controller, and test controller's permissions
+    function testControllerCanControl() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        vm.prank(pill);
-        BONDS.setController(bondhash, will);
-        assertEq(BONDS.controller(bondhash), will);
-    }
-
-    /// Register a bond and change Controller record as Controller
-    function testControllerCanSetController() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
-            pill,
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
             lifespan
         );
-        vm.prank(pill);
-        BONDS.setController(bondhash, will);
-        assertEq(BONDS.controller(bondhash), will);
-        vm.prank(will);
-        BONDS.setController(bondhash, pill);
-        assertEq(BONDS.controller(bondhash), pill);
-    }
-
-    /// Register a bond and transfer to new owner via ERC721 interface
-    function testOwnerCanTransferERC721() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
             label,
-            pill,
+            cation,
+            anion,
             lifespan
         );
-        tokenID = uint256(bondhash);
-        assertEq(_BOND_.ownerOf(tokenID), pill);
-        assertEq(_BOND_.balanceOf(pill), 1);
-        assertEq(_BOND_.balanceOf(will), 0);
-        vm.prank(pill);
-        _BOND_.safeTransferFrom(pill, will, tokenID);
-        assertEq(_BOND_.ownerOf(tokenID), will);
-        assertEq(BONDS.owner(bondhash), will);
-        assertEq(_BOND_.balanceOf(pill), 0);
-        assertEq(_BOND_.balanceOf(will), 1);
-    }
-
-    /// Register a bond and set another address as controller
-    function testOwnerCanApproveERC721() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
-            pill,
-            lifespan
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
         );
-        tokenID = uint256(bondhash);
         vm.prank(pill);
-        _BOND_.approve(will, tokenID);
-        assertEq(BONDS.controller(bondhash), will);
-    }
-
-    /// Register a bond and verify controller can set new controller
-    function testControllerCanApproveERC721() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
-            pill,
-            lifespan
-        );
-        tokenID = uint256(bondhash);
-        vm.prank(pill);
-        BONDS.setController(bondhash, will);
-        vm.prank(will);
-        _BOND_.approve(pill, tokenID);
-        assertEq(BONDS.controller(bondhash), pill);
+        BONDS.setController(bondhash, faker);
+        assertEq(BONDS.controller(bondhash), faker);
+        vm.prank(faker);
+        BONDS.setController(bondhash, taker);
+        assertEq(BONDS.controller(bondhash), taker);
+        vm.prank(taker);
+        BONDS.setRecord(bondhash, address(0));
+        assertEq(BONDS.resolver(bondhash), address(0));
+        vm.prank(taker);
+        vm.expectRevert(abi.encodePacked("NOT_OWNER"));
+        BONDS.setCation(bondhash, fakehash);
     }
 
     /// Register a bond and attempt to make unauthorised calls
     function testCannotMakeUnauthorisedCalls() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        tokenID = uint256(bondhash);
-        vm.prank(will);
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
+        vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
-        BONDS.setOwner(bondhash, will);
-        vm.prank(will);
+        BONDS.setCation(bondhash, fakehash);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        BONDS.setController(bondhash, will);
-        vm.prank(will);
+        BONDS.setRecord(bondhash, address(0));
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        BONDS.setRecord(bondhash, will);
-        vm.prank(will);
-        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        BONDS.setExpiry(bondhash, block.timestamp + 100);
+        BONDS.setController(bondhash, faker);
     }
 
-    /// >>> TO DO
-    /// Register a bond, let it expire, and attempt to renew it
-    function testRenewalByOwner() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+    /// Register a bond, let it expire, and then re-register it
+    function testRegisterExpiredBond() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        tokenID = uint256(bondhash);
-        
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        vm.warp(block.timestamp + 60);
+        assertEq(BONDS.recordExists(bondhash), false);
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
     }
 
-    /// >>> TO DO
-    /// Attempt to register an expiwhite bond (accounted to someone else's balance)
-    function testClaimExpiwhiteBond() public {
-        // register test bond
-        bondhash = _BOND_.newBond{value: namePrice * lifespan}(
-            label,
+    /// Register a bond and attempt to renew it
+    function testOnlyCationCanRenew() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
             pill,
             lifespan
         );
-        tokenID = uint256(bondhash);
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        uint256 _expiry = BONDS.expiry(bondhash);
+        vm.prank(pill);
+        vm.deal(pill, bondPrice * lifespan);
+        BONDS.renew{value: bondPrice * lifespan}(bondhash, _expiry + lifespan);
+        assertEq(BONDS.expiry(bondhash), _expiry + lifespan);
+        vm.warp(block.timestamp + 200);
+        assertEq(BONDS.recordExists(bondhash), false);
+        _expiry = BONDS.expiry(bondhash);
+        vm.prank(faker);
+        vm.deal(faker, bondPrice * lifespan);
+        vm.expectRevert(abi.encodePacked("BOND_EXPIRED"));
+        BONDS.renew{value: bondPrice * lifespan}(bondhash, _expiry + lifespan);
     }
-    */
+
+    /// Register a bond and attempt to change its anion
+    function testOnlyCationCanChangeAnion() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
+            pill,
+            lifespan
+        );
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            label,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
+        BONDS.setAnion(bondhash, fakehash);
+        vm.prank(pill);
+        BONDS.setAnion(bondhash, fakehash);
+    }
 }
