@@ -349,7 +349,7 @@ contract Helix2MoleculeRegistry {
     function setAlias(
         bytes32 molyhash,
         bytes32 _alias
-    ) external isAuthorised(molyhash) {
+    ) external isRegistrar() {
         Molecules[molyhash]._alias = _alias;
         emit NewAlias(molyhash, _alias);
     }
@@ -558,17 +558,17 @@ contract Helix2MoleculeRegistry {
     /**
      * @dev return hooks of a molecule
      * @param molyhash : hash of molecule to query
-     * @return tuple of (hooks, rules)
+    * @return _hooks
+     * @return _rules
      */
     function hooksWithRules(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (address[] memory, uint8[] memory) {
-        address[] memory _hooks = Molecules[molyhash]._hooks;
-        uint8[] memory _rules = new uint8[](_hooks.length);
+    ) public view isOwned(molyhash) returns (address[] memory _hooks, uint8[] memory _rules) {
+        _hooks = Molecules[molyhash]._hooks;
+        _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
             _rules[i] = Molecules[molyhash]._rules[_hooks[i]];
         }
-        return (_hooks, _rules);
     }
 
     /**

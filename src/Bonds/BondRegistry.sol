@@ -43,6 +43,7 @@ contract Helix2BondRegistry {
         address indexed operator,
         bool approved
     );
+    error BadHook();
 
     /// Dev
     address public Dev;
@@ -293,7 +294,7 @@ contract Helix2BondRegistry {
     function setAlias(
         bytes32 bondhash,
         bytes32 _alias
-    ) external isAuthorised(bondhash) {
+    ) external isRegistrar() {
         Bonds[bondhash]._alias = _alias;
         emit NewAlias(bondhash, _alias);
     }
@@ -375,7 +376,7 @@ contract Helix2BondRegistry {
         bytes32 bondhash,
         uint8 rule,
         address config
-    ) external onlyCation(bondhash) {
+    ) external isCationOrController(bondhash) {
         require(isNotDuplicateHook(bondhash, config), "HOOK_EXISTS");
         Bonds[bondhash]._hooks.push(config);
         Bonds[bondhash]._rules[config] = rule;
@@ -392,7 +393,7 @@ contract Helix2BondRegistry {
         bytes32 bondhash,
         uint8 rule,
         address config
-    ) external onlyCation(bondhash) {
+    ) external isCationOrController(bondhash) {
         require(Bonds[bondhash]._rules[config] != rule, "RULE_EXISTS");
         Bonds[bondhash]._rules[config] = rule;
         emit Rehooked(bondhash, config, rule);
@@ -406,19 +407,19 @@ contract Helix2BondRegistry {
     function unhook(
         bytes32 bondhash,
         address config
-    ) external onlyCation(bondhash) {
+    ) external isCationOrController(bondhash) {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
             if (index == uint(0)) {
-                emit Unhooked(bondhash, address(0));
+                revert BadHook();
             } else {
                 Bonds[bondhash]._rules[config] = uint8(0);
                 emit Unhooked(bondhash, config);
                 delete Bonds[bondhash]._hooks[index];
             }
         } else {
-            emit Unhooked(bondhash, address(0));
+            revert BadHook();
         }
     }
 
@@ -514,17 +515,17 @@ contract Helix2BondRegistry {
     /**
      * @dev return hooks of a bond
      * @param bondhash : hash of bond to query
-     * @return tuple of (hooks, rules)
+     * @return _hooks
+     * @return _rules
      */
     function hooksWithRules(
         bytes32 bondhash
-    ) public view isOwned(bondhash) returns (address[] memory, uint8[] memory) {
-        address[] memory _hooks = Bonds[bondhash]._hooks;
-        uint8[] memory _rules = new uint8[](_hooks.length);
+    ) public view isOwned(bondhash) returns (address[] memory _hooks, uint8[] memory _rules) {
+        _hooks = Bonds[bondhash]._hooks;
+        _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {
             _rules[i] = Bonds[bondhash]._rules[_hooks[i]];
         }
-        return (_hooks, _rules);
     }
 
     /**

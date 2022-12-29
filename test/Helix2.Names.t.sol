@@ -170,14 +170,18 @@ contract Helix2NamesTest is Test {
         assertEq(NAMES.controller(namehash), taker);
     }
 
-    /// Register a name, set new controller, and test controller's permissions
-    function testControllerCanControl() public {
+    /// Register a name, set new controller, and test owner and controller's permissions
+    function testOwnerOrControllerCanControl() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
             pill,
             lifespan
         );
+        vm.prank(pill);
+        NAMES.setRecord(namehash, address(0));
+        vm.prank(pill);
+        NAMES.setResolver(namehash, address(0));
         vm.prank(pill);
         NAMES.setController(namehash, taker);
         assertEq(NAMES.controller(namehash), taker);
@@ -286,7 +290,7 @@ contract Helix2NamesTest is Test {
     }
 
     /// Attempt to register an expired name (accounted to someone else's balance)
-    function testOnlyOwnerCanRenew() public {
+    function testOnlyOwnerOrControllerCanRenew() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -300,6 +304,12 @@ contract Helix2NamesTest is Test {
         vm.deal(pill, basePrice * lifespan);
         NAMES.renew{value: basePrice * lifespan}(namehash, _expiry + lifespan);
         assertEq(NAMES.expiry(namehash), _expiry + lifespan);
+        vm.prank(pill);
+        NAMES.setController(namehash, faker);
+        _expiry = NAMES.expiry(namehash);
+        vm.prank(faker);
+        vm.deal(faker, basePrice * lifespan);
+        NAMES.renew{value: basePrice * lifespan}(namehash, _expiry + lifespan);
         vm.warp(block.timestamp + 200);
         assertEq(NAMES.recordExists(namehash), false);
         _expiry = NAMES.expiry(namehash);

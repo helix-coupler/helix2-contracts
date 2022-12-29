@@ -57,12 +57,19 @@ contract Helix2BondsTest is Test {
     string public white = "virgil";
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
-    string public label = "virgin";
+    address public joker = address(0xc0de4d1c001e0);
+    string public green = "nick";
+    string public _alias = "virgin";
     uint256 public lifespan = 50;
+    uint8 public rule = uint8(uint256(404));
+    address public config = address(0x0101010101010);
+    uint8 public rule_ = uint8(uint256(400));
+    address public config_ = address(0x0101010101011);
     bytes32 public cation;
     bytes32 public anion;
     bytes32 public bondhash;
     bytes32 public fakehash;
+    bytes32 public jokehash;
     uint256 public tokenID;
 
     constructor() {
@@ -124,12 +131,12 @@ contract Helix2BondsTest is Test {
             abi.encodePacked(
                 cation,
                 roothash,
-                keccak256(abi.encodePacked(label))
+                keccak256(abi.encodePacked(_alias))
             )
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -152,7 +159,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -190,7 +197,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -202,6 +209,9 @@ contract Helix2BondsTest is Test {
         assertEq(BONDS.controller(bondhash), pill);
         assertEq(BONDS.resolver(bondhash), defaultResolver);
         assertEq(BONDS.expiry(bondhash), block.timestamp + lifespan);
+        (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(bondhash);
+        assertEq(address(0), hooks_[0]);
+        assertEq(uint8(uint256(0)), rules_[0]);
     }
 
     /// Register a bond and change Cationship record
@@ -219,7 +229,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -236,7 +246,7 @@ contract Helix2BondsTest is Test {
     }
 
     /// Register a bond and set new controller, and test controller's permissions
-    function testControllerCanControl() public {
+    function testCationOrControllerCanControl() public {
         // register two names
         cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
@@ -250,7 +260,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -261,6 +271,10 @@ contract Helix2BondsTest is Test {
             faker,
             lifespan + 1
         );
+        vm.prank(pill);
+        BONDS.setRecord(bondhash, address(0));
+        vm.prank(pill);
+        BONDS.setCovalence(bondhash, false);
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         assertEq(BONDS.controller(bondhash), faker);
@@ -290,7 +304,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -325,7 +339,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -335,7 +349,7 @@ contract Helix2BondsTest is Test {
         assertEq(BONDS.recordExists(bondhash), false);
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -344,7 +358,7 @@ contract Helix2BondsTest is Test {
     }
 
     /// Register a bond and attempt to renew it
-    function testOnlyCationCanRenew() public {
+    function testOnlyCationOrControllerCanRenew() public {
         // register two names
         cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
@@ -358,7 +372,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -369,6 +383,13 @@ contract Helix2BondsTest is Test {
         vm.deal(pill, bondPrice * lifespan);
         BONDS.renew{value: bondPrice * lifespan}(bondhash, _expiry + lifespan);
         assertEq(BONDS.expiry(bondhash), _expiry + lifespan);
+        vm.prank(pill);
+        BONDS.setController(bondhash, faker);
+        assertEq(BONDS.controller(bondhash), faker);
+        _expiry = BONDS.expiry(bondhash);
+        vm.prank(faker);
+        vm.deal(faker, bondPrice * lifespan);
+        BONDS.renew{value: bondPrice * lifespan}(bondhash, _expiry + lifespan);
         vm.warp(block.timestamp + 200);
         assertEq(BONDS.recordExists(bondhash), false);
         _expiry = BONDS.expiry(bondhash);
@@ -379,7 +400,7 @@ contract Helix2BondsTest is Test {
     }
 
     /// Register a bond and attempt to change its anion
-    function testOnlyCationCanChangeAnion() public {
+    function testOnlyCationOrControllerCanChangeAnion() public {
         // register two names
         cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
@@ -393,7 +414,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            label,
+            _alias,
             cation,
             anion,
             lifespan
@@ -410,5 +431,159 @@ contract Helix2BondsTest is Test {
         BONDS.setAnion(bondhash, fakehash);
         vm.prank(pill);
         BONDS.setAnion(bondhash, fakehash);
+        vm.prank(pill);
+        BONDS.setController(bondhash, faker);
+        vm.prank(faker);
+        BONDS.setAnion(bondhash, jokehash);
+    }
+
+    /// Register a bond and attempt to add a hook
+    function testOnlyCationOrControllerCanHook() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
+            pill,
+            lifespan
+        );
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            _alias,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        vm.prank(pill);
+        BONDS.hook(bondhash, rule, config);
+        (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(bondhash);
+        assertEq(config, hooks_[1]);
+        assertEq(rule, rules_[1]);
+        vm.prank(pill);
+        BONDS.setController(bondhash, faker);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        BONDS.hook(bondhash, rule, config);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        BONDS.hook(bondhash, rule + 1, config);
+        vm.prank(faker);
+        BONDS.hook(bondhash, rule_, config_);
+        (address[] memory hooks__, uint8[] memory rules__) = BONDS.hooksWithRules(bondhash);
+        assertEq(config_, hooks__[2]);
+        assertEq(rule_, rules__[2]);
+    }
+
+    /// Register a bond and attempt to rehook a hook to new rule
+    function testOnlyCationOrControllerCanRehook() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
+            pill,
+            lifespan
+        );
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            _alias,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        vm.prank(pill);
+        BONDS.hook(bondhash, rule, config);
+        vm.prank(pill);
+        BONDS.rehook(bondhash, rule + 1, config);
+        (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(bondhash);
+        assertEq(config, hooks_[1]);
+        assertEq(rule + 1, rules_[1]);
+        vm.prank(pill);
+        BONDS.setController(bondhash, faker);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        BONDS.hook(bondhash, rule, config);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        BONDS.hook(bondhash, rule + 1, config);
+        vm.prank(faker);
+        BONDS.hook(bondhash, rule_, config_);
+        vm.prank(faker);
+        BONDS.rehook(bondhash, rule_ + 1, config_);
+        (address[] memory hooks__, uint8[] memory rules__) = BONDS.hooksWithRules(bondhash);
+        assertEq(config_, hooks__[2]);
+        assertEq(rule_ + 1, rules__[2]);
+    }
+
+    /// Register a bond and attempt to unhook a hook
+    function testOnlyCationOrControllerCanUnhook() public {
+        // register two names
+        cation = _NAME_.newName{value: namePrice * lifespan}(
+            black,
+            pill,
+            lifespan
+        );
+        anion = _NAME_.newName{value: namePrice * lifespan}(
+            white,
+            taker,
+            lifespan
+        );
+        // register test bond linking two names
+        bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
+            _alias,
+            cation,
+            anion,
+            lifespan
+        );
+        // register name to transfer to
+        fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
+            brown,
+            faker,
+            lifespan + 1
+        );
+        assertEq(BONDS.recordExists(bondhash), true);
+        vm.prank(pill);
+        BONDS.hook(bondhash, rule, config);
+        vm.prank(pill);
+        BONDS.unhook(bondhash, config);
+        (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(bondhash);
+        assertEq(address(0), hooks_[0]);
+        assertEq(uint8(uint256(0)), rules_[0]);
+        assertEq(address(0), hooks_[1]);
+        assertEq(uint8(uint256(0)), rules_[1]);
+        assertEq(2, hooks_.length);
+        assertEq(2, rules_.length);
+        vm.prank(pill);
+        BONDS.setController(bondhash, faker);
+        vm.prank(faker);
+        vm.expectRevert(abi.encodeWithSelector(Helix2BondRegistry.BadHook.selector));
+        BONDS.unhook(bondhash, config);
+        vm.prank(faker);
+        BONDS.hook(bondhash, rule_, config_);
+        (address[] memory hooks__, uint8[] memory rules__) = BONDS.hooksWithRules(bondhash);
+        assertEq(config_, hooks__[2]);
+        assertEq(rule_, rules__[2]);
+        assertEq(3, hooks__.length);
+        assertEq(3, rules__.length);
     }
 }
