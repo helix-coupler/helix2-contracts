@@ -121,14 +121,14 @@ contract Helix2NameRegistry {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 namehash) {
-        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED");
         require(msg.sender == Names[namehash]._controller, "NOT_CONTROLLER");
         _;
     }
 
     /// @dev : Modifier to allow Owner or Controller
     modifier isOwnerOrController(bytes32 namehash) {
-        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED");
         address _owner = Names[namehash]._owner;
         require(
             _owner == msg.sender ||
@@ -165,7 +165,7 @@ contract Helix2NameRegistry {
      * @param namehash : hash of name
      */
     modifier isAvailable(bytes32 namehash) {
-        require(block.timestamp >= Names[namehash]._expiry, "NAME_EXISTS"); // expiry check
+        require(block.timestamp >= Names[namehash]._expiry, "NAME_EXISTS");
         _;
     }
 
@@ -174,7 +174,7 @@ contract Helix2NameRegistry {
      * @param namehash : hash of name
      */
     modifier isOwned(bytes32 namehash) {
-        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED");
         _;
     }
 
@@ -183,7 +183,7 @@ contract Helix2NameRegistry {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED"); // expiry check
+        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED");
         address _owner = Names[namehash]._owner;
         require(
             _owner == msg.sender || Operators[_owner][msg.sender],

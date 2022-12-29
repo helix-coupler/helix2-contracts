@@ -175,7 +175,7 @@ contract Helix2MoleculeRegistrar {
         MOLECULES.setResolver(molyhash, defaultResolver); /// set new resolver
         MOLECULES.setAlias(molyhash, aliashash); /// set new alias
         MOLECULES.setCovalence(molyhash, false); /// set new covalence flag
-        MOLECULES.unhookAll(molyhash, anion.length); /// reset hooks
+        MOLECULES.unhookAll(molyhash); /// reset hooks
         emit NewMolecule(molyhash, cation);
         return molyhash;
     }

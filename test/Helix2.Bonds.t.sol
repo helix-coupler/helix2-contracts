@@ -61,10 +61,11 @@ contract Helix2BondsTest is Test {
     string public green = "nick";
     string public _alias = "virgin";
     uint256 public lifespan = 50;
-    uint8 public rule = uint8(uint256(404));
-    address public config = address(0x0101010101010);
-    uint8 public rule_ = uint8(uint256(400));
-    address public config_ = address(0x0101010101011);
+    uint8[2] public rule = [uint8(uint256(404)), uint8(uint256(400))];
+    address[2] public config = [
+        address(0x0101010101010),
+        address(0x0101010101011)
+    ];
     bytes32 public cation;
     bytes32 public anion;
     bytes32 public bondhash;
@@ -142,6 +143,8 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         assertEq(bondhash, _bondhash);
+        bytes32 taker_ = BONDS.anion(bondhash);
+        assertEq(anion, taker_);
     }
 
     /// Register a bond, let it expire, and verify records
@@ -212,8 +215,8 @@ contract Helix2BondsTest is Test {
         (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(
             bondhash
         );
-        assertEq(address(0), hooks_[0]);
-        assertEq(uint8(uint256(0)), rules_[0]);
+        assertEq(hooks_.length, 0);
+        assertEq(rules_.length, 0);
     }
 
     /// Register a bond and change Cationship record
@@ -467,29 +470,29 @@ contract Helix2BondsTest is Test {
         );
         assertEq(BONDS.recordExists(bondhash), true);
         vm.prank(pill);
-        BONDS.hook(bondhash, rule, config);
+        BONDS.hook(bondhash, rule[0], config[0]);
         (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(
             bondhash
         );
-        assertEq(config, hooks_[1]);
-        assertEq(rule, rules_[1]);
+        assertEq(config[0], hooks_[0]);
+        assertEq(rule[0], rules_[0]);
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        BONDS.hook(bondhash, rule, config);
+        BONDS.hook(bondhash, rule[0], config[0]);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        BONDS.hook(bondhash, rule + 1, config);
+        BONDS.hook(bondhash, rule[0] + 1, config[0]);
         vm.prank(faker);
-        BONDS.hook(bondhash, rule_, config_);
+        BONDS.hook(bondhash, rule[1], config[1]);
         (address[] memory hooks__, uint8[] memory rules__) = BONDS
             .hooksWithRules(bondhash);
-        assertEq(config_, hooks__[2]);
-        assertEq(rule_, rules__[2]);
+        assertEq(config[1], hooks__[1]);
+        assertEq(rule[1], rules__[1]);
     }
 
-    /// Register a bond and attempt to rehook a hook to new rule
+    /// Register a bond and attempt to rehook a hook to new rule[0]
     function testOnlyCationOrControllerCanRehook() public {
         // register two names
         cation = _NAME_.newName{value: namePrice * lifespan}(
@@ -517,30 +520,30 @@ contract Helix2BondsTest is Test {
         );
         assertEq(BONDS.recordExists(bondhash), true);
         vm.prank(pill);
-        BONDS.hook(bondhash, rule, config);
+        BONDS.hook(bondhash, rule[0], config[0]);
         vm.prank(pill);
-        BONDS.rehook(bondhash, rule + 1, config);
+        BONDS.rehook(bondhash, rule[0] + 1, config[0]);
         (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(
             bondhash
         );
-        assertEq(config, hooks_[1]);
-        assertEq(rule + 1, rules_[1]);
+        assertEq(config[0], hooks_[0]);
+        assertEq(rule[0] + 1, rules_[0]);
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        BONDS.hook(bondhash, rule, config);
+        BONDS.hook(bondhash, rule[0], config[0]);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        BONDS.hook(bondhash, rule + 1, config);
+        BONDS.hook(bondhash, rule[0] + 1, config[0]);
         vm.prank(faker);
-        BONDS.hook(bondhash, rule_, config_);
+        BONDS.hook(bondhash, rule[1], config[1]);
         vm.prank(faker);
-        BONDS.rehook(bondhash, rule_ + 1, config_);
+        BONDS.rehook(bondhash, rule[1] + 1, config[1]);
         (address[] memory hooks__, uint8[] memory rules__) = BONDS
             .hooksWithRules(bondhash);
-        assertEq(config_, hooks__[2]);
-        assertEq(rule_ + 1, rules__[2]);
+        assertEq(config[1], hooks__[1]);
+        assertEq(rule[1] + 1, rules__[1]);
     }
 
     /// Register a bond and attempt to unhook a hook
@@ -571,32 +574,28 @@ contract Helix2BondsTest is Test {
         );
         assertEq(BONDS.recordExists(bondhash), true);
         vm.prank(pill);
-        BONDS.hook(bondhash, rule, config);
+        BONDS.hook(bondhash, rule[0], config[0]);
         vm.prank(pill);
-        BONDS.unhook(bondhash, config);
+        BONDS.unhook(bondhash, config[0]);
         (address[] memory hooks_, uint8[] memory rules_) = BONDS.hooksWithRules(
             bondhash
         );
-        assertEq(address(0), hooks_[0]);
-        assertEq(uint8(uint256(0)), rules_[0]);
-        assertEq(address(0), hooks_[1]);
-        assertEq(uint8(uint256(0)), rules_[1]);
-        assertEq(2, hooks_.length);
-        assertEq(2, rules_.length);
+        assertEq(hooks_.length, 1);
+        assertEq(rules_.length, 1);
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         vm.prank(faker);
         vm.expectRevert(
             abi.encodeWithSelector(Helix2BondRegistry.BAD_HOOK.selector)
         );
-        BONDS.unhook(bondhash, config);
+        BONDS.unhook(bondhash, config[0]);
         vm.prank(faker);
-        BONDS.hook(bondhash, rule_, config_);
+        BONDS.hook(bondhash, rule[1], config[1]);
         (address[] memory hooks__, uint8[] memory rules__) = BONDS
             .hooksWithRules(bondhash);
-        assertEq(config_, hooks__[2]);
-        assertEq(rule_, rules__[2]);
-        assertEq(3, hooks__.length);
-        assertEq(3, rules__.length);
+        assertEq(config[1], hooks__[1]);
+        assertEq(rule[1], rules__[1]);
+        assertEq(hooks__.length, uint(2));
+        assertEq(rules__.length, uint(2));
     }
 }

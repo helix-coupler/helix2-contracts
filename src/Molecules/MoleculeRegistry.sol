@@ -46,7 +46,7 @@ contract Helix2MoleculeRegistry {
         bool approved
     );
 
-    error BAD_ANION(bytes32 moleculehash, bytes32 anion);
+    error BAD_ANION();
     error BAD_HOOK();
 
     /// Dev
@@ -142,7 +142,7 @@ contract Helix2MoleculeRegistry {
         require(
             block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
-        ); // expiry check
+        );
         require(
             msg.sender == Molecules[molyhash]._controller,
             "NOT_CONTROLLER"
@@ -152,7 +152,10 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Modifier to allow Cation or Controller
     modifier isCationOrController(bytes32 molyhash) {
-        require(block.timestamp < Molecules[molyhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(
+            block.timestamp < Molecules[molyhash]._expiry,
+            "MOLECULE_EXPIRED"
+        );
         bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -194,7 +197,7 @@ contract Helix2MoleculeRegistry {
         require(
             block.timestamp >= Molecules[molyhash]._expiry,
             "MOLECULE_EXISTS"
-        ); // expiry check
+        );
         _;
     }
 
@@ -206,7 +209,7 @@ contract Helix2MoleculeRegistry {
         require(
             block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
-        ); // expiry check
+        );
         _;
     }
 
@@ -242,7 +245,7 @@ contract Helix2MoleculeRegistry {
         require(
             block.timestamp < Molecules[molyhash]._expiry,
             "MOLECULE_EXPIRED"
-        ); // expiry check
+        );
         bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -299,7 +302,7 @@ contract Helix2MoleculeRegistry {
     function addAnion(
         bytes32 molyhash,
         bytes32 _anion
-    ) external isAuthorised(molyhash) {
+    ) external isCationOrController(molyhash) {
         require(isNotDuplicateAnion(molyhash, _anion), "ANION_EXISTS");
         Molecules[molyhash]._anion.push(_anion);
         emit NewAnion(molyhash, _anion);
@@ -307,7 +310,7 @@ contract Helix2MoleculeRegistry {
 
     /**
      * @dev : adds new array of anions to the molecule
-     * @notice : will overwrite pre-existing anions
+     * @notice : will skip pre-existing anions
      * @param molyhash : hash of target molecule
      * @param _anion : array of new anions
      */
@@ -316,7 +319,7 @@ contract Helix2MoleculeRegistry {
         bytes32[] memory _anion
     ) external isAuthorised(molyhash) {
         for (uint i = 0; i < _anion.length; i++) {
-            if (_anion[i].existsIn(Molecules[molyhash]._anion)) {
+            if (!_anion[i].existsIn(Molecules[molyhash]._anion)) {
                 Molecules[molyhash]._anion.push(_anion[i]);
             }
         }
@@ -331,14 +334,14 @@ contract Helix2MoleculeRegistry {
     function popAnion(
         bytes32 molyhash,
         bytes32 __anion
-    ) external isAuthorised(molyhash) {
+    ) external isCationOrController(molyhash) {
         bytes32[] memory _anion = Molecules[molyhash]._anion;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
             delete Molecules[molyhash]._anion[index];
             emit PopAnion(molyhash, __anion);
         } else {
-            revert BAD_ANION(molyhash, __anion);
+            revert BAD_ANION();
         }
     }
 
@@ -464,15 +467,11 @@ contract Helix2MoleculeRegistry {
         address[] memory _hooks = Molecules[molyhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
-            if (index == uint(0)) {
-                emit Unhooked(molyhash, address(0));
-            } else {
-                Molecules[molyhash]._rules[config] = uint8(0);
-                emit Unhooked(molyhash, config);
-                delete Molecules[molyhash]._hooks[index];
-            }
+            Molecules[molyhash]._rules[config] = uint8(0);
+            emit Unhooked(molyhash, config);
+            delete Molecules[molyhash]._hooks[index];
         } else {
-            emit Unhooked(molyhash, address(0));
+            revert BAD_HOOK();
         }
     }
 
@@ -480,7 +479,9 @@ contract Helix2MoleculeRegistry {
      * @dev removes all hooks in a molecule
      * @param molyhash : hash of the molecule
      */
-    function unhookAll(bytes32 molyhash, uint init) external isAuthorised(molyhash) {
+    function unhookAll(
+        bytes32 molyhash
+    ) external isAuthorised(molyhash) {
         address[] memory _hooks = Molecules[molyhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Molecules[molyhash]._rules[_hooks[i]] = uint8(0);
@@ -488,9 +489,6 @@ contract Helix2MoleculeRegistry {
         }
         delete Molecules[molyhash]._hooks;
         emit UnhookedAll(molyhash);
-        for (uint i = 0; i < init; i++) {
-            Molecules[molyhash]._hooks.push(address(0));
-        }
     }
 
     /**

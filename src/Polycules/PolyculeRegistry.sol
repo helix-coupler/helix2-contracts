@@ -144,7 +144,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
-        ); // expiry check
+        );
         require(
             msg.sender == Polycules[polyhash]._controller,
             "NOT_CONTROLLER"
@@ -157,7 +157,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
-        ); // expiry check
+        );
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -175,7 +175,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
-        ); // expiry check
+        );
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -203,7 +203,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp >= Polycules[polyhash]._expiry,
             "POLYCULE_EXISTS"
-        ); // expiry check
+        );
         _;
     }
 
@@ -215,7 +215,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
-        ); // expiry check
+        );
         _;
     }
 
@@ -267,7 +267,7 @@ contract Helix2PolyculeRegistry {
         require(
             block.timestamp < Polycules[polyhash]._expiry,
             "POLYCULE_EXPIRED"
-        ); // expiry check
+        );
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -327,7 +327,7 @@ contract Helix2PolyculeRegistry {
         bytes32 _anion,
         address config,
         uint8 rule
-    ) external isAuthorised(polyhash) {
+    ) external isCationOrController(polyhash) {
         require(isNotDuplicateAnion(polyhash, _anion), "ANION_EXISTS");
         require(isNotDuplicateHook(polyhash, config), "HOOK_EXISTS");
         require(Polycules[polyhash]._rules[config] != rule, "RULE_EXISTS");
@@ -340,10 +340,10 @@ contract Helix2PolyculeRegistry {
 
     /**
      * @dev : adds new array of anions to the polycule
-     * @notice : will overwrite pre-existing anions
+     * @notice : will skip pre-existing anions & hook configs
      * @param polyhash : hash of target polycule
      * @param _anion : array of new anions
-     * @param _config : array of new config
+     * @param _config : array of new matching config
      * @param _rules : array of rules for hooks
      */
     function setAnions(
@@ -372,7 +372,7 @@ contract Helix2PolyculeRegistry {
     function popAnion(
         bytes32 polyhash,
         bytes32 __anion
-    ) external isAuthorised(polyhash) {
+    ) external isCationOrController(polyhash) {
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         address[] memory _hooks = Polycules[polyhash]._hooks;
         if (__anion.existsIn(_anion)) {
@@ -576,7 +576,10 @@ contract Helix2PolyculeRegistry {
      * @dev removes all hooks in a polycule
      * @param polyhash : hash of the polycule
      */
-    function unhookAll(bytes32 polyhash, uint init) external isAuthorised(polyhash) {
+    function unhookAll(
+        bytes32 polyhash,
+        uint init
+    ) external isAuthorised(polyhash) {
         address[] memory _hooks = Polycules[polyhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Polycules[polyhash]._rules[_hooks[i]] = uint8(0);

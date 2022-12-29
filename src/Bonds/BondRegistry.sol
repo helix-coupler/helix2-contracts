@@ -135,14 +135,14 @@ contract Helix2BondRegistry {
 
     /// @dev : Modifier to allow only Controller
     modifier onlyController(bytes32 bondhash) {
-        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED");
         require(msg.sender == Bonds[bondhash]._controller, "NOT_CONTROLLER");
         _;
     }
 
     /// @dev : Modifier to allow Cation or Controller
     modifier isCationOrController(bytes32 bondhash) {
-        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED");
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -181,7 +181,7 @@ contract Helix2BondRegistry {
      * @param bondhash : hash of bond
      */
     modifier isAvailable(bytes32 bondhash) {
-        require(block.timestamp >= Bonds[bondhash]._expiry, "BOND_EXISTS"); // expiry check
+        require(block.timestamp >= Bonds[bondhash]._expiry, "BOND_EXISTS");
         _;
     }
 
@@ -190,7 +190,7 @@ contract Helix2BondRegistry {
      * @param bondhash : label of bond
      */
     modifier isOwned(bytes32 bondhash) {
-        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED");
         _;
     }
 
@@ -224,7 +224,7 @@ contract Helix2BondRegistry {
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
-        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED"); // expiry check
+        require(block.timestamp < Bonds[bondhash]._expiry, "BOND_EXPIRED");
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -408,13 +408,9 @@ contract Helix2BondRegistry {
         address[] memory _hooks = Bonds[bondhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
-            if (index == uint(0)) {
-                revert BAD_HOOK();
-            } else {
-                Bonds[bondhash]._rules[config] = uint8(0);
-                emit Unhooked(bondhash, config);
-                delete Bonds[bondhash]._hooks[index];
-            }
+            Bonds[bondhash]._rules[config] = uint8(0);
+            emit Unhooked(bondhash, config);
+            delete Bonds[bondhash]._hooks[index];
         } else {
             revert BAD_HOOK();
         }
@@ -432,7 +428,6 @@ contract Helix2BondRegistry {
         }
         delete Bonds[bondhash]._hooks;
         emit UnhookedAll(bondhash);
-        Bonds[bondhash]._hooks.push(address(0));
     }
 
     /**
