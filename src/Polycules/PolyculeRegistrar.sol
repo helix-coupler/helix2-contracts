@@ -114,7 +114,7 @@ contract Helix2PolyculeRegistrar {
                 keccak256(
                     abi.encodePacked(
                         _cation,
-                        HELIX2.getRoothash()[1],
+                        HELIX2.getRoothash()[3],
                         keccak256(abi.encodePacked(_alias))
                     )
                 )

@@ -172,10 +172,6 @@ contract Helix2PolyculeRegistry {
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 polyhash) {
         Registrar = HELIX2.getRegistrar()[3];
-        require(
-            block.timestamp < Polycules[polyhash]._expiry,
-            "POLYCULE_EXPIRED"
-        );
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -282,11 +278,10 @@ contract Helix2PolyculeRegistry {
      * @param polyhash : hash of polycule
      * @param _cation : new cation
      */
-    function register(
-        bytes32 polyhash,
-        bytes32 _cation
-    ) external isAvailable(polyhash) {
+    function register(bytes32 polyhash, bytes32 _cation) external isRegistrar {
+        require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Polycules[polyhash]._cation = _cation;
+        emit NewCation(polyhash, _cation);
         emit NewRegistration(polyhash, _cation);
     }
 

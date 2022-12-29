@@ -54,7 +54,7 @@ contract Helix2BondsTest is Test {
     address public pill = address(0xc0de4c0ca19e);
     string public black = "vitalik";
     address public taker = address(0xc0de4c0cac01a);
-    string public white = "virgil";
+    string public crook = "virgil";
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
     address public joker = address(0xc0de4d1c001e0);
@@ -122,7 +122,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -156,7 +156,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -194,7 +194,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -228,7 +228,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -259,7 +259,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -303,7 +303,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -338,7 +338,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -371,7 +371,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -413,7 +413,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -451,7 +451,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -501,7 +501,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );
@@ -555,7 +555,7 @@ contract Helix2BondsTest is Test {
             lifespan
         );
         anion = _NAME_.newName{value: namePrice * lifespan}(
-            white,
+            crook,
             taker,
             lifespan
         );

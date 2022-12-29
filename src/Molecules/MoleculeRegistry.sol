@@ -479,9 +479,7 @@ contract Helix2MoleculeRegistry {
      * @dev removes all hooks in a molecule
      * @param molyhash : hash of the molecule
      */
-    function unhookAll(
-        bytes32 molyhash
-    ) external isAuthorised(molyhash) {
+    function unhookAll(bytes32 molyhash) external isAuthorised(molyhash) {
         address[] memory _hooks = Molecules[molyhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Molecules[molyhash]._rules[_hooks[i]] = uint8(0);

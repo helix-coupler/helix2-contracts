@@ -62,8 +62,8 @@ contract Helix2MoleculesTest is Test {
         address(0xc0de4c0cac01d),
         address(0xc0de4c0cac01e)
     ];
-    string[3] public white = ["virgil", "virgil_", "virgil__"];
-    string[2] public _white_ = ["virgil___", "virgil____"];
+    string[3] public crook = ["virgil", "virgil_", "virgil__"];
+    string[2] public _crook_ = ["virgil___", "virgil____"];
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
     address public joker = address(0xc0de4d1c001e0);
@@ -131,10 +131,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -170,10 +170,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -212,10 +212,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -232,11 +232,11 @@ contract Helix2MoleculesTest is Test {
         bytes32[] memory taker_ = MOLECULES.anion(molyhash);
         assertEq(taker.length, anion.length);
         assertEq(taker.length, taker_.length);
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             assertEq(NAMES.owner(taker_[i]), taker[i]);
         }
         assertEq(MOLECULES.cation(molyhash), cation);
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             assertEq(taker_[i], anion[i]);
         }
         assertEq(MOLECULES.controller(molyhash), pill);
@@ -256,10 +256,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -291,10 +291,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -336,10 +336,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -375,10 +375,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -412,10 +412,10 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i],
+                    crook[i],
                     taker[i],
                     lifespan
                 )
@@ -458,7 +458,7 @@ contract Helix2MoleculesTest is Test {
             _expiry + lifespan
         );
     }
-    
+
     /// Register a molecule and attempt to add & pop anions
     function testOnlyCationOrControllerCanChangeAnions() public {
         // register (1 + n) names
@@ -467,20 +467,20 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i], 
-                    taker[i], 
+                    crook[i],
+                    taker[i],
                     lifespan
                 )
             );
         }
-        for (uint i = 0; i < _white_.length; i++) {
+        for (uint i = 0; i < _crook_.length; i++) {
             _anion_.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    _white_[i], 
-                    _taker_[i], 
+                    _crook_[i],
+                    _taker_[i],
                     lifespan
                 )
             );
@@ -512,7 +512,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.setAnions(molyhash, _anion_);
         assertEq(MOLECULES.anion(molyhash).length, anion.length + 1 + 2);
     }
-    
+
     /// Register a molecule and attempt to add a hook
     function testOnlyCationOrControllerCanHook() public {
         // register (1 + n) names
@@ -521,11 +521,11 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i], 
-                    taker[i], 
+                    crook[i],
+                    taker[i],
                     lifespan
                 )
             );
@@ -546,9 +546,8 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.recordExists(molyhash), true);
         vm.prank(pill);
         MOLECULES.hook(molyhash, rule[0], config[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES.hooksWithRules(
-            molyhash
-        );
+        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES
+            .hooksWithRules(molyhash);
         assertEq(config[0], hooks_[0]);
         assertEq(rule[0], rules_[0]);
         vm.prank(pill);
@@ -566,7 +565,7 @@ contract Helix2MoleculesTest is Test {
         assertEq(config[1], hooks__[1]);
         assertEq(rule[1], rules__[1]);
     }
-    
+
     /// Register a molecule and attempt to rehook a hook to new rule[0]
     function testOnlyCationOrControllerCanRehook() public {
         // register (1 + n) names
@@ -575,11 +574,11 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i], 
-                    taker[i], 
+                    crook[i],
+                    taker[i],
                     lifespan
                 )
             );
@@ -602,9 +601,8 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, rule[0], config[0]);
         vm.prank(pill);
         MOLECULES.rehook(molyhash, rule[0] + 1, config[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES.hooksWithRules(
-            molyhash
-        );
+        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES
+            .hooksWithRules(molyhash);
         assertEq(config[0], hooks_[0]);
         assertEq(rule[0] + 1, rules_[0]);
         vm.prank(pill);
@@ -624,7 +622,7 @@ contract Helix2MoleculesTest is Test {
         assertEq(config[1], hooks__[1]);
         assertEq(rule[1] + 1, rules__[1]);
     }
-    
+
     /// Register a molecule and attempt to unhook a hook
     function testOnlyCationOrControllerCanUnhook() public {
         // register (1 + n) names
@@ -633,11 +631,11 @@ contract Helix2MoleculesTest is Test {
             pill,
             lifespan
         );
-        for (uint i = 0; i < white.length; i++) {
+        for (uint i = 0; i < crook.length; i++) {
             anion.push(
                 _NAME_.newName{value: namePrice * lifespan}(
-                    white[i], 
-                    taker[i], 
+                    crook[i],
+                    taker[i],
                     lifespan
                 )
             );
@@ -660,9 +658,8 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, rule[0], config[0]);
         vm.prank(pill);
         MOLECULES.unhook(molyhash, config[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES.hooksWithRules(
-            molyhash
-        );
+        (address[] memory hooks_, uint8[] memory rules_) = MOLECULES
+            .hooksWithRules(molyhash);
         assertEq(hooks_.length, 1);
         assertEq(rules_.length, 1);
         vm.prank(pill);
@@ -681,5 +678,4 @@ contract Helix2MoleculesTest is Test {
         assertEq(rules__.length, uint(2));
         assertEq(hooks__.length, uint(2));
     }
-
 }
