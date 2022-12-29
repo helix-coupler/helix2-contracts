@@ -57,13 +57,18 @@ contract Helix2NameRegistrar is ERC721 {
      * @param label : label of name
      */
     modifier isAvailable(string memory label) {
-        bytes32 roothash = HELIX2.getRoothash()[1];
-        uint _expiry = NAMES.expiry(
-            keccak256(
-                abi.encodePacked(roothash, keccak256(abi.encodePacked(label)))
-            )
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(
+            !NAMES.recordExists(
+                keccak256(
+                    abi.encodePacked(
+                        HELIX2.getRoothash()[0],
+                        keccak256(abi.encodePacked(label))
+                    )
+                )
+            ),
+            "NAME_EXISTS"
         );
-        require(_expiry < block.timestamp, "NAME_EXISTS");
         _;
     }
 
@@ -72,7 +77,7 @@ contract Helix2NameRegistrar is ERC721 {
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
-        require(block.timestamp < NAMES.expiry(namehash), "NAME_EXPIRED"); // expiry check
+        require(NAMES.recordExists(namehash), "NO_RECORD");
         address owner = NAMES.owner(namehash);
         require(
             owner == msg.sender || Operators[owner][msg.sender],
@@ -108,7 +113,7 @@ contract Helix2NameRegistrar is ERC721 {
         string memory label,
         address owner,
         uint lifespan
-    ) external payable isLegal(label) isAvailable(label) returns (bytes32) {
+    ) external payable isLegal(label) returns (bytes32) {
         require(owner != address(0), "CANNOT_BURN");
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
@@ -116,6 +121,8 @@ contract Helix2NameRegistrar is ERC721 {
         bytes32 namehash = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
         );
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(!NAMES.recordExists(namehash), "NAME_EXISTS");
         address _owner = NAMES.owner(namehash);
         /// @notice : Balance of previous owner is updated only when the
         /// expired name is re-registered by someone else, aka, an

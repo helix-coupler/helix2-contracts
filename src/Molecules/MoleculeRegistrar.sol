@@ -94,14 +94,32 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
+     * @dev : verify molecule has expired and can be registered
+     * @param _cation : cation of molecule
+     * @param _alias : alias of molecule
+     */
+    modifier isAvailable(bytes32 _cation, string memory _alias) {
+        require(
+            !MOLECULES.recordExists(
+                keccak256(
+                    abi.encodePacked(
+                        _cation,
+                        HELIX2.getRoothash()[2],
+                        keccak256(abi.encodePacked(_alias))
+                    )
+                )
+            ),
+            "MOLECULE_EXISTS"
+        );
+        _;
+    }
+
+    /**
      * @dev : verify ownership of molecule
      * @param molyhash : hash of molecule
      */
     modifier onlyCation(bytes32 molyhash) {
-        require(
-            block.timestamp < MOLECULES.expiry(molyhash),
-            "MOLECULE_EXPIRED"
-        ); // expiry check
+        require(MOLECULES.recordExists(molyhash), "NO_RECORD");
         address cation = NAMES.owner(MOLECULES.cation(molyhash));
         require(
             cation == msg.sender || Operators[cation][msg.sender],
@@ -148,14 +166,16 @@ contract Helix2MoleculeRegistrar {
         bytes32 molyhash = keccak256(
             abi.encodePacked(cation, roothash, aliashash)
         );
-        MOLECULES.setCation(molyhash, cation); /// set new cation (= from)
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(!MOLECULES.recordExists(molyhash), "MOLECULE_EXISTS");
+        MOLECULES.register(molyhash, cation); /// set new cation (= from)
         MOLECULES.setAnions(molyhash, anion); /// set anions (= to)
         MOLECULES.setExpiry(molyhash, block.timestamp + lifespan); /// set new expiry
         MOLECULES.setController(molyhash, _cation); /// set new controller
         MOLECULES.setResolver(molyhash, defaultResolver); /// set new resolver
         MOLECULES.setAlias(molyhash, aliashash); /// set new alias
         MOLECULES.setCovalence(molyhash, false); /// set new covalence flag
-        MOLECULES.unhookAll(molyhash); /// reset hooks
+        MOLECULES.unhookAll(molyhash, anion.length); /// reset hooks
         emit NewMolecule(molyhash, cation);
         return molyhash;
     }

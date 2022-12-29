@@ -46,7 +46,7 @@ contract Helix2ConstructorTest is Test {
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2BondRegistrar public _BOND_;
-    Helix2MoleculeRegistrar public _MOLE_;
+    Helix2MoleculeRegistrar public _MOLY_;
     Helix2PolyculeRegistrar public _POLY_;
 
     /// Constants
@@ -80,7 +80,7 @@ contract Helix2ConstructorTest is Test {
         MOLECULES = new Helix2MoleculeRegistry(_NAMES, _HELIX2);
         address _MOLECULES = address(MOLECULES);
         // deploy MoleculeRegistrar
-        _MOLE_ = new Helix2MoleculeRegistrar(_MOLECULES, _NAMES, _HELIX2);
+        _MOLY_ = new Helix2MoleculeRegistrar(_MOLECULES, _NAMES, _HELIX2);
 
         // POLYCULES ---------------------------------------------
         // deploy PolyculeRegistry

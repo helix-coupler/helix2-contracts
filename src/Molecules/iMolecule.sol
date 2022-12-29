@@ -40,7 +40,7 @@ interface iMOLECULE {
 
     function unhook(bytes32 molyhash, address config) external;
 
-    function unhookAll(bytes32 molyhash) external;
+    function unhookAll(bytes32 molyhash, uint init) external;
 
     function setApprovalForAll(address controller, bool approved) external;
 

@@ -104,14 +104,32 @@ contract Helix2PolyculeRegistrar {
     }
 
     /**
+     * @dev : verify polycule has expired and can be registered
+     * @param _cation : cation of polycule
+     * @param _alias : alias of polycule
+     */
+    modifier isAvailable(bytes32 _cation, string memory _alias) {
+        require(
+            !POLYCULES.recordExists(
+                keccak256(
+                    abi.encodePacked(
+                        _cation,
+                        HELIX2.getRoothash()[1],
+                        keccak256(abi.encodePacked(_alias))
+                    )
+                )
+            ),
+            "POLYCULE_EXISTS"
+        );
+        _;
+    }
+
+    /**
      * @dev : verify ownership of polycule
      * @param polyhash : hash of polycule
      */
     modifier onlyCation(bytes32 polyhash) {
-        require(
-            block.timestamp < POLYCULES.expiry(polyhash),
-            "POLYCULE_EXPIRED"
-        ); // expiry check
+        require(POLYCULES.recordExists(polyhash), "NO_RECORD");
         address cation = NAMES.owner(POLYCULES.cation(polyhash));
         require(
             cation == msg.sender || Operators[cation][msg.sender],
@@ -168,12 +186,15 @@ contract Helix2PolyculeRegistrar {
         bytes32 polyhash = keccak256(
             abi.encodePacked(cation, roothash, aliashash)
         );
-        POLYCULES.setCation(polyhash, cation); /// set new cation (= from)
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(!POLYCULES.recordExists(polyhash), "POLYCULE_EXISTS");
+        POLYCULES.register(polyhash, cation); /// set new cation (= from)
         POLYCULES.setAnions(polyhash, anion, config, rules); /// set anions (= to)
         POLYCULES.setExpiry(polyhash, block.timestamp + lifespan); /// set new expiry
         POLYCULES.setController(polyhash, _cation); /// set new controller
         POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
         POLYCULES.setAlias(polyhash, aliashash); /// set new alias
+        POLYCULES.unhookAll(polyhash, anion.length); /// reset hooks
         emit NewPolycule(polyhash, cation);
         return polyhash;
     }

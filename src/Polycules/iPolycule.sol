@@ -49,7 +49,7 @@ interface iPOLYCULE {
 
     function unhook(bytes32 polyhash, bytes32 anion) external;
 
-    function unhookAll(bytes32 polyhash) external;
+    function unhookAll(bytes32 polyhash, uint init) external;
 
     function setApprovalForAll(address controller, bool approved) external;
 

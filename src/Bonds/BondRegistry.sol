@@ -43,7 +43,7 @@ contract Helix2BondRegistry {
         address indexed operator,
         bool approved
     );
-    error BadHook();
+    error BAD_HOOK();
 
     /// Dev
     address public Dev;
@@ -291,10 +291,7 @@ contract Helix2BondRegistry {
      * @param bondhash : hash of bond
      * @param _alias : bash of alias
      */
-    function setAlias(
-        bytes32 bondhash,
-        bytes32 _alias
-    ) external isRegistrar() {
+    function setAlias(bytes32 bondhash, bytes32 _alias) external isRegistrar {
         Bonds[bondhash]._alias = _alias;
         emit NewAlias(bondhash, _alias);
     }
@@ -412,14 +409,14 @@ contract Helix2BondRegistry {
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
             if (index == uint(0)) {
-                revert BadHook();
+                revert BAD_HOOK();
             } else {
                 Bonds[bondhash]._rules[config] = uint8(0);
                 emit Unhooked(bondhash, config);
                 delete Bonds[bondhash]._hooks[index];
             }
         } else {
-            revert BadHook();
+            revert BAD_HOOK();
         }
     }
 
@@ -520,7 +517,12 @@ contract Helix2BondRegistry {
      */
     function hooksWithRules(
         bytes32 bondhash
-    ) public view isOwned(bondhash) returns (address[] memory _hooks, uint8[] memory _rules) {
+    )
+        public
+        view
+        isOwned(bondhash)
+        returns (address[] memory _hooks, uint8[] memory _rules)
+    {
         _hooks = Bonds[bondhash]._hooks;
         _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {

@@ -46,7 +46,8 @@ contract Helix2MoleculeRegistry {
         bool approved
     );
 
-    error AnionNotFound(bytes32 moleculehash, bytes32 anion);
+    error BAD_ANION(bytes32 moleculehash, bytes32 anion);
+    error BAD_HOOK();
 
     /// Dev
     address public Dev;
@@ -256,11 +257,10 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of molecule
      * @param _cation : new cation
      */
-    function register(
-        bytes32 molyhash,
-        bytes32 _cation
-    ) external isAvailable(molyhash) {
+    function register(bytes32 molyhash, bytes32 _cation) external isRegistrar {
+        require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Molecules[molyhash]._cation = _cation;
+        emit NewCation(molyhash, _cation);
         emit NewRegistration(molyhash, _cation);
     }
 
@@ -273,6 +273,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         bytes32 _cation
     ) external onlyCation(molyhash) {
+        require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Molecules[molyhash]._cation = _cation;
         emit NewCation(molyhash, _cation);
     }
@@ -337,7 +338,7 @@ contract Helix2MoleculeRegistry {
             delete Molecules[molyhash]._anion[index];
             emit PopAnion(molyhash, __anion);
         } else {
-            revert AnionNotFound(molyhash, __anion);
+            revert BAD_ANION(molyhash, __anion);
         }
     }
 
@@ -346,10 +347,7 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of molecule
      * @param _alias : bash of alias
      */
-    function setAlias(
-        bytes32 molyhash,
-        bytes32 _alias
-    ) external isRegistrar() {
+    function setAlias(bytes32 molyhash, bytes32 _alias) external isRegistrar {
         Molecules[molyhash]._alias = _alias;
         emit NewAlias(molyhash, _alias);
     }
@@ -431,7 +429,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         uint8 rule,
         address config
-    ) external onlyCation(molyhash) {
+    ) external isCationOrController(molyhash) {
         require(isNotDuplicateHook(molyhash, config), "HOOK_EXISTS");
         Molecules[molyhash]._hooks.push(config);
         Molecules[molyhash]._rules[config] = rule;
@@ -448,7 +446,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         uint8 rule,
         address config
-    ) external onlyCation(molyhash) {
+    ) external isCationOrController(molyhash) {
         require(Molecules[molyhash]._rules[config] != rule, "RULE_EXISTS");
         Molecules[molyhash]._rules[config] = rule;
         emit Rehooked(molyhash, config, rule);
@@ -462,7 +460,7 @@ contract Helix2MoleculeRegistry {
     function unhook(
         bytes32 molyhash,
         address config
-    ) external onlyCation(molyhash) {
+    ) external isCationOrController(molyhash) {
         address[] memory _hooks = Molecules[molyhash]._hooks;
         if (config.existsIn(_hooks)) {
             uint index = config.findIn(_hooks);
@@ -482,7 +480,7 @@ contract Helix2MoleculeRegistry {
      * @dev removes all hooks in a molecule
      * @param molyhash : hash of the molecule
      */
-    function unhookAll(bytes32 molyhash) external onlyCation(molyhash) {
+    function unhookAll(bytes32 molyhash, uint init) external isAuthorised(molyhash) {
         address[] memory _hooks = Molecules[molyhash]._hooks;
         for (uint i = 0; i < _hooks.length; i++) {
             Molecules[molyhash]._rules[_hooks[i]] = uint8(0);
@@ -490,7 +488,9 @@ contract Helix2MoleculeRegistry {
         }
         delete Molecules[molyhash]._hooks;
         emit UnhookedAll(molyhash);
-        Molecules[molyhash]._hooks.push(address(0));
+        for (uint i = 0; i < init; i++) {
+            Molecules[molyhash]._hooks.push(address(0));
+        }
     }
 
     /**
@@ -558,12 +558,17 @@ contract Helix2MoleculeRegistry {
     /**
      * @dev return hooks of a molecule
      * @param molyhash : hash of molecule to query
-    * @return _hooks
+     * @return _hooks
      * @return _rules
      */
     function hooksWithRules(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (address[] memory _hooks, uint8[] memory _rules) {
+    )
+        public
+        view
+        isOwned(molyhash)
+        returns (address[] memory _hooks, uint8[] memory _rules)
+    {
         _hooks = Molecules[molyhash]._hooks;
         _rules = new uint8[](_hooks.length);
         for (uint i = 0; i < _hooks.length; i++) {

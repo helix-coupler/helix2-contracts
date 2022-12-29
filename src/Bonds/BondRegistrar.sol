@@ -92,11 +92,32 @@ contract Helix2BondRegistrar {
     }
 
     /**
+     * @dev : verify bond has expired and can be registered
+     * @param _cation : cation of bond
+     * @param _alias : alias of bond
+     */
+    modifier isAvailable(bytes32 _cation, string memory _alias) {
+        require(
+            !BONDS.recordExists(
+                keccak256(
+                    abi.encodePacked(
+                        _cation,
+                        HELIX2.getRoothash()[1],
+                        keccak256(abi.encodePacked(_alias))
+                    )
+                )
+            ),
+            "BOND_EXISTS"
+        );
+        _;
+    }
+
+    /**
      * @dev : verify ownership of bond
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
-        require(block.timestamp < BONDS.expiry(bondhash), "BOND_EXPIRED"); // expiry check
+        require(BONDS.recordExists(bondhash), "NO_RECORD");
         address owner = NAMES.owner(BONDS.cation(bondhash));
         require(
             owner == msg.sender || Operators[owner][msg.sender],
@@ -143,6 +164,8 @@ contract Helix2BondRegistrar {
         bytes32 bondhash = keccak256(
             abi.encodePacked(cation, roothash, aliashash)
         );
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(!BONDS.recordExists(bondhash), "BOND_EXISTS");
         BONDS.register(bondhash, cation); /// set new cation (= from)
         BONDS.setAnion(bondhash, anion); /// set anion (= to)
         BONDS.setExpiry(bondhash, block.timestamp + lifespan); /// set new expiry
