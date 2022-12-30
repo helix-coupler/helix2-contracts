@@ -66,8 +66,6 @@ contract Helix2MoleculesTest is Test {
     string[2] public _crook_ = ["virgil___", "virgil____"];
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
-    address public joker = address(0xc0de4d1c001e0);
-    string public green = "nick";
     string public _alias = "virgin";
     uint256 public lifespan = 50;
     uint8[2] public rule = [uint8(uint256(404)), uint8(uint256(400))];
@@ -510,7 +508,10 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.anion(molyhash).length, anion.length + 1);
         vm.prank(pill);
         MOLECULES.setAnions(molyhash, _anion_);
-        assertEq(MOLECULES.anion(molyhash).length, anion.length + 1 + 2);
+        assertEq(
+            MOLECULES.anion(molyhash).length,
+            anion.length + _anion_.length + 1
+        );
     }
 
     /// Register a molecule and attempt to add a hook

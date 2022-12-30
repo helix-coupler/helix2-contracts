@@ -194,7 +194,6 @@ contract Helix2PolyculeRegistrar {
         POLYCULES.setController(polyhash, _cation); /// set new controller
         POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
         POLYCULES.setAlias(polyhash, aliashash); /// set new alias
-        POLYCULES.unhookAll(polyhash, anion.length); /// reset hooks
         emit NewPolycule(polyhash, cation);
         return polyhash;
     }
