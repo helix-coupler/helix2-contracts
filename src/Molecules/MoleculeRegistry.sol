@@ -17,6 +17,8 @@ contract Helix2MoleculeRegistry {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+    using LibString for uint8[];
+    using LibString for uint8;
 
     /// Interfaces
     iHELIX2 public HELIX2;
@@ -25,9 +27,9 @@ contract Helix2MoleculeRegistry {
     /// @dev : Helix2 Molecule events
     event NewDev(address Dev, address newDev);
     event NewMolecule(bytes32 indexed molyhash, bytes32 cation);
-    event Hooked(bytes32 indexed molyhash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed molyhash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed molyhash, address config);
+    event Hooked(bytes32 indexed bondhash, address config, uint8 rule);
+    event Rehooked(bytes32 indexed bondhash, address config, uint8 rule);
+    event Unhooked(bytes32 indexed bondhash, uint8 rule);
     event UnhookedAll(bytes32 indexed molyhash);
     event NewCation(bytes32 indexed molyhash, bytes32 cation);
     event NewRegistration(bytes32 indexed molyhash, bytes32 cation);
@@ -63,8 +65,8 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
-        address[] _hooks; /// Hooks
-        mapping(address => uint8) _rules; /// Rules for Hooks
+        uint8[] _rules; /// Rules
+        mapping(uint8 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Molecule (= Owner)
         bytes32[] _anion; /// Targets of Molecule
         bytes32 _alias; /// Hash of Molecule
@@ -82,8 +84,8 @@ contract Helix2MoleculeRegistry {
      */
     function catalyse() internal {
         // 0x0
-        Molecules[0x0]._rules[address(0x0)] = uint8(0);
-        Molecules[0x0]._hooks = [address(0x0)];
+        Molecules[0x0]._hooks[uint8(0)] = address(0x0);
+        Molecules[0x0]._rules = [uint8(0)];
         Molecules[0x0]._cation = bytes32(0x0);
         Molecules[0x0]._anion = [bytes32(0x0)];
         Molecules[0x0]._alias = bytes32(0x0);
@@ -94,8 +96,8 @@ contract Helix2MoleculeRegistry {
         // root
         bytes32[4] memory hashes = HELIX2.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
-            Molecules[hashes[i]]._rules[address(0x0)] = uint8(0);
-            Molecules[hashes[i]]._hooks = [address(0x0)];
+            Molecules[hashes[i]]._hooks[uint8(0)] = address(0x0);
+            Molecules[hashes[i]]._rules = [uint8(0)];
             Molecules[hashes[i]]._cation = hashes[i];
             Molecules[hashes[i]]._anion = [hashes[i]];
             Molecules[hashes[i]]._alias = hashes[i];
@@ -216,13 +218,13 @@ contract Helix2MoleculeRegistry {
     /**
      * @dev : check if new config is a duplicate
      * @param molyhash : hash of molecule
-     * @param config : config to check
+     * @param rule : rule to check
      */
     function isNotDuplicateHook(
         bytes32 molyhash,
-        address config
+        uint8 rule
     ) public view returns (bool) {
-        return !config.existsIn(Molecules[molyhash]._hooks);
+        return !rule.existsIn(Molecules[molyhash]._rules);
     }
 
     /**
@@ -430,12 +432,12 @@ contract Helix2MoleculeRegistry {
      */
     function hook(
         bytes32 molyhash,
-        uint8 rule,
-        address config
+        address config,
+        uint8 rule
     ) external isCationOrController(molyhash) {
-        require(isNotDuplicateHook(molyhash, config), "HOOK_EXISTS");
-        Molecules[molyhash]._hooks.push(config);
-        Molecules[molyhash]._rules[config] = rule;
+        require(isNotDuplicateHook(molyhash, rule), "HOOK_EXISTS");
+        Molecules[molyhash]._rules.push(rule);
+        Molecules[molyhash]._hooks[rule] = config;
         emit Hooked(molyhash, config, rule);
     }
 
@@ -447,29 +449,29 @@ contract Helix2MoleculeRegistry {
      */
     function rehook(
         bytes32 molyhash,
-        uint8 rule,
-        address config
+        address config,
+        uint8 rule
     ) external isCationOrController(molyhash) {
-        require(Molecules[molyhash]._rules[config] != rule, "RULE_EXISTS");
-        Molecules[molyhash]._rules[config] = rule;
+        require(Molecules[molyhash]._hooks[rule] != config, "RULE_EXISTS");
+        Molecules[molyhash]._hooks[rule] = config;
         emit Rehooked(molyhash, config, rule);
     }
 
     /**
      * @dev removes a hook in a molecule
      * @param molyhash : hash of the molecule
-     * @param config : contract address of config
+     * @param rule : rule to unhook
      */
     function unhook(
         bytes32 molyhash,
-        address config
+        uint8 rule
     ) external isCationOrController(molyhash) {
-        address[] memory _hooks = Molecules[molyhash]._hooks;
-        if (config.existsIn(_hooks)) {
-            uint index = config.findIn(_hooks);
-            Molecules[molyhash]._rules[config] = uint8(0);
-            emit Unhooked(molyhash, config);
-            delete Molecules[molyhash]._hooks[index];
+        uint8[] memory _rules = Molecules[molyhash]._rules;
+        if (rule.existsIn(_rules)) {
+            uint index = rule.findIn(_rules);
+            Molecules[molyhash]._hooks[rule] = address(0);
+            emit Unhooked(molyhash, rule);
+            delete Molecules[molyhash]._rules[index];
         } else {
             revert BAD_HOOK();
         }
@@ -480,12 +482,12 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of the molecule
      */
     function unhookAll(bytes32 molyhash) external isAuthorised(molyhash) {
-        address[] memory _hooks = Molecules[molyhash]._hooks;
-        for (uint i = 0; i < _hooks.length; i++) {
-            Molecules[molyhash]._rules[_hooks[i]] = uint8(0);
-            emit Unhooked(molyhash, _hooks[i]);
+        uint8[] memory _rules = Molecules[molyhash]._rules;
+        for (uint i = 0; i < _rules.length; i++) {
+            Molecules[molyhash]._hooks[_rules[i]] = address(0);
+            emit Unhooked(molyhash, _rules[i]);
         }
-        delete Molecules[molyhash]._hooks;
+        delete Molecules[molyhash]._rules;
         emit UnhookedAll(molyhash);
     }
 
@@ -554,8 +556,8 @@ contract Helix2MoleculeRegistry {
     /**
      * @dev return hooks of a molecule
      * @param molyhash : hash of molecule to query
-     * @return _hooks
      * @return _rules
+     * @return _hooks
      */
     function hooksWithRules(
         bytes32 molyhash
@@ -563,12 +565,12 @@ contract Helix2MoleculeRegistry {
         public
         view
         isOwned(molyhash)
-        returns (address[] memory _hooks, uint8[] memory _rules)
+        returns (uint8[] memory _rules, address[] memory _hooks)
     {
-        _hooks = Molecules[molyhash]._hooks;
-        _rules = new uint8[](_hooks.length);
-        for (uint i = 0; i < _hooks.length; i++) {
-            _rules[i] = Molecules[molyhash]._rules[_hooks[i]];
+        _rules = Molecules[molyhash]._rules;
+        _hooks = new address[](_rules.length);
+        for (uint i = 0; i < _rules.length; i++) {
+            _hooks[i] = Molecules[molyhash]._hooks[_rules[i]];
         }
     }
 

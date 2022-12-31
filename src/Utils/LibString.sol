@@ -222,6 +222,24 @@ library LibString {
     }
 
     /**
+     * @dev : check if a value exists in a dynamic memory array of uint8
+     * @param array : array of uint8 to search in
+     * @param value : value to search
+     * @return true or false
+     */
+    function existsIn(
+        uint8 value,
+        uint8[] memory array
+    ) public pure returns (bool) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @dev : find an element in a dynamic memory array of bytes32
      * @param array : array of bytes32 to search in
      * @param value : value to search
@@ -230,6 +248,24 @@ library LibString {
     function findIn(
         bytes32 value,
         bytes32[] memory array
+    ) public pure returns (uint) {
+        for (uint i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                return i;
+            }
+        }
+        return uint(0);
+    }
+
+    /**
+     * @dev : find an element in a dynamic memory array of uint8
+     * @param array : array of uint8 to search in
+     * @param value : value to search
+     * @return index
+     */
+    function findIn(
+        uint8 value,
+        uint8[] memory array
     ) public pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {

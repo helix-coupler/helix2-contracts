@@ -68,12 +68,12 @@ contract Helix2PolyculesTest is Test {
     string public brown = "nick";
     string public _alias = "virgin";
     uint256 public lifespan = 50;
-    uint8[] public rule = [
+    uint8[] public rules = [
         uint8(uint256(404)),
         uint8(uint256(400)),
         uint8(uint256(500))
     ];
-    uint8[] public _rule_ = [uint8(uint256(504)), uint8(uint256(401))];
+    uint8[] public _rules_ = [uint8(uint256(504)), uint8(uint256(401))];
     address[] public config = [
         address(0x0101010101010),
         address(0x0101010101011),
@@ -164,13 +164,13 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         assertEq(polyhash, _polyhash);
         bytes32[] memory taker_ = POLYCULES.anion(polyhash);
         assertEq(taker.length, anion.length);
         assertEq(taker.length, taker_.length);
-        (address[] memory hooks__, uint8[] memory rules__) = POLYCULES
+        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(taker.length, hooks__.length);
         assertEq(taker.length, rules__.length);
@@ -200,7 +200,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         vm.warp(block.timestamp + 10);
         assertEq(POLYCULES.recordExists(polyhash), true);
@@ -244,7 +244,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         assertEq(NAMES.owner(POLYCULES.cation(polyhash)), pill);
         bytes32[] memory taker_ = POLYCULES.anion(polyhash);
@@ -260,10 +260,10 @@ contract Helix2PolyculesTest is Test {
         assertEq(POLYCULES.controller(polyhash), pill);
         assertEq(POLYCULES.resolver(polyhash), defaultResolver);
         assertEq(POLYCULES.expiry(polyhash), block.timestamp + lifespan);
-        (address[] memory hooks_, uint8[] memory rules_) = POLYCULES
+        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(hooks_.length, config.length);
-        assertEq(rules_.length, rule.length);
+        assertEq(rules_.length, rules.length);
     }
 
     /// Register a polycule and change cation
@@ -290,7 +290,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -327,7 +327,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -374,7 +374,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -415,7 +415,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.warp(block.timestamp + 60);
@@ -427,7 +427,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
     }
@@ -456,7 +456,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
         uint256 _expiry = POLYCULES.expiry(polyhash);
@@ -522,7 +522,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -533,15 +533,15 @@ contract Helix2PolyculesTest is Test {
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER_OR_CONTROLLER"));
-        POLYCULES.addAnion(polyhash, _anion_[0], _config_[0], _rule_[0]);
+        POLYCULES.addAnion(polyhash, _anion_[0], _config_[0], _rules_[0]);
         vm.prank(pill);
-        POLYCULES.addAnion(polyhash, _anion_[0], _config_[0], _rule_[0]);
+        POLYCULES.addAnion(polyhash, _anion_[0], _config_[0], _rules_[0]);
         assertEq(POLYCULES.anion(polyhash).length, anion.length + 1);
         vm.prank(pill);
         POLYCULES.popAnion(polyhash, _anion_[0]);
         assertEq(POLYCULES.anion(polyhash).length, anion.length + 1);
         vm.prank(pill);
-        POLYCULES.setAnions(polyhash, _anion_, _config_, _rule_);
+        POLYCULES.setAnions(polyhash, _anion_, _config_, _rules_);
         assertEq(
             POLYCULES.anion(polyhash).length,
             anion.length + _anion_.length + 1
@@ -581,7 +581,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -591,31 +591,31 @@ contract Helix2PolyculesTest is Test {
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.prank(pill);
-        POLYCULES.hook(_anion_[0], polyhash, _rule_[0], _config_[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = POLYCULES
+        POLYCULES.hook(_anion_[0], polyhash, _config_[0], _rules_[0]);
+        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[0], hooks_[config.length]);
-        assertEq(_rule_[0], rules_[rule.length]);
+        assertEq(_rules_[0], rules_[rules.length]);
         vm.prank(pill);
         POLYCULES.setController(polyhash, faker);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        POLYCULES.hook(_anion_[1], polyhash, _rule_[0], _config_[0]);
+        POLYCULES.hook(_anion_[1], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        POLYCULES.hook(_anion_[1], polyhash, _rule_[0] + 1, _config_[0]);
+        POLYCULES.hook(_anion_[1], polyhash, _config_[1], _rules_[0]);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("ANION_EXISTS"));
-        POLYCULES.hook(anion[0], polyhash, _rule_[0], _config_[0]);
+        POLYCULES.hook(anion[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
-        POLYCULES.hook(_anion_[1], polyhash, _rule_[1], _config_[1]);
-        (address[] memory hooks__, uint8[] memory rules__) = POLYCULES
+        POLYCULES.hook(_anion_[1], polyhash, _config_[1], _rules_[1]);
+        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[1], hooks__[config.length + 1]);
-        assertEq(_rule_[1], rules__[rule.length + 1]);
+        assertEq(_rules_[1], rules__[rules.length + 1]);
     }
-    
-    /// Register a polycule and attempt to rehook a hook to new _rule_[0]
+
+    /// Register a polycule and attempt to rehook a hook to new _rules_[0]
     function testOnlyCationOrControllerCanRehook() public {
         // register (1 + n) names
         cation = _NAME_.newName{value: namePrice * lifespan}(
@@ -648,7 +648,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -658,31 +658,31 @@ contract Helix2PolyculesTest is Test {
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.prank(pill);
-        POLYCULES.hook(_anion_[0], polyhash, _rule_[0], _config_[0]);
+        POLYCULES.hook(_anion_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(pill);
-        POLYCULES.rehook(polyhash, _rule_[0] + 1, _config_[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = POLYCULES
+        POLYCULES.rehook(polyhash, _config_[1], _rules_[0]);
+        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
-        assertEq(_config_[0], hooks_[anion.length]);
-        assertEq(_rule_[0] + 1, rules_[anion.length]);
+        assertEq(_config_[1], hooks_[anion.length]);
+        assertEq(_rules_[0], rules_[anion.length]);
         vm.prank(pill);
         POLYCULES.setController(polyhash, faker);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("ANION_EXISTS"));
-        POLYCULES.hook(_anion_[0], polyhash, _rule_[0], _config_[0]);
+        POLYCULES.hook(_anion_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
-        POLYCULES.hook(_anion_[1], polyhash, _rule_[0] + 1, _config_[0]);
+        POLYCULES.hook(_anion_[1], polyhash, _config_[1], _rules_[0]);
         vm.prank(faker);
-        POLYCULES.hook(_anion_[1], polyhash, _rule_[1], _config_[1]);
+        POLYCULES.hook(_anion_[1], polyhash, _config_[1], _rules_[1]);
         vm.prank(faker);
-        POLYCULES.rehook(polyhash, _rule_[1] + 1, _config_[1]);
-        (address[] memory hooks__, uint8[] memory rules__) = POLYCULES
+        POLYCULES.rehook(polyhash, _config_[0], _rules_[1]);
+        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
-        assertEq(_config_[1], hooks__[anion.length + 1]);
-        assertEq(_rule_[1] + 1, rules__[anion.length + 1]);
+        assertEq(_config_[0], hooks__[anion.length + 1]);
+        assertEq(_rules_[1], rules__[anion.length + 1]);
     }
-    
+
     /// Register a polycule and attempt to unhook a hook
     function testOnlyCationOrControllerCanUnhook() public {
         // register (1 + n) names
@@ -716,7 +716,7 @@ contract Helix2PolyculesTest is Test {
             anion,
             lifespan,
             config,
-            rule
+            rules
         );
         // register name to transfer to
         fakehash = _NAME_.newName{value: namePrice * (lifespan + 1)}(
@@ -726,10 +726,10 @@ contract Helix2PolyculesTest is Test {
         );
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.prank(pill);
-        POLYCULES.hook(_anion_[0], polyhash, _rule_[0], _config_[0]);
+        POLYCULES.hook(_anion_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(pill);
-        POLYCULES.unhook(polyhash, _config_[0]);
-        (address[] memory hooks_, uint8[] memory rules_) = POLYCULES
+        POLYCULES.unhook(polyhash, _rules_[0]);
+        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(hooks_.length, anion.length + 1);
         assertEq(rules_.length, anion.length + 1);
@@ -739,14 +739,14 @@ contract Helix2PolyculesTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(Helix2PolyculeRegistry.BAD_HOOK.selector)
         );
-        POLYCULES.unhook(polyhash, _config_[0]);
+        POLYCULES.unhook(polyhash, _rules_[0]);
         vm.prank(faker);
-        POLYCULES.hook(_anion_[0], polyhash, _rule_[1], _config_[1]);
-        (address[] memory hooks__, uint8[] memory rules__) = POLYCULES
+        POLYCULES.hook(_anion_[0], polyhash, _config_[1], _rules_[1]);
+        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[1], hooks__[anion.length + 1]);
-        assertEq(_rule_[1], rules__[anion.length + 1]);
+        assertEq(_rules_[1], rules__[anion.length + 1]);
         assertEq(rules__.length, anion.length + 2);
-        assertEq(hooks__.length,anion.length + 2);
+        assertEq(hooks__.length, anion.length + 2);
     }
 }

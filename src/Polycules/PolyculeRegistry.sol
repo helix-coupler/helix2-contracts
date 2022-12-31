@@ -17,6 +17,8 @@ contract Helix2PolyculeRegistry {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+    using LibString for uint8[];
+    using LibString for uint8;
 
     /// Interfaces
     iHELIX2 public HELIX2;
@@ -27,7 +29,7 @@ contract Helix2PolyculeRegistry {
     event NewPolycule(bytes32 indexed polyhash, bytes32 cation);
     event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
     event RehookedConfig(bytes32 indexed polyhash, address config, uint8 rule);
-    event UnhookedConfig(bytes32 indexed polyhash, address config);
+    event UnhookedConfig(bytes32 indexed polyhash, uint8 rule);
     event RehookedAnion(bytes32 indexed polyhash, bytes32 anion, uint8 rule);
     event UnhookedAnion(bytes32 indexed polyhash, bytes32 anion);
     event UnhookedAll(bytes32 indexed polyhash);
@@ -65,8 +67,8 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
-        address[] _hooks; /// Hooks
-        mapping(address => uint8) _rules; /// Rules for Hooks
+        uint8[] _rules; /// Rules
+        mapping(uint8 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Polycule (= Owner)
         bytes32[] _anion; /// Targets of Polycule
         bytes32 _alias; /// Hash of Polycule
@@ -84,8 +86,8 @@ contract Helix2PolyculeRegistry {
      */
     function catalyse() internal {
         // 0x0
-        Polycules[0x0]._rules[address(0x0)] = uint8(0);
-        Polycules[0x0]._hooks = [address(0x0)];
+        Polycules[0x0]._hooks[uint8(0)] = address(0x0);
+        Polycules[0x0]._rules = [uint8(0)];
         Polycules[0x0]._cation = bytes32(0x0);
         Polycules[0x0]._anion = [bytes32(0x0)];
         Polycules[0x0]._alias = bytes32(0x0);
@@ -96,8 +98,8 @@ contract Helix2PolyculeRegistry {
         // root
         bytes32[4] memory hashes = HELIX2.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
-            Polycules[hashes[i]]._rules[address(0x0)] = uint8(0);
-            Polycules[hashes[i]]._hooks = [address(0x0)];
+            Polycules[hashes[i]]._hooks[uint8(0)] = address(0x0);
+            Polycules[hashes[i]]._rules = [uint8(0)];
             Polycules[hashes[i]]._cation = hashes[i];
             Polycules[hashes[i]]._anion = [hashes[i]];
             Polycules[hashes[i]]._alias = hashes[i];
@@ -218,13 +220,13 @@ contract Helix2PolyculeRegistry {
     /**
      * @dev : check if new config is a duplicate
      * @param polyhash : hash of polycule
-     * @param config : config to check
+     * @param rule : rule to check
      */
     function isNotDuplicateHook(
         bytes32 polyhash,
-        address config
+        uint8 rule
     ) public view returns (bool) {
-        return !config.existsIn(Polycules[polyhash]._hooks);
+        return !rule.existsIn(Polycules[polyhash]._rules);
     }
 
     /**
@@ -242,13 +244,13 @@ contract Helix2PolyculeRegistry {
     /**
      * @dev : verify if each anion has a hook
      * @param _anion : array of anions
-     * @param _config : array of config addresses
+     * @param _rule : array of config addresses
      */
     function isLegalMap(
         bytes32[] memory _anion,
-        address[] memory _config
+        uint8[] memory _rule
     ) public pure returns (bool) {
-        if (_anion.length == _config.length) {
+        if (_anion.length == _rule.length) {
             return true;
         } else {
             return false;
@@ -316,6 +318,8 @@ contract Helix2PolyculeRegistry {
      * @dev : adds one anion to the polycule
      * @param polyhash : hash of target polycule
      * @param _anion : hash of new anion
+     * @param config : config address for the rule
+     * @param rule : rule for the new anion
      */
     function addAnion(
         bytes32 polyhash,
@@ -324,11 +328,11 @@ contract Helix2PolyculeRegistry {
         uint8 rule
     ) external isCationOrController(polyhash) {
         require(isNotDuplicateAnion(polyhash, _anion), "ANION_EXISTS");
-        require(isNotDuplicateHook(polyhash, config), "HOOK_EXISTS");
-        require(Polycules[polyhash]._rules[config] != rule, "RULE_EXISTS");
+        require(isNotDuplicateHook(polyhash, rule), "HOOK_EXISTS");
+        require(Polycules[polyhash]._hooks[rule] != config, "RULE_EXISTS");
         Polycules[polyhash]._anion.push(_anion);
-        Polycules[polyhash]._hooks.push(config);
-        Polycules[polyhash]._rules[config] == rule;
+        Polycules[polyhash]._rules.push(rule);
+        Polycules[polyhash]._hooks[rule] == config;
         emit NewAnion(polyhash, _anion);
         emit Hooked(polyhash, config, rule);
     }
@@ -338,21 +342,21 @@ contract Helix2PolyculeRegistry {
      * @notice : will skip pre-existing anions & hook configs
      * @param polyhash : hash of target polycule
      * @param _anion : array of new anions
-     * @param _config : array of new matching config
-     * @param _rules : array of rules for hooks
+     * @param _hooks : array of rules for hooks
+     * @param _rule : array of new matching config
      */
     function setAnions(
         bytes32 polyhash,
         bytes32[] memory _anion,
-        address[] memory _config,
-        uint8[] memory _rules
+        address[] memory _hooks,
+        uint8[] memory _rule
     ) external isAuthorised(polyhash) {
-        require(isLegalMap(_anion, _config), "BAD_MAP");
+        require(isLegalMap(_anion, _rule), "BAD_MAP");
         for (uint i = 0; i < _anion.length; i++) {
             if (!_anion[i].existsIn(Polycules[polyhash]._anion)) {
                 Polycules[polyhash]._anion.push(_anion[i]);
-                Polycules[polyhash]._hooks.push(_config[i]);
-                Polycules[polyhash]._rules[_config[i]] = _rules[i];
+                Polycules[polyhash]._rules.push(_rule[i]);
+                Polycules[polyhash]._hooks[_rule[i]] = _hooks[i];
                 Polycules[polyhash]._covalence = false;
             }
         }
@@ -369,12 +373,12 @@ contract Helix2PolyculeRegistry {
         bytes32 __anion
     ) external isCationOrController(polyhash) {
         bytes32[] memory _anion = Polycules[polyhash]._anion;
-        address[] memory _hooks = Polycules[polyhash]._hooks;
+        uint8[] memory _rules = Polycules[polyhash]._rules;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
-            Polycules[polyhash]._rules[_hooks[index]] = uint8(0);
+            Polycules[polyhash]._hooks[_rules[index]] = address(0);
             delete Polycules[polyhash]._anion[index];
-            delete Polycules[polyhash]._hooks[index];
+            delete Polycules[polyhash]._rules[index];
             emit PopAnion(polyhash, __anion);
         } else {
             revert BAD_ANION();
@@ -463,19 +467,19 @@ contract Helix2PolyculeRegistry {
      * @dev adds a new hook & rule and anion
      * @param __anion : anion to add hook for
      * @param polyhash : hash of the polycule
-     * @param rule : rule for the hook (and anion)
      * @param config : address of config contract
+     * @param rule : rule for the hook (and anion)
      */
     function hook(
         bytes32 __anion,
         bytes32 polyhash,
-        uint8 rule,
-        address config
+        address config,
+        uint8 rule
     ) external isCationOrController(polyhash) {
         require(isNotDuplicateAnion(polyhash, __anion), "ANION_EXISTS");
-        require(isNotDuplicateHook(polyhash, config), "HOOK_EXISTS");
-        Polycules[polyhash]._hooks.push(config);
-        Polycules[polyhash]._rules[config] = rule;
+        require(isNotDuplicateHook(polyhash, rule), "HOOK_EXISTS");
+        Polycules[polyhash]._rules.push(rule);
+        Polycules[polyhash]._hooks[rule] = config;
         Polycules[polyhash]._anion.push(__anion);
         emit Hooked(polyhash, config, rule);
     }
@@ -483,16 +487,16 @@ contract Helix2PolyculeRegistry {
     /**
      * @dev rehooks a hook to a new rule
      * @param polyhash : hash of the polycule
-     * @param rule : rule for the new hook
      * @param config : address of config contract
+     * @param rule : rule for the new hook
      */
     function rehook(
         bytes32 polyhash,
-        uint8 rule,
-        address config
+        address config,
+        uint8 rule
     ) external isCationOrController(polyhash) {
-        require(Polycules[polyhash]._rules[config] != rule, "RULE_EXISTS");
-        Polycules[polyhash]._rules[config] = rule;
+        require(Polycules[polyhash]._hooks[rule] != config, "RULE_EXISTS");
+        Polycules[polyhash]._hooks[rule] = config;
         emit RehookedConfig(polyhash, config, rule);
     }
 
@@ -507,15 +511,14 @@ contract Helix2PolyculeRegistry {
         uint8 rule,
         bytes32 __anion
     ) external isCationOrController(polyhash) {
-        address[] memory _hooks = Polycules[polyhash]._hooks;
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
             require(
-                Polycules[polyhash]._rules[_hooks[index]] != rule,
+                Polycules[polyhash]._rules[index] != rule,
                 "RULE_EXISTS"
             );
-            Polycules[polyhash]._rules[_hooks[index]] = rule;
+            Polycules[polyhash]._rules[index] = rule;
             emit RehookedAnion(polyhash, __anion, rule);
         } else {
             revert BAD_ANION();
@@ -525,18 +528,18 @@ contract Helix2PolyculeRegistry {
     /**
      * @dev removes a hook in a polycule
      * @param polyhash : hash of the polycule
-     * @param config : contract address of config
+     * @param rule : rule to unhook
      */
     function unhook(
         bytes32 polyhash,
-        address config
+        uint8 rule
     ) external isCationOrController(polyhash) {
-        address[] memory _hooks = Polycules[polyhash]._hooks;
-        if (config.existsIn(_hooks)) {
-            uint index = config.findIn(_hooks);
-            Polycules[polyhash]._rules[config] = uint8(0);
-            emit UnhookedConfig(polyhash, config);
-            delete Polycules[polyhash]._hooks[index];
+        uint8[] memory _rules = Polycules[polyhash]._rules;
+        if (rule.existsIn(_rules)) {
+            uint index = rule.findIn(_rules);
+            Polycules[polyhash]._hooks[rule] = address(0);
+            emit UnhookedConfig(polyhash, rule);
+            delete Polycules[polyhash]._rules[index];
             delete Polycules[polyhash]._anion[index];
         } else {
             revert BAD_HOOK();
@@ -552,13 +555,13 @@ contract Helix2PolyculeRegistry {
         bytes32 polyhash,
         bytes32 __anion
     ) external isCationOrController(polyhash) {
-        address[] memory _hooks = Polycules[polyhash]._hooks;
+        uint8[] memory _rules = Polycules[polyhash]._rules;
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
-            Polycules[polyhash]._rules[_hooks[index]] = uint8(0);
+            Polycules[polyhash]._hooks[_rules[index]] = address(0);
             emit UnhookedAnion(polyhash, __anion);
-            delete Polycules[polyhash]._hooks[index];
+            delete Polycules[polyhash]._rules[index];
             delete Polycules[polyhash]._anion[index];
         } else {
             emit UnhookedAnion(polyhash, bytes32(0));
@@ -572,12 +575,12 @@ contract Helix2PolyculeRegistry {
     function unhookAll(
         bytes32 polyhash
     ) external isCationOrController(polyhash) {
-        address[] memory _hooks = Polycules[polyhash]._hooks;
-        for (uint i = 0; i < _hooks.length; i++) {
-            Polycules[polyhash]._rules[_hooks[i]] = uint8(0);
-            emit UnhookedConfig(polyhash, _hooks[i]);
+        uint8[] memory _rules = Polycules[polyhash]._rules;
+        for (uint i = 0; i < _rules.length; i++) {
+            Polycules[polyhash]._hooks[_rules[i]] = address(0);
+            emit UnhookedConfig(polyhash, _rules[i]);
         }
-        delete Polycules[polyhash]._hooks;
+        delete Polycules[polyhash]._rules;
         delete Polycules[polyhash]._anion;
         emit UnhookedAll(polyhash);
     }
@@ -647,8 +650,8 @@ contract Helix2PolyculeRegistry {
     /**
      * @dev return hooks of a polycule
      * @param polyhash : hash of polycule to query
-     * @return _hooks
      * @return _rules
+     * @return _hooks
      */
     function hooksWithRules(
         bytes32 polyhash
@@ -656,12 +659,12 @@ contract Helix2PolyculeRegistry {
         public
         view
         isOwned(polyhash)
-        returns (address[] memory _hooks, uint8[] memory _rules)
+        returns (uint8[] memory _rules, address[] memory _hooks)
     {
-        _hooks = Polycules[polyhash]._hooks;
-        _rules = new uint8[](_hooks.length);
-        for (uint i = 0; i < _hooks.length; i++) {
-            _rules[i] = Polycules[polyhash]._rules[_hooks[i]];
+        _rules = Polycules[polyhash]._rules;
+        _hooks = new address[](_rules.length);
+        for (uint i = 0; i < _rules.length; i++) {
+            _hooks[i] = Polycules[polyhash]._hooks[_rules[i]];
         }
     }
 

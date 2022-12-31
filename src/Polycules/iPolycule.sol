@@ -39,13 +39,13 @@ interface iPOLYCULE {
 
     function setResolver(bytes32 polyhash, address resolver) external;
 
-    function hook(bytes32 polyhash, uint8 rule, address config) external;
+    function hook(bytes32 polyhash, address config, uint8 rule) external;
 
-    function rehook(bytes32 polyhash, uint8 rule, address config) external;
+    function rehook(bytes32 polyhash, address config, uint8 rule) external;
 
     function rehook(bytes32 polyhash, uint8 rule, bytes32 anion) external;
 
-    function unhook(bytes32 polyhash, address config) external;
+    function unhook(bytes32 polyhash, uint8 rule) external;
 
     function unhook(bytes32 polyhash, bytes32 anion) external;
 
@@ -70,7 +70,7 @@ interface iPOLYCULE {
 
     function hooksWithRules(
         bytes32 polyhash
-    ) external view returns (address[] memory, uint8[] memory);
+    ) external view returns (uint8[] memory, address[] memory);
 
     function resolver(bytes32 polyhash) external view returns (address);
 

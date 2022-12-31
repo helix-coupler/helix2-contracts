@@ -115,7 +115,7 @@ contract Helix2ConstructorTest is Test {
     // Test Constructor Bond
     function testConstructor_Bond() public {
         // 0x0
-        (address[] memory hooks, uint8[] memory rules) = BONDS.hooksWithRules(
+        (uint8[] memory rules, address[] memory hooks) = BONDS.hooksWithRules(
             bytes32(0x0)
         );
         assertEq(hooks.length, 1);
@@ -131,7 +131,7 @@ contract Helix2ConstructorTest is Test {
         // roothash
         bytes32[4] memory hashes = HELIX2_.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
-            (address[] memory _hooks, uint8[] memory _rules) = BONDS
+            (uint8[] memory _rules, address[] memory _hooks) = BONDS
                 .hooksWithRules(hashes[i]);
             assertEq(_hooks.length, 1);
             assertEq(_hooks[0], address(0x0));
@@ -149,7 +149,7 @@ contract Helix2ConstructorTest is Test {
     // Test Constructor Molecule
     function testConstructor_Molecule() public {
         // 0x0
-        (address[] memory hooks, uint8[] memory rules) = MOLECULES
+        (uint8[] memory rules, address[] memory hooks) = MOLECULES
             .hooksWithRules(bytes32(0x0));
         assertEq(hooks.length, 1);
         assertEq(hooks[0], address(0x0));
@@ -165,7 +165,7 @@ contract Helix2ConstructorTest is Test {
         // roothash
         bytes32[4] memory hashes = HELIX2_.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
-            (address[] memory _hooks, uint8[] memory _rules) = MOLECULES
+            (uint8[] memory _rules, address[] memory _hooks) = MOLECULES
                 .hooksWithRules(hashes[i]);
             assertEq(_hooks.length, 1);
             assertEq(_hooks[0], address(0x0));
@@ -184,7 +184,7 @@ contract Helix2ConstructorTest is Test {
     // Test Constructor Polycule
     function testConstructor_Polycule() public {
         // 0x0
-        (address[] memory hooks, uint8[] memory rules) = POLYCULES
+        (uint8[] memory rules, address[] memory hooks) = POLYCULES
             .hooksWithRules(bytes32(0x0));
         assertEq(hooks.length, 1);
         assertEq(hooks[0], address(0x0));
@@ -200,7 +200,7 @@ contract Helix2ConstructorTest is Test {
         // roothash
         bytes32[4] memory hashes = HELIX2_.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
-            (address[] memory _hooks, uint8[] memory _rules) = POLYCULES
+            (uint8[] memory _rules, address[] memory _hooks) = POLYCULES
                 .hooksWithRules(hashes[i]);
             assertEq(_hooks.length, 1);
             assertEq(_hooks[0], address(0x0));

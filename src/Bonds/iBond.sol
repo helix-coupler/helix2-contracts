@@ -30,11 +30,11 @@ interface iBOND {
 
     function setResolver(bytes32 bondhash, address resolver) external;
 
-    function hook(bytes32 bondhash, uint8 rule, address config) external;
+    function hook(bytes32 bondhash, address config, uint8 rule) external;
 
-    function rehook(bytes32 bondhash, uint8 rule, address config) external;
+    function rehook(bytes32 bondhash, address config, uint8 rule) external;
 
-    function unhook(bytes32 bondhash, address config) external;
+    function unhook(bytes32 bondhash, uint8 rule) external;
 
     function unhookAll(bytes32 bondhash) external;
 
@@ -57,7 +57,7 @@ interface iBOND {
 
     function hooksWithRules(
         bytes32 bondhash
-    ) external view returns (address[] memory, uint8[] memory);
+    ) external view returns (uint8[] memory, address[] memory);
 
     function resolver(bytes32 bondhash) external view returns (address);
 
