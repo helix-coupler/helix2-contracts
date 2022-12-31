@@ -15,12 +15,33 @@ contract HELIX2 is Base {
     string public constant symbol = "HELIX2";
 
     /// @dev : Events
-    event NewRegisters(address[4] newReg);
+    event NewRegisteries(address[4] newReg);
     event NewRegistry(uint256 index, address newReg);
     event NewRegistrars(address[4] newReg);
     event NewRegistrar(uint256 index, address newReg);
     event NewPrices(uint256[4] newPrices);
     event NewPrice(uint256 index, uint256 newPrice);
+    event NewLives(uint256[4] newLives);
+    event NewLife(uint256 index, uint256 newLife);
+
+    /**
+     * @dev : sets new list of lifespans
+     * @param newLives : list of new lifespans
+     */
+    function setLives(uint256[4] calldata newLives) external onlyDev {
+        emit NewLives(newLives);
+        lifespans = newLives;
+    }
+
+    /**
+     * @dev : replace single lifespan value
+     * @param index : index to replace (starts from 0)
+     * @param newLife : new lifespan for index
+     */
+    function setLife(uint256 index, uint256 newLife) external onlyDev {
+        emit NewLife(index, newLife);
+        lifespans[index] = newLife;
+    }
 
     /**
      * @dev : sets new base price list
@@ -42,11 +63,11 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : migrate all Helix2 Registers
+     * @dev : migrate all Helix2 Registeries
      * @param newReg : new Registry array
      */
-    function setRegisters(address[4] calldata newReg) external onlyDev {
-        emit NewRegisters(newReg);
+    function setRegisteries(address[4] calldata newReg) external onlyDev {
+        emit NewRegisteries(newReg);
         helix2Registry = newReg;
     }
 

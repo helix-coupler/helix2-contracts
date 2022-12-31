@@ -110,7 +110,7 @@ contract Helix2MoleculeRegistry {
 
     /**
      * @dev Initialise a new HELIX2 Molecules Registry
-     * @notice : constructor notes
+     * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      */

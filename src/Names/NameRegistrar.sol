@@ -28,7 +28,7 @@ contract Helix2NameRegistrar is ERC721 {
 
     /**
      * @dev : Initialise a new HELIX2 Names Registrar
-     * @notice : constructor notes
+     * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      */

@@ -92,7 +92,7 @@ contract Helix2NameRegistry {
 
     /**
      * @dev : Initialise a new HELIX2 Names Registry
-     * @notice : constructor notes
+     * @notice :
      * @param _helix2 : address of HELIX2 Manager
      */
     constructor(address _helix2) {

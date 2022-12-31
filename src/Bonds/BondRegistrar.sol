@@ -65,7 +65,7 @@ contract Helix2BondRegistrar {
 
     /**
      * @dev : Initialise a new HELIX2 Bonds Registrar
-     * @notice : constructor notes
+     * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      * @param __registry : address of HELIX2 Bond Registry

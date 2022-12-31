@@ -112,7 +112,7 @@ contract Helix2PolyculeRegistry {
 
     /**
      * @dev Initialise a new HELIX2 Polycules Registry
-     * @notice : constructor notes
+     * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      */
@@ -514,10 +514,7 @@ contract Helix2PolyculeRegistry {
         bytes32[] memory _anion = Polycules[polyhash]._anion;
         if (__anion.existsIn(_anion)) {
             uint index = __anion.findIn(_anion);
-            require(
-                Polycules[polyhash]._rules[index] != rule,
-                "RULE_EXISTS"
-            );
+            require(Polycules[polyhash]._rules[index] != rule, "RULE_EXISTS");
             Polycules[polyhash]._rules[index] = rule;
             emit RehookedAnion(polyhash, __anion, rule);
         } else {

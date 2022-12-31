@@ -36,7 +36,7 @@ abstract contract Base {
     /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[4] public sizes = [32, 32, 32, 32];
 
-    /// @dev : Lifespans in seconds for each struct in order [<name>, <bond>, <molecule>, <polycule>]
+    /// @dev : Default lifespans in seconds for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[4] public lifespans = [1, 1, 1, 1];
 
     /// @dev : Root Identifier
@@ -50,7 +50,8 @@ abstract contract Base {
     /// @dev : ENS Registry
     address public ensRegistry = 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e;
 
-    /// @dev : Helix2 Registry array
+    /// @dev : Helix2 Registry array init
+    /// @notice : Registeries must be set upon deployment
     address[4] public helix2Registry = [
         address(0), /// Name Registry
         address(0), /// Bond Registry
@@ -58,14 +59,15 @@ abstract contract Base {
         address(0) /// Polycule Registry
     ];
 
-    /// @dev : Initialise Registers
+    /// @dev : Initialise Registeries
     iENS public ENS = iENS(ensRegistry);
     iNAME public NAMES = iNAME(helix2Registry[0]);
     iBOND public BONDS = iBOND(helix2Registry[1]);
     iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
     iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
 
-    /// @dev : Helix2 Registrar array
+    /// @dev : Helix2 Registrar array init
+    /// @notice : Registrars must be set upon deployment
     address[4] public helix2Registrar = [
         address(0), /// Name Registry
         address(0), /// Bond Registry
@@ -154,7 +156,7 @@ abstract contract Base {
     }
 
     /**
-     * @dev : returns Registers
+     * @dev : returns Registeries
      */
     function getRegistry() public view returns (address[4] memory) {
         return helix2Registry;

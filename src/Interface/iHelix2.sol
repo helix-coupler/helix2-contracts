@@ -28,12 +28,15 @@ interface iHELIX2 {
     function getContract() external view returns (address);
 
     // write functions
+    function setLives(uint256[4] calldata newLives) external;
 
-    function setPrices(uint256[4] calldata prices) external;
+    function setLife(uint256 index, uint256 newLife) external;
 
-    function setPrice(uint256 index, uint256 price) external;
+    function setPrices(uint256[4] calldata newPrices) external;
 
-    function setRegisters(address[4] calldata newReg) external;
+    function setPrice(uint256 index, uint256 newPrice) external;
+
+    function setRegisteries(address[4] calldata newReg) external;
 
     function setRegistry(uint256 index, address newReg) external;
 
