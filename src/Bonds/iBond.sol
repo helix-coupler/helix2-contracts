@@ -5,9 +5,6 @@ pragma solidity >0.8.0 <0.9.0;
  * @dev Helix2 Bonds Interface
  */
 interface iBOND {
-    /// REGISTRAR
-
-    /// REGISTRY
     /// @dev : HELIX2 Bonds external functions
     // write functions
     function register(bytes32 bondhash, bytes32 cation) external;

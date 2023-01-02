@@ -177,10 +177,10 @@ abstract contract Base {
     }
 
     /**
-     * @dev : returns contract address
+     * @dev : returns ENS Registry address
      */
-    function getContract() public view returns (address) {
-        return address(this);
+    function getENSRegistry() public view returns (address) {
+        return ensRegistry;
     }
 
     /**

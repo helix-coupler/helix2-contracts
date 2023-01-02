@@ -18,6 +18,7 @@ contract HELIX2 is Base {
     string public constant symbol = "HELIX2";
 
     /// @dev : Events
+    event NewENSRegistry(address newReg);
     event NewRegisteries(address[4] newReg);
     event NewRegistry(uint256 index, address newReg);
     event NewRegistrars(address[4] newReg);
@@ -101,5 +102,14 @@ contract HELIX2 is Base {
     function setRegistrar(uint256 index, address newReg) external onlyDev {
         emit NewRegistrar(index, newReg);
         helix2Registrar[index] = newReg;
+    }
+
+    /**
+     * @dev : sets ENS Registry if it migrates 
+     * @param newReg : new Register for index
+     */
+    function setENSRegistry(address newReg) external onlyDev {
+        emit NewENSRegistry(newReg);
+        ensRegistry = newReg;
     }
 }

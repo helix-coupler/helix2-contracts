@@ -36,6 +36,7 @@ contract Helix2BondRegistrar {
     uint256 public defaultLifespan; // default registration duration: 90 days
     uint256 public basePrice; // default base price
     uint256 public sizeLimit; // name length limit
+    bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
     /// Interfaces
@@ -81,6 +82,7 @@ contract Helix2BondRegistrar {
         sizeLimit = HELIX2.getSizes()[1];
         defaultLifespan = HELIX2.getLifespans()[1];
         illegalBlocks = HELIX2.getIllegalBlocks();
+        roothash = HELIX2.getRoothash()[1];
         Dev = msg.sender;
     }
 
@@ -163,7 +165,6 @@ contract Helix2BondRegistrar {
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
         bytes32 aliashash = keccak256(abi.encodePacked(_alias));
-        bytes32 roothash = HELIX2.getRoothash()[1];
         bytes32 bondhash = keccak256(
             abi.encodePacked(cation, roothash, aliashash)
         );

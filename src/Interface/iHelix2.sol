@@ -6,8 +6,6 @@ pragma solidity >0.8.0 <0.9.0;
  */
 interface iHELIX2 {
     /// @dev : HELIX2 Names external functions
-    // write functions
-
     // view functions
     function isDev() external view returns (address);
 
@@ -25,7 +23,7 @@ interface iHELIX2 {
 
     function getLifespans() external view returns (uint256[4] memory);
 
-    function getContract() external view returns (address);
+    function getENSRegistry() external view returns (address);
 
     // write functions
     function setLives(uint256[4] calldata newLives) external;
@@ -43,4 +41,6 @@ interface iHELIX2 {
     function setRegistrars(uint256[4] calldata newReg) external;
 
     function setRegistrar(uint256 index, address newReg) external;
+
+    function setENSRegistry(address newReg) external;
 }

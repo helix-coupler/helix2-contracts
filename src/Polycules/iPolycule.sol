@@ -5,9 +5,6 @@ pragma solidity >0.8.0 <0.9.0;
  * @dev Helix2 Polycules Interface
  */
 interface iPOLYCULE {
-    /// REGISTRAR
-
-    /// REGISTRY
     /// @dev : HELIX2 Polycules external functions
     // write functions
     function register(bytes32 polyhash, bytes32 cation) external;

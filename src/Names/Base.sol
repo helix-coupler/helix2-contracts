@@ -3,6 +3,7 @@ pragma solidity >0.8.0 <0.9.0;
 
 import "src/Names/iName.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iENS.sol";
 
 /**
  * @author sshmatrix
@@ -22,6 +23,7 @@ abstract contract BaseRegistrar {
 
     /// Interface
     iNAME public NAMES;
+    iENS public ENS;
     iHELIX2 public HELIX2;
 
     /// @dev : Default resolver used by this contract
