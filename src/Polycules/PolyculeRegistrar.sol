@@ -8,6 +8,9 @@ import "src/Interface/iHelix2.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
+ * @notice GitHub: https://github.com/helix-coupler/helix2-contracts
+ * @notice README: https://github.com/helix-coupler/resources
+ * @dev testnet v0.0.1
  * @title Helix2 Polycule Registrar
  */
 contract Helix2PolyculeRegistrar {

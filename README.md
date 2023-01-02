@@ -7,6 +7,7 @@
 ## Install dependency (optional)
 
 `forge install foundry-rs/forge-std`
+
 `forge install memester-xyz/surl`
 
 ## Goerli Testnet

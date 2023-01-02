@@ -8,6 +8,9 @@ import "src/Utils/LibString.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
+ * @notice GitHub: https://github.com/helix-coupler/helix2-contracts
+ * @notice README: https://github.com/helix-coupler/resources
+ * @dev testnet v0.0.1
  * @title Helix2 Name Registrar
  */
 contract Helix2NameRegistrar is ERC721 {
@@ -110,6 +113,44 @@ contract Helix2NameRegistrar is ERC721 {
      * @return hash of new name
      */
     function newName(
+        string memory label,
+        address owner,
+        uint lifespan
+    ) external payable isLegal(label) returns (bytes32) {
+        require(owner != address(0), "CANNOT_BURN");
+        require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
+        require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
+        bytes32 roothash = HELIX2.getRoothash()[0];
+        bytes32 namehash = keccak256(
+            abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
+        );
+        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
+        require(!NAMES.recordExists(namehash), "NAME_EXISTS");
+        address _owner = NAMES.owner(namehash);
+        /// @notice : Balance of previous owner is updated only when the
+        /// expired name is re-registered by someone else, aka, an
+        /// expired name is accounted to its previous owner until it is re-registered (!= renewed)
+        if (_owner != address(0)) _balanceOf[_owner]--;
+        NAMES.register(namehash, owner); /// set new owner
+        NAMES.setController(namehash, owner); /// set new controller
+        NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
+        NAMES.setResolver(namehash, defaultResolver); /// set new resolver
+        unchecked {
+            // update balances
+            _balanceOf[owner]++;
+        }
+        emit NewName(namehash, owner);
+        return namehash;
+    }
+
+    /**
+     * @dev registers a new name
+     * @param label : label of name without suffix
+     * @param owner : owner to set for new name
+     * @param lifespan : duration of registration in seconds
+     * @return hash of new name
+     */
+    function importENS(
         string memory label,
         address owner,
         uint lifespan
