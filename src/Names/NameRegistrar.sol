@@ -144,7 +144,7 @@ contract Helix2NameRegistrar is ERC721 {
         emit NewName(namehash, owner);
         return namehash;
     }
-    
+
     /**
      * @dev registers an ENS name (vitalik.eth)
      * @param node : namehash of ENS
@@ -158,9 +158,7 @@ contract Helix2NameRegistrar is ERC721 {
         require(msg.sender == ENS.owner(node), "NOT_ENS_OWNER");
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
-        bytes32 namehash = keccak256(
-            abi.encodePacked(node, roothash)
-        );
+        bytes32 namehash = keccak256(abi.encodePacked(node, roothash));
         /// @notice : availability is checked inline (not as modifier) to avoid deep stack
         require(!NAMES.recordExists(namehash), "NAME_EXISTS");
         address _owner = NAMES.owner(namehash);

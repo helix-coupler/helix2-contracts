@@ -105,7 +105,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : sets ENS Registry if it migrates 
+     * @dev : sets ENS Registry if it migrates
      * @param newReg : new Register for index
      */
     function setENSRegistry(address newReg) external onlyDev {

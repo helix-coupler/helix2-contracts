@@ -33,6 +33,8 @@ contract Helix2NamesTest is Test {
     Helix2NameRegistry public NAMES;
     // Registrar
     Helix2NameRegistrar public _NAME_;
+    // ENS Registry
+    iENS public ENS;
 
     /// Constants
     address public deployer;
@@ -49,6 +51,7 @@ contract Helix2NamesTest is Test {
     address public taker = address(0xc0de4c0cac01a);
     address public faker = address(0xc0de4cafec0ca);
     uint256 public tokenID;
+    string public ens = "00075";
 
     constructor() {
         deployer = address(this);
@@ -73,6 +76,8 @@ contract Helix2NamesTest is Test {
         basePrice = HELIX2_.getPrices()[0];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
+        roothash = HELIX2_.getRoothash()[0];
+        ENS = iENS(HELIX2_.getENSRegistry());
     }
 
     /// forge setup
@@ -86,13 +91,29 @@ contract Helix2NamesTest is Test {
             pill,
             lifespan
         );
-        roothash = HELIX2_.getRoothash()[0];
         // expected hash of registered name
         bytes32 _namehash = keccak256(
             abi.encodePacked(keccak256(abi.encodePacked(label)), roothash)
         );
         assertEq(namehash, _namehash);
         assertEq(_NAME_.balanceOf(pill), 1);
+    }
+
+    /// Register a name
+    function testClaimENS() public {
+        // calculate ENS node
+        bytes32 node = keccak256(
+            abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256(abi.encodePacked(ens)))
+        );
+        address mill = ENS.owner(node);
+        console.log(mill);
+        vm.prank(mill);
+        // register test name
+        namehash = _NAME_.claimENS{value: basePrice * lifespan}(node, lifespan);
+        // expected hash of registered name
+        bytes32 _namehash = keccak256(abi.encodePacked(node, roothash));
+        assertEq(namehash, _namehash);
+        assertEq(_NAME_.balanceOf(mill), 1);
     }
 
     /// Register a name, let it expire, and verify records
