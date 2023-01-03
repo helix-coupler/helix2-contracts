@@ -103,7 +103,10 @@ contract Helix2NamesTest is Test {
     function testClaimENS() public {
         // calculate ENS node
         bytes32 node = keccak256(
-            abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256(abi.encodePacked(ens)))
+            abi.encodePacked(
+                keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))),
+                keccak256(abi.encodePacked(ens))
+            )
         );
         address mill = ENS.owner(node);
         console.log(mill);

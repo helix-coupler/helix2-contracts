@@ -18,6 +18,9 @@ import "src/Molecules/MoleculeRegistry.sol";
 import "src/Polycules/PolyculeRegistry.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
+import "src/Bonds/BondResolver.sol";
+import "src/Molecules/MoleculeResolver.sol";
+import "src/Polycules/PolyculeResolver.sol";
 // Interface
 import "src/Names/iName.sol";
 import "src/Bonds/iBond.sol";
@@ -25,6 +28,9 @@ import "src/Molecules/iMolecule.sol";
 import "src/Polycules/iPolycule.sol";
 import "src/Names/iERC721.sol";
 import "src/Names/iNameResolver.sol";
+import "src/Bonds/iBondResolver.sol";
+import "src/Molecules/iMoleculeResolver.sol";
+import "src/Polycules/iPolyculeResolver.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iENS.sol";
 
@@ -38,6 +44,9 @@ contract Helix2ConstructorTest is Test {
 
     HELIX2 public HELIX2_;
     NameResolver public NameResolver_;
+    BondResolver public BondResolver_;
+    MoleculeResolver public MoleculeResolver_;
+    PolyculeResolver public PolyculeResolver_;
     // Registry
     Helix2NameRegistry public NAMES;
     Helix2BondRegistry public BONDS;
@@ -92,6 +101,12 @@ contract Helix2ConstructorTest is Test {
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
         NameResolver_ = new NameResolver(_HELIX2);
+        // deploy Bond Resolver
+        BondResolver_ = new BondResolver(_HELIX2);
+        // deploy Molecule Resolver
+        MoleculeResolver_ = new MoleculeResolver(_HELIX2);
+        // deploy Polycule Resolver
+        PolyculeResolver_ = new PolyculeResolver(_HELIX2);
     }
 
     /// forge setup
