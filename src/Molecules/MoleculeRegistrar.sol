@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Molecules/iMolecule.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC173.sol";
 import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
@@ -32,7 +33,10 @@ contract Helix2MoleculeRegistrar {
 
     /// @dev : Helix2 Molecule events
     event NewMolecule(string _alias, bytes32 indexed molyhash, bytes32 cation);
-    event NewDev(address Dev, address newDev);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     error OnlyDev(address _dev, address _you);
 
     /// Constants
@@ -73,11 +77,19 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
+     * @dev get owner of contract
+     * @return address of controlling dev or multi-sig wallet
+     */
+    function owner() external view returns (address) {
+        return Dev;
+    }
+
+    /**
      * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
+    function transferOwnership(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
         Dev = newDev;
     }
 

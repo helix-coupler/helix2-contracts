@@ -50,8 +50,6 @@ interface iPOLYCULE {
 
     function setApprovalForAll(address controller, bool approved) external;
 
-    function changeDev(address newDev) external;
-
     function setConfig(address helix2) external;
 
     function toggleActive() external;

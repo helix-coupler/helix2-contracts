@@ -3,6 +3,8 @@ pragma solidity >0.8.0 <0.9.0;
 
 /// @dev : Helix2 Interfaces
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC165.sol";
+import "src/Interface/iERC173.sol";
 
 /// @dev : Other Interfaces
 
@@ -12,8 +14,11 @@ import "src/Interface/iHelix2.sol";
  */
 abstract contract Base {
     /// Events
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     error OnlyDev(address _dev, address _you);
-    event NewDev(address Dev, address newDev);
 
     /// Dev
     address public Dev;
@@ -58,11 +63,14 @@ abstract contract Base {
 
     /// @dev : Pause/Resume contract
     bool public active = true;
-
+    /// @dev : EIP-165
     mapping(bytes4 => bool) public supportsInterface;
 
     constructor() {
         Dev = msg.sender;
+        // Interface
+        supportsInterface[type(iERC165).interfaceId] = true;
+        supportsInterface[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -81,16 +89,25 @@ abstract contract Base {
     }
 
     /**
+     * @dev get owner of contract
+     * @return address of controlling dev or multi-sig wallet
+     */
+    function owner() external view returns (address) {
+        return Dev;
+    }
+
+    /**
      * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
+    function transferOwnership(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
         Dev = newDev;
     }
 
     /**
      * @dev setInterface
+     * @notice EIP-165
      * @param sig : signature
      * @param value : boolean
      */

@@ -4,6 +4,8 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Polycules/iPolycule.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC165.sol";
+import "src/Interface/iERC173.sol";
 import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
@@ -30,7 +32,10 @@ contract Helix2PolyculeRegistry {
     iPriceOracle public PRICES;
 
     /// @dev : Helix2 Polycule events
-    event NewDev(address Dev, address newDev);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
     event RehookedConfig(bytes32 indexed polyhash, address config, uint8 rule);
     event UnhookedConfig(bytes32 indexed polyhash, uint8 rule);
@@ -60,6 +65,8 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Pause/Resume contract
     bool public active = true;
+    /// @dev : EIP-165
+    mapping(bytes4 => bool) public supportsInterface;
 
     /// @dev : Polycule roothash
     bytes32 public roothash;
@@ -127,6 +134,9 @@ contract Helix2PolyculeRegistry {
         basePrice = PRICES.getPrices()[3];
         /// give ownership of '0x0' and <roothash> to Dev
         catalyse();
+        // Interface
+        supportsInterface[type(iERC165).interfaceId] = true;
+        supportsInterface[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -158,12 +168,31 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
+     * @dev get owner of contract
+     * @return address of controlling dev or multi-sig wallet
+     */
+    function owner() external view returns (address) {
+        return Dev;
+    }
+
+    /**
      * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
+    function transferOwnership(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
         Dev = newDev;
+    }
+
+    /**
+     * @dev setInterface
+     * @notice EIP-165
+     * @param sig : signature
+     * @param value : boolean
+     */
+    function setInterface(bytes4 sig, bool value) external payable onlyDev {
+        require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
+        supportsInterface[sig] = value;
     }
 
     /// @dev : Modifier to allow only Controller

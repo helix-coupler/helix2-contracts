@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Bonds/iBond.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC173.sol";
 import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
@@ -30,7 +31,10 @@ contract Helix2BondRegistrar {
 
     /// @dev : Helix2 Bond events
     event NewBond(string _alias, bytes32 indexed bondhash, bytes32 cation);
-    event NewDev(address Dev, address newDev);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     error OnlyDev(address _dev, address _you);
 
     /// Constants
@@ -71,11 +75,19 @@ contract Helix2BondRegistrar {
     }
 
     /**
+     * @dev get owner of contract
+     * @return address of controlling dev or multi-sig wallet
+     */
+    function owner() external view returns (address) {
+        return Dev;
+    }
+
+    /**
      * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
+    function transferOwnership(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
         Dev = newDev;
     }
 
@@ -144,9 +156,9 @@ contract Helix2BondRegistrar {
      */
     modifier onlyCation(bytes32 bondhash) {
         require(BONDS.recordExists(bondhash), "NO_RECORD");
-        address owner = NAMES.owner(BONDS.cation(bondhash));
+        address cation = NAMES.owner(BONDS.cation(bondhash));
         require(
-            owner == msg.sender || Operators[owner][msg.sender],
+            cation == msg.sender || Operators[cation][msg.sender],
             "NOT_OWNER"
         );
         _;

@@ -5,6 +5,7 @@ import "src/Polycules/iPolycule.sol";
 import "src/Utils/LibString.sol";
 import "src/Names/iName.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Interface/iERC173.sol";
 import "src/Oracle/iPriceOracle.sol";
 
 /**
@@ -32,7 +33,10 @@ contract Helix2PolyculeRegistrar {
 
     /// @dev : Helix2 Polycule events
     event NewPolycule(string _alias, bytes32 indexed polyhash, bytes32 cation);
-    event NewDev(address Dev, address newDev);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     error OnlyDev(address _dev, address _you);
 
     /// Constants
@@ -73,11 +77,19 @@ contract Helix2PolyculeRegistrar {
     }
 
     /**
+     * @dev get owner of contract
+     * @return address of controlling dev or multi-sig wallet
+     */
+    function owner() external view returns (address) {
+        return Dev;
+    }
+
+    /**
      * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
-    function changeDev(address newDev) external onlyDev {
-        emit NewDev(Dev, newDev);
+    function transferOwnership(address newDev) external onlyDev {
+        emit OwnershipTransferred(Dev, newDev);
         Dev = newDev;
     }
 
