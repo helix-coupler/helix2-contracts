@@ -5,7 +5,6 @@ pragma solidity >0.8.0 <0.9.0;
  * @dev Helix2 Names Interface
  */
 interface iNAME {
-    /// @dev : HELIX2 Names external functions
     // write functions
     function register(
         string memory label,

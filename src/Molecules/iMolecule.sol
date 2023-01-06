@@ -5,7 +5,6 @@ pragma solidity >0.8.0 <0.9.0;
  * @dev Helix2 Molecules Interface
  */
 interface iMOLECULE {
-    /// @dev : HELIX2 Molecules external functions
     // write functions
     function register(bytes32 molyhash, bytes32 cation) external;
 
