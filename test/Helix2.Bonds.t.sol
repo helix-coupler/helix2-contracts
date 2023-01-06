@@ -104,8 +104,10 @@ contract Helix2BondsTest is Test {
         bondPrice = HELIX2_.getPrices()[1];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
+        NAMES.setConfig(address(HELIX2_));
         HELIX2_.setRegistrar(1, address(_BOND_));
         HELIX2_.setRegistry(1, _BONDS);
+        BONDS.setConfig(address(HELIX2_));
     }
 
     /// forge setup

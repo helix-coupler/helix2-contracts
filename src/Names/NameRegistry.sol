@@ -63,6 +63,7 @@ contract Helix2NameRegistry {
 
     /// @dev : Helix2 Name struct
     struct Name {
+        string _label; /// Label of Name
         address _owner; /// Owner of Name
         address _resolver; /// Resolver of Name
         address _controller; /// Controller of Name
@@ -72,11 +73,12 @@ contract Helix2NameRegistry {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev : sets permissions for 0x0 and roothash
+     * @dev sets permissions for 0x0 and roothash
      * @notice : consider changing msg.sender → address(this)
      */
     function catalyse() internal onlyDev {
         // 0x0
+        Names[0x0]._label = ".";
         Names[0x0]._owner = msg.sender;
         Names[0x0]._expiry = theEnd;
         Names[0x0]._controller = msg.sender;
@@ -84,6 +86,7 @@ contract Helix2NameRegistry {
         // root
         bytes32[4] memory hashes = HELIX2.getRoothash();
         for (uint i = 0; i < hashes.length; i++) {
+            Names[hashes[i]]._label = ".";
             Names[hashes[i]]._owner = msg.sender;
             Names[hashes[i]]._expiry = theEnd;
             Names[hashes[i]]._controller = msg.sender;
@@ -92,7 +95,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : Initialise a new HELIX2 Names Registry
+     * @dev Initialise a new HELIX2 Names Registry
      * @notice :
      * @param _helix2 : address of HELIX2 Manager
      */
@@ -112,7 +115,29 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev sets new manager and config from therein
+     * @notice setConfig() must be called whenever a new manager is
+     * is deployed or whenever a config changes in the manager
+     * @param _helix2 : address of HELIX2 Manager
+     */
+    function setConfig(address _helix2) external onlyDev {
+        HELIX2 = iHELIX2(_helix2);
+        roothash = HELIX2.getRoothash()[0];
+        basePrice = HELIX2.getPrices()[0];
+        Registrar = HELIX2.getRegistrar()[0];
+        _NAME_ = iNAME(Registrar);
+        ERC721 = iERC721(Registrar);
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -142,14 +167,12 @@ contract Helix2NameRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        Registrar = HELIX2.getRegistrar()[0];
         require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 namehash) {
-        Registrar = HELIX2.getRegistrar()[0];
         address _owner = Names[namehash]._owner;
         require(
             msg.sender == Registrar ||
@@ -162,7 +185,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : check if name is available
+     * @dev check if name is available
      * @param namehash : hash of name
      */
     modifier isAvailable(bytes32 namehash) {
@@ -171,7 +194,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : check if name is already registered
+     * @dev check if name is already registered
      * @param namehash : hash of name
      */
     modifier isOwned(bytes32 namehash) {
@@ -180,7 +203,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : verify ownership of name
+     * @dev verify ownership of name
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
@@ -194,19 +217,25 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : register owner of new name
+     * @dev registers new name
+     * @param _label : label of name
      * @param namehash : hash of name
      * @param _owner : new owner
      */
-    function register(bytes32 namehash, address _owner) external isRegistrar {
+    function register(
+        string calldata _label,
+        bytes32 namehash,
+        address _owner
+    ) external isRegistrar {
         require(_owner != address(0), "CANNOT_BURN");
         emit Transfer(address(0), _owner, uint256(namehash));
         Names[namehash]._owner = _owner;
+        Names[namehash]._label = _label;
         emit NewOwner(namehash, _owner);
     }
 
     /**
-     * @dev : set owner of a name
+     * @dev set owner of a name
      * @param namehash : hash of name
      * @param _owner : new owner
      */
@@ -216,9 +245,6 @@ contract Helix2NameRegistry {
     ) external onlyOwner(namehash) {
         require(_owner != address(0), "CANNOT_BURN");
         address owner_ = Names[namehash]._owner;
-        Registrar = HELIX2.getRegistrar()[0];
-        _NAME_ = iNAME(Registrar);
-        ERC721 = iERC721(Registrar);
         _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
         _NAME_.setBalance(_owner, ERC721.balanceOf(_owner) + 1);
         emit Transfer(owner_, _owner, uint256(namehash));
@@ -227,7 +253,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set owner of a name due to ERC721 transfer() call
+     * @dev set owner of a name due to ERC721 transfer() call
      * @param namehash : hash of name
      * @param _owner : new owner
      */
@@ -241,7 +267,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set controller of a name
+     * @dev set controller of a name
      * @param namehash : hash of name
      * @param _controller : new controller
      */
@@ -255,7 +281,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set controller of a name due to ERC721 approve() call
+     * @dev set controller of a name due to ERC721 approve() call
      * @param namehash : hash of name
      * @param _controller : new controller
      */
@@ -268,7 +294,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set resolver for a name
+     * @dev set resolver for a name
      * @param namehash : hash of name
      * @param _resolver : new resolver
      */
@@ -281,7 +307,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set expiry for a name
+     * @dev set expiry for a name
      * @param namehash : hash of name
      * @param _expiry : new expiry
      */
@@ -292,7 +318,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : renew a name
+     * @dev renew a name
      * @param namehash : hash of name
      * @param _expiry : new expiry
      */
@@ -301,7 +327,6 @@ contract Helix2NameRegistry {
         uint _expiry
     ) external payable isOwnerOrController(namehash) {
         require(_expiry > Names[namehash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[0];
         uint newDuration = _expiry - Names[namehash]._expiry;
         require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Names[namehash]._expiry = _expiry;
@@ -309,7 +334,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set record for a name
+     * @dev set record for a name
      * @param namehash : hash of name
      * @param _resolver : new record
      */
@@ -322,7 +347,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : set operator for a name
+     * @dev set operator for a name
      * @param operator : new operator
      * @param approved : state to set
      */
@@ -342,6 +367,16 @@ contract Helix2NameRegistry {
             return address(0x0);
         }
         return addr;
+    }
+
+    /**
+     * @dev return label of a name
+     * @param namehash hash of name to query
+     * @return label of name
+     */
+    function label(bytes32 namehash) public view returns (string memory) {
+        string memory _label = Names[namehash]._label;
+        return _label;
     }
 
     /**
@@ -401,7 +436,7 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev : withdraw ether to Dev, anyone can trigger
+     * @dev withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");

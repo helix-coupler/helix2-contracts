@@ -18,6 +18,7 @@ contract Helix2BondRegistrar {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+    using LibString for uint256;
 
     /// Dev
     address public Dev;
@@ -35,7 +36,7 @@ contract Helix2BondRegistrar {
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan; // default registration duration: 90 days
     uint256 public basePrice; // default base price
-    uint256 public sizeLimit; // name length limit
+    uint256[2] public sizeLimit; // name length limit
     bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
@@ -59,7 +60,14 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -68,7 +76,7 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : Initialise a new HELIX2 Bonds Registrar
+     * @dev Initialise a new HELIX2 Bonds Registrar
      * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
@@ -87,17 +95,20 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : verify alias has legal form
+     * @dev verify alias has legal form
      * @param _alias : alias of bond
      */
     modifier isLegal(string memory _alias) {
-        require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(
+            _alias.strlen() > sizeLimit[0] && _alias.strlen() < sizeLimit[1],
+            "ILLEGAL_LABEL"
+        ); /// check for undersized or oversized alias
         require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
     /**
-     * @dev : verify bond has expired and can be registered
+     * @dev verify bond has expired and can be registered
      * @param _cation : cation of bond
      * @param _alias : alias of bond
      */
@@ -118,7 +129,7 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : verify ownership of bond
+     * @dev verify ownership of bond
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
@@ -132,7 +143,7 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : sets Default Resolver
+     * @dev sets Default Resolver
      * @param _resolver : resolver address
      */
     function setDefaultResolver(address _resolver) external onlyDev {
@@ -140,7 +151,7 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev : sets Default Lifespan
+     * @dev sets Default Lifespan
      * @param _lifespan : new default value
      */
     function setDefaultLifespan(uint _lifespan) external onlyDev {

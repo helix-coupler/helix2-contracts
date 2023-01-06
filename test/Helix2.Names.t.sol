@@ -52,6 +52,7 @@ contract Helix2NamesTest is Test {
     address public faker = address(0xc0de4cafec0ca);
     uint256 public tokenID;
     string public ens = "00075";
+    string public _ens = string.concat(ens, '.eth');
 
     constructor() {
         deployer = address(this);
@@ -76,6 +77,7 @@ contract Helix2NamesTest is Test {
         basePrice = HELIX2_.getPrices()[0];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
+        NAMES.setConfig(address(HELIX2_));
         roothash = HELIX2_.getRoothash()[0];
         ENS = iENS(HELIX2_.getENSRegistry());
     }
@@ -112,7 +114,7 @@ contract Helix2NamesTest is Test {
         console.log(mill);
         vm.prank(mill);
         // register test name
-        namehash = _NAME_.claimENS{value: basePrice * lifespan}(node, lifespan);
+        namehash = _NAME_.claimENS{value: basePrice * lifespan}(_ens, lifespan);
         // expected hash of registered name
         bytes32 _namehash = keccak256(abi.encodePacked(node, roothash));
         assertEq(namehash, _namehash);

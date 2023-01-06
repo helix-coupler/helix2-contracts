@@ -114,8 +114,10 @@ contract Helix2MoleculesTest is Test {
         molyprice = HELIX2_.getPrices()[2];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
+        NAMES.setConfig(address(HELIX2_));
         HELIX2_.setRegistrar(2, address(_MOLY_));
         HELIX2_.setRegistry(2, _MOLECULES);
+        MOLECULES.setConfig(address(HELIX2_));
     }
 
     /// forge setup

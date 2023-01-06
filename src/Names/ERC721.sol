@@ -6,7 +6,7 @@ import "src/Names/iName.sol";
 import "src/Names/iERC721.sol";
 
 /**
- * @dev : Helix2 ERC721 Wrapper
+ * @dev Helix2 ERC721 Wrapper
  */
 abstract contract ERC721 is BaseRegistrar {
     mapping(address => uint256) internal _balanceOf;
@@ -39,7 +39,7 @@ abstract contract ERC721 is BaseRegistrar {
     );
 
     /**
-     * @dev : returns owner of a token ID
+     * @dev returns owner of a token ID
      * @param tokenID : token ID
      */
     function ownerOf(uint256 tokenID) public view returns (address) {
@@ -50,7 +50,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : returns token balance of a wallet
+     * @dev returns token balance of a wallet
      * @param wallet : wallet address
      */
     function balanceOf(address wallet) public view returns (uint256) {
@@ -58,7 +58,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : updates the balance of wallet by 1
+     * @dev updates the balance of wallet by 1
      * @param wallet : wallet address
      * @param balance : new balance
      */
@@ -67,7 +67,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : sets Controller for one token
+     * @dev sets Controller for one token
      * @param operator : operator address to be set as Controller
      * @param tokenID : token ID
      */
@@ -88,7 +88,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : sets Controller (for an owner)
+     * @dev sets Controller (for an owner)
      * @param operator : operator address to be set as Controller
      * @param flag : bool to set
      */
@@ -98,7 +98,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : transferFrom() function
+     * @dev transferFrom() function
      * @param from : from address
      * @param to : to address
      * @param tokenID : token
@@ -108,7 +108,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : safeTransferFrom() function
+     * @dev safeTransferFrom() function
      * @param from : from address
      * @param to : to address
      * @param tokenID : token
@@ -122,7 +122,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : safeTransferFrom() function with extra data
+     * @dev safeTransferFrom() function with extra data
      * @param from : from address
      * @param to : to address
      * @param tokenID : token
@@ -138,7 +138,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev : custom _transfer() function that also mints
+     * @dev custom _transfer() function that also mints
      * @param from : address of sender
      * @param to : address of receiver
      * @param tokenID : token

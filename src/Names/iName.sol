@@ -7,7 +7,11 @@ pragma solidity >0.8.0 <0.9.0;
 interface iNAME {
     /// @dev : HELIX2 Names external functions
     // write functions
-    function register(bytes32 namehash, address owner) external;
+    function register(
+        string memory label,
+        bytes32 namehash,
+        address owner
+    ) external;
 
     function setOwner(bytes32 namehash, address owner) external;
 
@@ -31,8 +35,14 @@ interface iNAME {
 
     function changeDev(address newDev) external;
 
+    function setConfig(address helix2) external;
+
+    function toggleActive() external;
+
     // view functions
     function owner(bytes32 namehash) external view returns (address);
+
+    function label(bytes32 namehash) external view returns (string memory);
 
     function controller(bytes32 namehash) external view returns (address);
 

@@ -20,6 +20,7 @@ contract Helix2MoleculeRegistrar {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+    using LibString for uint256;
 
     /// Dev
     address public Dev;
@@ -37,7 +38,7 @@ contract Helix2MoleculeRegistrar {
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan; // default registration duration: 90 days
     uint256 public basePrice; // default base price
-    uint256 public sizeLimit; // name length limit
+    uint256[2] public sizeLimit; // name length limit
     bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
@@ -61,7 +62,14 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -70,7 +78,7 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : Initialise a new HELIX2 Molecules Registrar
+     * @dev Initialise a new HELIX2 Molecules Registrar
      * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
@@ -89,17 +97,20 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : verify alias has legal form
+     * @dev verify alias has legal form
      * @param _alias : alias of molecule
      */
     modifier isLegal(string memory _alias) {
-        require(bytes(_alias).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(
+            _alias.strlen() > sizeLimit[0] && _alias.strlen() < sizeLimit[1],
+            "ILLEGAL_LABEL"
+        ); /// check for undersized or oversized alias
         require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
     /**
-     * @dev : verify molecule has expired and can be registered
+     * @dev verify molecule has expired and can be registered
      * @param _cation : cation of molecule
      * @param _alias : alias of molecule
      */
@@ -120,7 +131,7 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : verify ownership of molecule
+     * @dev verify ownership of molecule
      * @param molyhash : hash of molecule
      */
     modifier onlyCation(bytes32 molyhash) {
@@ -134,7 +145,7 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : sets Default Resolver
+     * @dev sets Default Resolver
      * @param _resolver : resolver address
      */
     function setDefaultResolver(address _resolver) external onlyDev {
@@ -142,7 +153,7 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev : sets Default Lifespan
+     * @dev sets Default Lifespan
      * @param _lifespan : new default value
      */
     function setDefaultLifespan(uint _lifespan) external onlyDev {

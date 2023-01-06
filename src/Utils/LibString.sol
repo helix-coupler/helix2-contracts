@@ -6,6 +6,34 @@ library LibString {
     uint8 private constant _ADDRESS_LENGTH = 20;
 
     /**
+     * @dev returns the length of a given string
+     * @param _string string to measure the length of
+     * @return length of the input string
+     */
+    function strlen(string memory _string) internal pure returns (uint256) {
+        uint256 _length;
+        uint256 i = 0;
+        uint256 bytelength = bytes(_string).length;
+        for (_length = 0; i < bytelength; _length++) {
+            bytes1 _byte = bytes(_string)[i];
+            if (_byte < 0x80) {
+                i += 1;
+            } else if (_byte < 0xE0) {
+                i += 2;
+            } else if (_byte < 0xF0) {
+                i += 3;
+            } else if (_byte < 0xF8) {
+                i += 4;
+            } else if (_byte < 0xFC) {
+                i += 5;
+            } else {
+                i += 6;
+            }
+        }
+        return _length;
+    }
+
+    /**
      * @dev Converts a `uint256` to its ASCII `string` decimal representation.
      * @notice openzeppelin-contracts/contracts/utils/Strings.sol
      */
@@ -147,7 +175,7 @@ library LibString {
     }
 
     /**
-     * @dev : check if a value exists in a calldata array of size 4
+     * @dev check if a value exists in a calldata array of size 4
      * @param array : array to search in
      * @param value : value to search
      * @return true or false
@@ -155,7 +183,7 @@ library LibString {
     function existsIn(
         string memory value,
         string[4] memory array
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (
                 keccak256(abi.encodePacked(array[i])) ==
@@ -168,7 +196,7 @@ library LibString {
     }
 
     /**
-     * @dev : check if a value exists in a dynamic memory array of addresses
+     * @dev check if a value exists in a dynamic memory array of addresses
      * @param array : array of addresses to search in
      * @param value : value to search
      * @return true or false
@@ -176,7 +204,7 @@ library LibString {
     function existsIn(
         address value,
         address[] memory array
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return true;
@@ -186,7 +214,7 @@ library LibString {
     }
 
     /**
-     * @dev : find an element in a dynamic memory array of addresses
+     * @dev find an element in a dynamic memory array of addresses
      * @param array : array of addresses to search in
      * @param value : value to search
      * @return index
@@ -194,7 +222,7 @@ library LibString {
     function findIn(
         address value,
         address[] memory array
-    ) public pure returns (uint) {
+    ) internal pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return i;
@@ -204,7 +232,7 @@ library LibString {
     }
 
     /**
-     * @dev : check if a value exists in a dynamic memory array of bytes32
+     * @dev check if a value exists in a dynamic memory array of bytes32
      * @param array : array of bytes32 to search in
      * @param value : value to search
      * @return true or false
@@ -212,7 +240,7 @@ library LibString {
     function existsIn(
         bytes32 value,
         bytes32[] memory array
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return true;
@@ -222,7 +250,7 @@ library LibString {
     }
 
     /**
-     * @dev : check if a value exists in a dynamic memory array of uint8
+     * @dev check if a value exists in a dynamic memory array of uint8
      * @param array : array of uint8 to search in
      * @param value : value to search
      * @return true or false
@@ -230,7 +258,7 @@ library LibString {
     function existsIn(
         uint8 value,
         uint8[] memory array
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return true;
@@ -240,7 +268,7 @@ library LibString {
     }
 
     /**
-     * @dev : find an element in a dynamic memory array of bytes32
+     * @dev find an element in a dynamic memory array of bytes32
      * @param array : array of bytes32 to search in
      * @param value : value to search
      * @return index
@@ -248,7 +276,7 @@ library LibString {
     function findIn(
         bytes32 value,
         bytes32[] memory array
-    ) public pure returns (uint) {
+    ) internal pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return i;
@@ -258,7 +286,7 @@ library LibString {
     }
 
     /**
-     * @dev : find an element in a dynamic memory array of uint8
+     * @dev find an element in a dynamic memory array of uint8
      * @param array : array of uint8 to search in
      * @param value : value to search
      * @return index
@@ -266,7 +294,7 @@ library LibString {
     function findIn(
         uint8 value,
         uint8[] memory array
-    ) public pure returns (uint) {
+    ) internal pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
                 return i;

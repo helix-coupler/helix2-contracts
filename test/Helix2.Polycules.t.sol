@@ -124,8 +124,10 @@ contract Helix2PolyculesTest is Test {
         polyprice = HELIX2_.getPrices()[3];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
+        NAMES.setConfig(address(HELIX2_));
         HELIX2_.setRegistrar(3, address(_POLY_));
         HELIX2_.setRegistry(3, _POLYCULES);
+        POLYCULES.setConfig(address(HELIX2_));
     }
 
     /// forge setup

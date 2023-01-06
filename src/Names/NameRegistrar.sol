@@ -18,21 +18,22 @@ contract Helix2NameRegistrar is ERC721 {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
+    using LibString for uint256;
 
     /// @dev : Helix2 Name events
     event NewName(string label, bytes32 indexed namehash, address owner);
-    event NewImport(string service, bytes32 indexed namehash, address owner);
+    event NewENSImport(string ens, bytes32 indexed namehash, address owner);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
     uint256 public defaultLifespan; // minimum registration duration: 90 days
     uint256 public basePrice; // default base price
-    uint256 public sizeLimit; // name length limit
+    uint256[2] public sizeLimit; // name length limit
     bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
     /**
-     * @dev : Initialise a new HELIX2 Names Registrar
+     * @dev Initialise a new HELIX2 Names Registrar
      * @notice :
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
@@ -50,17 +51,20 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
-     * @dev : verify name has legal form
+     * @dev verify name has legal form
      * @param label : label of name
      */
     modifier isLegal(string memory label) {
-        require(bytes(label).length < sizeLimit, "ILLEGAL_LABEL"); /// check for oversized label <<< SIZE LIMIT
+        require(
+            label.strlen() > sizeLimit[0] && label.strlen() < sizeLimit[1],
+            "ILLEGAL_LABEL"
+        ); /// check for undersized or oversized label
         require(!label.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
     /**
-     * @dev : verify name has expired and can be registered
+     * @dev verify name has expired and can be registered
      * @param label : label of name
      */
     modifier isAvailable(string memory label) {
@@ -80,7 +84,7 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
-     * @dev : verify ownership of name
+     * @dev verify ownership of name
      * @param namehash : hash of name
      */
     modifier onlyOwner(bytes32 namehash) {
@@ -94,7 +98,7 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
-     * @dev : sets Default Resolver
+     * @dev sets Default Resolver
      * @param _resolver : resolver address
      */
     function setDefaultResolver(address _resolver) external onlyDev {
@@ -102,7 +106,7 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
-     * @dev : sets Default Lifespan
+     * @dev sets Default Lifespan
      * @param _lifespan : new default value
      */
     function setDefaultLifespan(uint _lifespan) external onlyDev {
@@ -139,7 +143,7 @@ contract Helix2NameRegistrar is ERC721 {
             }
             emit Transfer(_owner, address(0), uint256(namehash));
         }
-        NAMES.register(namehash, owner); /// set new owner
+        NAMES.register(label, namehash, owner); /// set new owner
         NAMES.setController(namehash, owner); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
         NAMES.setResolver(namehash, defaultResolver); /// set new resolver
@@ -152,15 +156,45 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
+     * @dev calculates hash of ENS domain (...sub.domain.vitalik.eth)
+     * @param _ens : ENS domain to hash
+     * @return _namehash : hash of ENS domain
+     */
+    function hashENS(
+        bytes calldata _ens
+    ) public pure returns (bytes32 _namehash) {
+        uint i = _ens.length;
+        bytes memory _label;
+        _namehash = bytes32(0);
+        unchecked {
+            while (i > 0) {
+                --i;
+                if (_ens[i] == bytes1(".")) {
+                    _namehash = keccak256(
+                        abi.encodePacked(_namehash, keccak256(_label))
+                    );
+                    _label = "";
+                } else {
+                    _label = bytes.concat(_ens[i], _label);
+                }
+            }
+            _namehash = keccak256(
+                abi.encodePacked(_namehash, keccak256(_label))
+            );
+        }
+    }
+
+    /**
      * @dev registers an ENS name (vitalik.eth)
-     * @param node : namehash of ENS
+     * @param ens : ENS to import (vitalik.eth)
      * @param lifespan : duration of registration in seconds
      * @return hash of registered name (vitalik.eth.)
      */
     function claimENS(
-        bytes32 node,
+        string calldata ens,
         uint lifespan
     ) external payable returns (bytes32) {
+        bytes32 node = hashENS(bytes(ens));
         require(msg.sender == ENS.owner(node), "NOT_ENS_OWNER");
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
@@ -177,7 +211,7 @@ contract Helix2NameRegistrar is ERC721 {
             }
             emit Transfer(_owner, address(0), uint256(namehash));
         }
-        NAMES.register(namehash, msg.sender); /// set new owner
+        NAMES.register(ens, namehash, msg.sender); /// set new owner
         NAMES.setController(namehash, msg.sender); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
         NAMES.setResolver(namehash, defaultResolver); /// set new resolver
@@ -185,7 +219,7 @@ contract Helix2NameRegistrar is ERC721 {
             // update balances
             _balanceOf[msg.sender]++;
         }
-        emit NewImport('ENS', namehash, msg.sender);
+        emit NewENSImport(ens, namehash, msg.sender);
         return namehash;
     }
 }

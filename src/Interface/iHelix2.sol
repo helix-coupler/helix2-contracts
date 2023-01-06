@@ -19,7 +19,7 @@ interface iHELIX2 {
 
     function getIllegalBlocks() external view returns (string[4] memory);
 
-    function getSizes() external view returns (uint256[4] memory);
+    function getSizes() external view returns (uint256[2][4] memory);
 
     function getLifespans() external view returns (uint256[4] memory);
 

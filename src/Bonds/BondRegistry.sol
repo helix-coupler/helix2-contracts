@@ -75,7 +75,7 @@ contract Helix2BondRegistry {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev : sets permissions for 0x0 and roothash
+     * @dev sets permissions for 0x0 and roothash
      * @notice : consider changing msg.sender → address(this)
      */
     function catalyse() internal {
@@ -127,7 +127,27 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev sets new manager and config from therein
+     * @notice setConfig() must be called whenever a new manager is
+     * is deployed or whenever a config changes in the manager
+     * @param _helix2 : address of HELIX2 Manager
+     */
+    function setConfig(address _helix2) external onlyDev {
+        HELIX2 = iHELIX2(_helix2);
+        roothash = HELIX2.getRoothash()[1];
+        basePrice = HELIX2.getPrices()[1];
+        Registrar = HELIX2.getRegistrar()[1];
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -158,14 +178,12 @@ contract Helix2BondRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        Registrar = HELIX2.getRegistrar()[1];
         require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 bondhash) {
-        Registrar = HELIX2.getRegistrar()[1];
         bytes32 __cation = Bonds[bondhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -179,7 +197,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : check if bond is available
+     * @dev check if bond is available
      * @param bondhash : hash of bond
      */
     modifier isAvailable(bytes32 bondhash) {
@@ -188,7 +206,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : verify bond is not expired
+     * @dev verify bond is not expired
      * @param bondhash : label of bond
      */
     modifier isOwned(bytes32 bondhash) {
@@ -197,7 +215,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : check if the bond is not duplicate
+     * @dev check if the bond is not duplicate
      * @param bondhash : hash of bond
      * @param newAnion : hash of new anion
      */
@@ -210,7 +228,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : check if new config is a duplicate
+     * @dev check if new config is a duplicate
      * @param bondhash : hash of bond
      * @param rule : config to check
      */
@@ -222,7 +240,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : verify ownership of bond
+     * @dev verify ownership of bond
      * @param bondhash : hash of bond
      */
     modifier onlyCation(bytes32 bondhash) {
@@ -237,7 +255,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : register owner of new bond
+     * @dev register owner of new bond
      * @param bondhash : hash of bond
      * @param _cation : new cation
      */
@@ -248,7 +266,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set cation of a bond
+     * @dev set cation of a bond
      * @param bondhash : hash of bond
      * @param _cation : new cation
      */
@@ -262,7 +280,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set controller of a bond
+     * @dev set controller of a bond
      * @param bondhash : hash of bond
      * @param _controller : new controller
      */
@@ -275,7 +293,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set new anion of a bond
+     * @dev set new anion of a bond
      * @param bondhash : hash of anion
      * @param _anion : address of anion
      */
@@ -288,7 +306,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set new alias for bond
+     * @dev set new alias for bond
      * @param bondhash : hash of bond
      * @param _alias : bash of alias
      */
@@ -297,7 +315,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set new mutuality flag for bond
+     * @dev set new mutuality flag for bond
      * @param bondhash : hash of bond
      * @param _covalence : bool
      */
@@ -310,7 +328,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set resolver for a bond
+     * @dev set resolver for a bond
      * @param bondhash : hash of bond
      * @param _resolver : new resolver
      */
@@ -323,7 +341,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set expiry for a bond
+     * @dev set expiry for a bond
      * @param bondhash : hash of bond
      * @param _expiry : new expiry
      */
@@ -334,7 +352,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set expiry for a bond
+     * @dev set expiry for a bond
      * @param bondhash : hash of bond
      * @param _expiry : new expiry
      */
@@ -343,7 +361,6 @@ contract Helix2BondRegistry {
         uint _expiry
     ) external payable isCationOrController(bondhash) {
         require(_expiry > Bonds[bondhash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[1];
         uint newDuration = _expiry - Bonds[bondhash]._expiry;
         require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Bonds[bondhash]._expiry = _expiry;
@@ -351,7 +368,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set record for a bond
+     * @dev set record for a bond
      * @param bondhash : hash of bond
      * @param _resolver : new record
      */
@@ -431,7 +448,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : set operator for a bond
+     * @dev set operator for a bond
      * @param operator : new operator
      * @param approved : state to set
      */
@@ -571,7 +588,7 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev : withdraw ether to Dev, anyone can trigger
+     * @dev withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");

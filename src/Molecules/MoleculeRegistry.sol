@@ -79,7 +79,7 @@ contract Helix2MoleculeRegistry {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev : sets permissions for 0x0 and roothash
+     * @dev sets permissions for 0x0 and roothash
      * @notice : consider changing msg.sender → address(this)
      */
     function catalyse() internal {
@@ -131,7 +131,27 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev sets new manager and config from therein
+     * @notice setConfig() must be called whenever a new manager is
+     * is deployed or whenever a config changes in the manager
+     * @param _helix2 : address of HELIX2 Manager
+     */
+    function setConfig(address _helix2) external onlyDev {
+        HELIX2 = iHELIX2(_helix2);
+        roothash = HELIX2.getRoothash()[2];
+        basePrice = HELIX2.getPrices()[2];
+        Registrar = HELIX2.getRegistrar()[2];
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -171,14 +191,12 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        Registrar = HELIX2.getRegistrar()[2];
         require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 molyhash) {
-        Registrar = HELIX2.getRegistrar()[2];
         bytes32 __cation = Molecules[molyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -192,7 +210,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : check if molecule is available
+     * @dev check if molecule is available
      * @param molyhash : hash of molecule
      */
     modifier isAvailable(bytes32 molyhash) {
@@ -204,7 +222,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : verify molecule is not expired
+     * @dev verify molecule is not expired
      * @param molyhash : hash of molecule
      */
     modifier isOwned(bytes32 molyhash) {
@@ -216,7 +234,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : check if new config is a duplicate
+     * @dev check if new config is a duplicate
      * @param molyhash : hash of molecule
      * @param rule : rule to check
      */
@@ -228,7 +246,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : check if new anion is a duplicate
+     * @dev check if new anion is a duplicate
      * @param molyhash : hash of molecule
      * @param _anion : anion to check
      */
@@ -240,7 +258,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : verify ownership of molecule
+     * @dev verify ownership of molecule
      * @param molyhash : hash of molecule
      */
     modifier onlyCation(bytes32 molyhash) {
@@ -258,7 +276,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : register owner of new molecule
+     * @dev register owner of new molecule
      * @param molyhash : hash of molecule
      * @param _cation : new cation
      */
@@ -269,7 +287,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set cation of a molecule
+     * @dev set cation of a molecule
      * @param molyhash : hash of molecule
      * @param _cation : new cation
      */
@@ -283,7 +301,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set controller of a molecule
+     * @dev set controller of a molecule
      * @param molyhash : hash of molecule
      * @param _controller : new controller
      */
@@ -296,7 +314,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : adds one anion to the molecule
+     * @dev adds one anion to the molecule
      * @param molyhash : hash of target molecule
      * @param _anion : hash of new anion
      */
@@ -310,7 +328,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : adds new array of anions to the molecule
+     * @dev adds new array of anions to the molecule
      * @notice : will skip pre-existing anions
      * @param molyhash : hash of target molecule
      * @param _anion : array of new anions
@@ -328,7 +346,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : pops an anion from the molecule
+     * @dev pops an anion from the molecule
      * @param molyhash : hash of target molecule
      * @param __anion : hash of anion to remove
      */
@@ -347,7 +365,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set new alias for molecule
+     * @dev set new alias for molecule
      * @param molyhash : hash of molecule
      * @param _alias : bash of alias
      */
@@ -356,7 +374,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set new mutuality flag for molecule
+     * @dev set new mutuality flag for molecule
      * @param molyhash : hash of molecule
      * @param _covalence : bool
      */
@@ -369,7 +387,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set resolver for a molecule
+     * @dev set resolver for a molecule
      * @param molyhash : hash of molecule
      * @param _resolver : new resolver
      */
@@ -382,7 +400,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set expiry for a molecule
+     * @dev set expiry for a molecule
      * @param molyhash : hash of molecule
      * @param _expiry : new expiry
      */
@@ -393,7 +411,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set expiry for a molecule
+     * @dev set expiry for a molecule
      * @param molyhash : hash of molecule
      * @param _expiry : new expiry
      */
@@ -402,7 +420,6 @@ contract Helix2MoleculeRegistry {
         uint _expiry
     ) external payable isCationOrController(molyhash) {
         require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[1];
         uint newDuration = _expiry - Molecules[molyhash]._expiry;
         require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Molecules[molyhash]._expiry = _expiry;
@@ -410,7 +427,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set record for a molecule
+     * @dev set record for a molecule
      * @param molyhash : hash of molecule
      * @param _resolver : new record
      */
@@ -490,7 +507,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : set operator for a molecule
+     * @dev set operator for a molecule
      * @param operator : new operator
      * @param approved : state to set
      */
@@ -630,7 +647,7 @@ contract Helix2MoleculeRegistry {
     }
 
     /**
-     * @dev : withdraw ether to Dev, anyone can trigger
+     * @dev withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");

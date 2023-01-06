@@ -29,7 +29,7 @@ contract HELIX2 is Base {
     event NewLife(uint256 index, uint256 newLife);
 
     /**
-     * @dev : sets new list of lifespans
+     * @dev sets new list of lifespans
      * @param newLives : list of new lifespans
      */
     function setLives(uint256[4] calldata newLives) external onlyDev {
@@ -38,7 +38,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : replace single lifespan value
+     * @dev replace single lifespan value
      * @param index : index to replace (starts from 0)
      * @param newLife : new lifespan for index
      */
@@ -48,7 +48,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : sets new base price list
+     * @dev sets new base price list
      * @param newPrices : list of base prices
      */
     function setPrices(uint256[4] calldata newPrices) external onlyDev {
@@ -57,7 +57,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : replace single base price value
+     * @dev replace single base price value
      * @param index : index to replace (starts from 0)
      * @param newPrice : new base price for index
      */
@@ -67,7 +67,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : migrate all Helix2 Registeries
+     * @dev migrate all Helix2 Registeries
      * @param newReg : new Registry array
      */
     function setRegisteries(address[4] calldata newReg) external onlyDev {
@@ -76,7 +76,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : replace one index of Helix2 Register
+     * @dev replace one index of Helix2 Register
      * @param index : index to replace (starts from 0)
      * @param newReg : new Register for index
      */
@@ -86,7 +86,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : migrate all Helix2 Registrars
+     * @dev migrate all Helix2 Registrars
      * @param newReg : new Registrar array
      */
     function setRegistrars(address[4] calldata newReg) external onlyDev {
@@ -95,7 +95,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : replace one index of Helix2 Registrar
+     * @dev replace one index of Helix2 Registrar
      * @param index : index to replace (starts from 0)
      * @param newReg : new Registrar for index
      */
@@ -105,7 +105,7 @@ contract HELIX2 is Base {
     }
 
     /**
-     * @dev : sets ENS Registry if it migrates
+     * @dev sets ENS Registry if it migrates
      * @param newReg : new Register for index
      */
     function setENSRegistry(address newReg) external onlyDev {

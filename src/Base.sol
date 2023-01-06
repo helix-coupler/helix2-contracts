@@ -22,7 +22,7 @@ abstract contract Base {
     string[4] public illegalBlocks = [".", "-", "", ""];
 
     /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
-    uint256[4] public sizes = [32, 32, 32, 32];
+    uint256[2][4] public sizes = [[3, 32], [3, 32], [3, 32], [3, 32]];
 
     /// @dev : Default lifespans in seconds for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[4] public lifespans = [1, 1, 1, 1];
@@ -82,7 +82,14 @@ abstract contract Base {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -91,7 +98,7 @@ abstract contract Base {
     }
 
     /**
-     * @dev : setInterface
+     * @dev setInterface
      * @param sig : signature
      * @param value : boolean
      */
@@ -101,7 +108,7 @@ abstract contract Base {
     }
 
     /**
-     * @dev : withdraw ether to Dev, anyone can trigger
+     * @dev withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external payable {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
@@ -109,63 +116,63 @@ abstract contract Base {
     }
 
     /**
-     * @dev : returns illegal blocks list
+     * @dev returns illegal blocks list
      */
     function getIllegalBlocks() public view returns (string[4] memory) {
         return illegalBlocks;
     }
 
     /**
-     * @dev : returns illegal sizes list
+     * @dev returns illegal sizes list
      */
-    function getSizes() public view returns (uint256[4] memory) {
+    function getSizes() public view returns (uint256[2][4] memory) {
         return sizes;
     }
 
     /**
-     * @dev : returns lifespans array
+     * @dev returns lifespans array
      */
     function getLifespans() public view returns (uint256[4] memory) {
         return lifespans;
     }
 
     /**
-     * @dev : returns Base Price list
+     * @dev returns Base Price list
      */
     function getPrices() public view returns (uint256[4] memory) {
         return prices;
     }
 
     /**
-     * @dev : returns Registeries
+     * @dev returns Registeries
      */
     function getRegistry() public view returns (address[4] memory) {
         return helix2Registry;
     }
 
     /**
-     * @dev : returns Registrars
+     * @dev returns Registrars
      */
     function getRegistrar() public view returns (address[4] memory) {
         return helix2Registrar;
     }
 
     /**
-     * @dev : returns hashes of root labels
+     * @dev returns hashes of root labels
      */
     function getRoothash() public view returns (bytes32[4] memory) {
         return roothash;
     }
 
     /**
-     * @dev : returns ENS Registry address
+     * @dev returns ENS Registry address
      */
     function getENSRegistry() public view returns (address) {
         return ensRegistry;
     }
 
     /**
-     * @dev : returns Dev address
+     * @dev returns Dev address
      */
     function isDev() public view returns (address) {
         return Dev;

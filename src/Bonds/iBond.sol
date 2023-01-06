@@ -39,6 +39,10 @@ interface iBOND {
 
     function changeDev(address newDev) external;
 
+    function setConfig(address helix2) external;
+
+    function toggleActive() external;
+
     // view functions
     function cation(bytes32 bondhash) external view returns (bytes32);
 

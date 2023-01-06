@@ -81,7 +81,7 @@ contract Helix2PolyculeRegistry {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev : sets permissions for 0x0 and roothash
+     * @dev sets permissions for 0x0 and roothash
      * @notice : consider changing msg.sender → address(this)
      */
     function catalyse() internal {
@@ -133,7 +133,27 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : transfer contract ownership to new Dev
+     * @dev pauses or resumes contract
+     */
+    function toggleActive() external onlyDev {
+        active = !active;
+    }
+
+    /**
+     * @dev sets new manager and config from therein
+     * @notice setConfig() must be called whenever a new manager is
+     * is deployed or whenever a config changes in the manager
+     * @param _helix2 : address of HELIX2 Manager
+     */
+    function setConfig(address _helix2) external onlyDev {
+        HELIX2 = iHELIX2(_helix2);
+        roothash = HELIX2.getRoothash()[3];
+        basePrice = HELIX2.getPrices()[3];
+        Registrar = HELIX2.getRegistrar()[3];
+    }
+
+    /**
+     * @dev transfer contract ownership to new Dev
      * @param newDev : new Dev
      */
     function changeDev(address newDev) external onlyDev {
@@ -173,7 +193,6 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 polyhash) {
-        Registrar = HELIX2.getRegistrar()[3];
         bytes32 __cation = Polycules[polyhash]._cation;
         address _cation = NAMES.owner(__cation);
         require(
@@ -188,13 +207,12 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Modifier to allow Registrar
     modifier isRegistrar() {
-        Registrar = HELIX2.getRegistrar()[3];
         require(msg.sender == Registrar, "NOT_REGISTRAR");
         _;
     }
 
     /**
-     * @dev : check if polycule is available
+     * @dev check if polycule is available
      * @param polyhash : hash of polycule
      */
     modifier isAvailable(bytes32 polyhash) {
@@ -206,7 +224,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : verify polycule is not expired
+     * @dev verify polycule is not expired
      * @param polyhash : hash of polycule
      */
     modifier isOwned(bytes32 polyhash) {
@@ -218,7 +236,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : check if new config is a duplicate
+     * @dev check if new config is a duplicate
      * @param polyhash : hash of polycule
      * @param rule : rule to check
      */
@@ -230,7 +248,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : check if new anion is a duplicate
+     * @dev check if new anion is a duplicate
      * @param polyhash : hash of polycule
      * @param _anion : anion to check
      */
@@ -242,7 +260,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : verify if each anion has a hook
+     * @dev verify if each anion has a hook
      * @param _anion : array of anions
      * @param _rule : array of config addresses
      */
@@ -258,7 +276,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : verify ownership of polycule
+     * @dev verify ownership of polycule
      * @param polyhash : hash of polycule
      */
     modifier onlyCation(bytes32 polyhash) {
@@ -276,7 +294,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : register owner of new polycule
+     * @dev register owner of new polycule
      * @param polyhash : hash of polycule
      * @param _cation : new cation
      */
@@ -287,7 +305,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set cation of a polycule
+     * @dev set cation of a polycule
      * @param polyhash : hash of polycule
      * @param _cation : new cation
      */
@@ -301,7 +319,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set controller of a polycule
+     * @dev set controller of a polycule
      * @param polyhash : hash of polycule
      * @param _controller : new controller
      */
@@ -314,7 +332,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : adds one anion to the polycule
+     * @dev adds one anion to the polycule
      * @param polyhash : hash of target polycule
      * @param _anion : hash of new anion
      * @param config : config address for the rule
@@ -337,7 +355,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : adds new array of anions to the polycule
+     * @dev adds new array of anions to the polycule
      * @notice : will skip pre-existing anions & hook configs
      * @param polyhash : hash of target polycule
      * @param _anion : array of new anions
@@ -363,7 +381,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : pops an anion from the polycule
+     * @dev pops an anion from the polycule
      * @param polyhash : hash of target polycule
      * @param __anion : hash of anion to remove
      */
@@ -385,7 +403,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set new alias for polycule
+     * @dev set new alias for polycule
      * @param polyhash : hash of polycule
      * @param _alias : bash of alias
      */
@@ -394,7 +412,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : switches mutuality flag for an anion
+     * @dev switches mutuality flag for an anion
      * @notice : >>> Incompatible <<<
      * @param polyhash : hash of polycule
      * @param _covalence : anion to switch flag for
@@ -408,7 +426,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set resolver for a polycule
+     * @dev set resolver for a polycule
      * @param polyhash : hash of polycule
      * @param _resolver : new resolver
      */
@@ -421,7 +439,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set expiry for a polycule
+     * @dev set expiry for a polycule
      * @param molyhash : hash of polycule
      * @param _expiry : new expiry
      */
@@ -432,7 +450,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set expiry for a polycule
+     * @dev set expiry for a polycule
      * @param molyhash : hash of polycule
      * @param _expiry : new expiry
      */
@@ -441,7 +459,6 @@ contract Helix2PolyculeRegistry {
         uint _expiry
     ) external payable isCationOrController(molyhash) {
         require(_expiry > Polycules[molyhash]._expiry, "BAD_EXPIRY");
-        Registrar = HELIX2.getRegistrar()[1];
         uint newDuration = _expiry - Polycules[molyhash]._expiry;
         require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
         Polycules[molyhash]._expiry = _expiry;
@@ -449,7 +466,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set record for a polycule
+     * @dev set record for a polycule
      * @param polyhash : hash of polycule
      * @param _resolver : new record
      */
@@ -581,7 +598,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : set operator for a polycule
+     * @dev set operator for a polycule
      * @param operator : new operator
      * @param approved : state to set
      */
@@ -721,7 +738,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev : withdraw ether to Dev, anyone can trigger
+     * @dev withdraw ether to Dev, anyone can trigger
      */
     function withdrawEther() external {
         (bool ok, ) = Dev.call{value: address(this).balance}("");
