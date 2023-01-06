@@ -179,9 +179,8 @@ contract Helix2BondRegistry {
     }
 
     /**
-     * @dev setInterface
-     * @notice EIP-165
-     * @param sig : signature
+     * @dev sets supportInterface flag
+     * @param sig : bytes4 identifier
      * @param value : boolean
      */
     function setInterface(bytes4 sig, bool value) external payable onlyDev {
