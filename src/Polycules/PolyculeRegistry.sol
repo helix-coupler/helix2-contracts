@@ -29,7 +29,6 @@ contract Helix2PolyculeRegistry {
 
     /// @dev : Helix2 Polycule events
     event NewDev(address Dev, address newDev);
-    event NewPolycule(bytes32 indexed polyhash, bytes32 cation);
     event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
     event RehookedConfig(bytes32 indexed polyhash, address config, uint8 rule);
     event UnhookedConfig(bytes32 indexed polyhash, uint8 rule);
@@ -37,11 +36,9 @@ contract Helix2PolyculeRegistry {
     event UnhookedAnion(bytes32 indexed polyhash, bytes32 anion);
     event UnhookedAll(bytes32 indexed polyhash);
     event NewCation(bytes32 indexed polyhash, bytes32 cation);
-    event NewRegistration(bytes32 indexed polyhash, bytes32 cation);
     event NewAnion(bytes32 indexed polyhash, bytes32 anion);
     event NewAnions(bytes32 indexed polyhash, bytes32[] anion);
     event PopAnion(bytes32 indexed polyhash, bytes32 anion);
-    event NewAlias(bytes32 indexed polyhash, bytes32 _alias);
     event NewController(bytes32 indexed polyhash, address controller);
     event NewExpiry(bytes32 indexed polyhash, uint expiry);
     event NewRecord(bytes32 indexed polyhash, address resolver);
@@ -287,7 +284,6 @@ contract Helix2PolyculeRegistry {
         require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Polycules[polyhash]._cation = _cation;
         emit NewCation(polyhash, _cation);
-        emit NewRegistration(polyhash, _cation);
     }
 
     /**
@@ -395,7 +391,6 @@ contract Helix2PolyculeRegistry {
      */
     function setAlias(bytes32 polyhash, bytes32 _alias) external isRegistrar {
         Polycules[polyhash]._alias = _alias;
-        emit NewAlias(polyhash, _alias);
     }
 
     /**

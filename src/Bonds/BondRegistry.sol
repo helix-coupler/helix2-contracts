@@ -29,15 +29,12 @@ contract Helix2BondRegistry {
 
     /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
-    event NewBond(bytes32 indexed bondhash, bytes32 cation);
     event Hooked(bytes32 indexed bondhash, address config, uint8 rule);
     event Rehooked(bytes32 indexed bondhash, address config, uint8 rule);
     event Unhooked(bytes32 indexed bondhash, uint8 rule);
     event UnhookedAll(bytes32 indexed bondhash);
     event NewCation(bytes32 indexed bondhash, bytes32 cation);
-    event NewRegistration(bytes32 indexed bondhash, bytes32 cation);
     event NewAnion(bytes32 indexed bondhash, bytes32 anion);
-    event NewAlias(bytes32 indexed bondhash, bytes32 _alias);
     event NewController(bytes32 indexed bondhash, address controller);
     event NewExpiry(bytes32 indexed bondhash, uint expiry);
     event NewRecord(bytes32 indexed bondhash, address resolver);
@@ -248,7 +245,6 @@ contract Helix2BondRegistry {
         require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Bonds[bondhash]._cation = _cation;
         emit NewCation(bondhash, _cation);
-        emit NewRegistration(bondhash, _cation);
     }
 
     /**
@@ -298,7 +294,6 @@ contract Helix2BondRegistry {
      */
     function setAlias(bytes32 bondhash, bytes32 _alias) external isRegistrar {
         Bonds[bondhash]._alias = _alias;
-        emit NewAlias(bondhash, _alias);
     }
 
     /**

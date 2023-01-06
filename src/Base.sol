@@ -1,22 +1,10 @@
 // SPDX-License-Identifier: WTFPL.ETH
 pragma solidity >0.8.0 <0.9.0;
 
-/// @dev : Helix2 Structs
-import "src/Names/NameRegistry.sol";
-import "src/Bonds/BondRegistry.sol";
-import "src/Molecules/MoleculeRegistry.sol";
-import "src/Polycules/PolyculeRegistry.sol";
-
 /// @dev : Helix2 Interfaces
 import "src/Interface/iHelix2.sol";
-import "src/Names/iName.sol";
-import "src/Bonds/iBond.sol";
-import "src/Molecules/iMolecule.sol";
-import "src/Polycules/iPolycule.sol";
-//import "src/interface/iResolver.sol";
 
 /// @dev : Other Interfaces
-import "src/Interface/iENS.sol";
 
 /**
  * @author sshmatrix
@@ -58,13 +46,6 @@ abstract contract Base {
         address(0), /// Molecule Registry
         address(0) /// Polycule Registry
     ];
-
-    /// @dev : Initialise Registeries
-    iENS public ENS = iENS(ensRegistry);
-    iNAME public NAMES = iNAME(helix2Registry[0]);
-    iBOND public BONDS = iBOND(helix2Registry[1]);
-    iMOLECULE public MOLECULES = iMOLECULE(helix2Registry[2]);
-    iPOLYCULE public POLYCULES = iPOLYCULE(helix2Registry[3]);
 
     /// @dev : Helix2 Registrar array init
     /// @notice : Registrars must be set upon deployment

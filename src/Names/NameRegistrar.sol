@@ -20,7 +20,8 @@ contract Helix2NameRegistrar is ERC721 {
     using LibString for string;
 
     /// @dev : Helix2 Name events
-    event NewName(bytes32 indexed namehash, address owner);
+    event NewName(string label, bytes32 indexed namehash, address owner);
+    event NewImport(string service, bytes32 indexed namehash, address owner);
 
     /// Constants
     mapping(address => mapping(address => bool)) Operators;
@@ -68,7 +69,7 @@ contract Helix2NameRegistrar is ERC721 {
             !NAMES.recordExists(
                 keccak256(
                     abi.encodePacked(
-                        HELIX2.getRoothash()[0],
+                        roothash,
                         keccak256(abi.encodePacked(label))
                     )
                 )
@@ -132,7 +133,12 @@ contract Helix2NameRegistrar is ERC721 {
         /// @notice : Balance of previous owner is updated only when the
         /// expired name is re-registered by someone else, aka, an
         /// expired name is accounted to its previous owner until it is re-registered (!= renewed)
-        if (_owner != address(0)) _balanceOf[_owner]--;
+        if (_owner != address(0)) {
+            unchecked {
+                _balanceOf[_owner]--;
+            }
+            emit Transfer(_owner, address(0), uint256(namehash));
+        }
         NAMES.register(namehash, owner); /// set new owner
         NAMES.setController(namehash, owner); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
@@ -141,7 +147,7 @@ contract Helix2NameRegistrar is ERC721 {
             // update balances
             _balanceOf[owner]++;
         }
-        emit NewName(namehash, owner);
+        emit NewName(label, namehash, owner);
         return namehash;
     }
 
@@ -165,7 +171,12 @@ contract Helix2NameRegistrar is ERC721 {
         /// @notice : Balance of previous owner is updated only when the
         /// expired name is re-registered by someone else, aka, an
         /// expired name is accounted to its previous owner until it is re-registered (!= renewed)
-        if (_owner != address(0)) _balanceOf[_owner]--;
+        if (_owner != address(0)) {
+            unchecked {
+                _balanceOf[_owner]--;
+            }
+            emit Transfer(_owner, address(0), uint256(namehash));
+        }
         NAMES.register(namehash, msg.sender); /// set new owner
         NAMES.setController(namehash, msg.sender); /// set new controller
         NAMES.setExpiry(namehash, block.timestamp + lifespan); /// set new expiry
@@ -174,7 +185,7 @@ contract Helix2NameRegistrar is ERC721 {
             // update balances
             _balanceOf[msg.sender]++;
         }
-        emit NewName(namehash, msg.sender);
+        emit NewImport('ENS', namehash, msg.sender);
         return namehash;
     }
 }

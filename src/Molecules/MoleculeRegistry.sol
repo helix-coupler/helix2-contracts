@@ -29,17 +29,14 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Helix2 Molecule events
     event NewDev(address Dev, address newDev);
-    event NewMolecule(bytes32 indexed molyhash, bytes32 cation);
     event Hooked(bytes32 indexed bondhash, address config, uint8 rule);
     event Rehooked(bytes32 indexed bondhash, address config, uint8 rule);
     event Unhooked(bytes32 indexed bondhash, uint8 rule);
     event UnhookedAll(bytes32 indexed molyhash);
     event NewCation(bytes32 indexed molyhash, bytes32 cation);
-    event NewRegistration(bytes32 indexed molyhash, bytes32 cation);
     event NewAnion(bytes32 indexed molyhash, bytes32 anion);
     event NewAnions(bytes32 indexed molyhash, bytes32[] anion);
     event PopAnion(bytes32 indexed molyhash, bytes32 anion);
-    event NewAlias(bytes32 indexed molyhash, bytes32 _alias);
     event NewController(bytes32 indexed molyhash, address controller);
     event NewExpiry(bytes32 indexed molyhash, uint expiry);
     event NewRecord(bytes32 indexed molyhash, address resolver);
@@ -269,7 +266,6 @@ contract Helix2MoleculeRegistry {
         require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
         Molecules[molyhash]._cation = _cation;
         emit NewCation(molyhash, _cation);
-        emit NewRegistration(molyhash, _cation);
     }
 
     /**
@@ -357,7 +353,6 @@ contract Helix2MoleculeRegistry {
      */
     function setAlias(bytes32 molyhash, bytes32 _alias) external isRegistrar {
         Molecules[molyhash]._alias = _alias;
-        emit NewAlias(molyhash, _alias);
     }
 
     /**

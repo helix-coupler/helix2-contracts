@@ -29,7 +29,7 @@ contract Helix2MoleculeRegistrar {
     string public constant symbol = "HMS";
 
     /// @dev : Helix2 Molecule events
-    event NewMolecule(bytes32 indexed molyhash, bytes32 cation);
+    event NewMolecule(string _alias, bytes32 indexed molyhash, bytes32 cation);
     event NewDev(address Dev, address newDev);
     error OnlyDev(address _dev, address _you);
 
@@ -109,7 +109,7 @@ contract Helix2MoleculeRegistrar {
                 keccak256(
                     abi.encodePacked(
                         _cation,
-                        HELIX2.getRoothash()[2],
+                        roothash,
                         keccak256(abi.encodePacked(_alias))
                     )
                 )
@@ -180,7 +180,7 @@ contract Helix2MoleculeRegistrar {
         MOLECULES.setAlias(molyhash, aliashash); /// set new alias
         MOLECULES.setCovalence(molyhash, false); /// set new covalence flag
         MOLECULES.unhookAll(molyhash); /// reset hooks
-        emit NewMolecule(molyhash, cation);
+        emit NewMolecule(_alias, molyhash, cation);
         return molyhash;
     }
 }

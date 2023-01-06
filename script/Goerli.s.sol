@@ -63,6 +63,7 @@ contract Helix2Deploy is Script {
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
     function run() external {
+        vm.startBroadcast();
         deployer = address(this);
 
         // HELIX2 ------------------------------------------------
@@ -107,5 +108,11 @@ contract Helix2Deploy is Script {
         MoleculeResolver_ = new MoleculeResolver(_HELIX2);
         // deploy Polycule Resolver
         PolyculeResolver_ = new PolyculeResolver(_HELIX2);
+
+        vm.stopBroadcast();
+        NameResolver_;
+        BondResolver_;
+        MoleculeResolver_;
+        PolyculeResolver_;
     }
 }

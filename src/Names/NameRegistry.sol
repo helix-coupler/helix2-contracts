@@ -28,9 +28,7 @@ contract Helix2NameRegistry {
 
     /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
-    event NewName(bytes32 indexed namehash, address owner);
     event NewOwner(bytes32 indexed namehash, address owner);
-    event NewRegistration(bytes32 indexed namehash, address owner);
     event NewController(bytes32 indexed namehash, address controller);
     event NewExpiry(bytes32 indexed namehash, uint expiry);
     event NewRecord(bytes32 indexed namehash, address resolver);
@@ -205,7 +203,6 @@ contract Helix2NameRegistry {
         emit Transfer(address(0), _owner, uint256(namehash));
         Names[namehash]._owner = _owner;
         emit NewOwner(namehash, _owner);
-        emit NewRegistration(namehash, _owner);
     }
 
     /**

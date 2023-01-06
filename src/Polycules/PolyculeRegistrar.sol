@@ -29,7 +29,7 @@ contract Helix2PolyculeRegistrar {
     string public constant symbol = "HPS";
 
     /// @dev : Helix2 Polycule events
-    event NewPolycule(bytes32 indexed polyhash, bytes32 cation);
+    event NewPolycule(string _alias, bytes32 indexed polyhash, bytes32 cation);
     event NewDev(address Dev, address newDev);
     error OnlyDev(address _dev, address _you);
 
@@ -119,7 +119,7 @@ contract Helix2PolyculeRegistrar {
                 keccak256(
                     abi.encodePacked(
                         _cation,
-                        HELIX2.getRoothash()[3],
+                        roothash,
                         keccak256(abi.encodePacked(_alias))
                     )
                 )
@@ -198,7 +198,7 @@ contract Helix2PolyculeRegistrar {
         POLYCULES.setController(polyhash, _cation); /// set new controller
         POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
         POLYCULES.setAlias(polyhash, aliashash); /// set new alias
-        emit NewPolycule(polyhash, cation);
+        emit NewPolycule(_alias, polyhash, cation);
         return polyhash;
     }
 }

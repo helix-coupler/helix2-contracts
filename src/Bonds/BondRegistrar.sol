@@ -27,7 +27,7 @@ contract Helix2BondRegistrar {
     string public constant symbol = "HBS";
 
     /// @dev : Helix2 Bond events
-    event NewBond(bytes32 indexed bondhash, bytes32 cation);
+    event NewBond(string _alias, bytes32 indexed bondhash, bytes32 cation);
     event NewDev(address Dev, address newDev);
     error OnlyDev(address _dev, address _you);
 
@@ -107,7 +107,7 @@ contract Helix2BondRegistrar {
                 keccak256(
                     abi.encodePacked(
                         _cation,
-                        HELIX2.getRoothash()[1],
+                        roothash,
                         keccak256(abi.encodePacked(_alias))
                     )
                 )
@@ -178,7 +178,7 @@ contract Helix2BondRegistrar {
         BONDS.setAlias(bondhash, aliashash); /// set new alias
         BONDS.setCovalence(bondhash, false); /// set new covalence flag
         BONDS.unhookAll(bondhash); /// reset hooks
-        emit NewBond(bondhash, cation);
+        emit NewBond(_alias, bondhash, cation);
         return bondhash;
     }
 }
