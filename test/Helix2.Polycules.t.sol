@@ -6,6 +6,8 @@ import "forge-std/console2.sol";
 import "test/GenAddr.sol";
 // Helix2 Manager Contract
 import "src/Helix2.sol";
+// Price Oracle
+import "src/Oracle/PriceOracle.sol";
 // Registrar
 import "src/Names/NameRegistrar.sol";
 import "src/Polycules/PolyculeRegistrar.sol";
@@ -23,6 +25,7 @@ import "src/Names/iNameResolver.sol";
 import "src/Polycules/iPolyculeResolver.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iENS.sol";
+import "src/Oracle/iPriceOracle.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
@@ -41,6 +44,8 @@ contract Helix2PolyculesTest is Test {
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2PolyculeRegistrar public _POLY_;
+    // Price Oracle
+    Helix2PriceOracle public PriceOracle;
 
     /// Constants
     address public deployer;
@@ -98,20 +103,31 @@ contract Helix2PolyculesTest is Test {
         // deploy Helix2
         HELIX2_ = new HELIX2();
         address _HELIX2 = address(HELIX2_);
+        // deploy Price Oracle
+        PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2);
+        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
         address _NAMES = address(NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2);
+        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
 
         // POLYCULES -------------------------------------------------
         // deploy PolyculeRegistry
-        POLYCULES = new Helix2PolyculeRegistry(_NAMES, _HELIX2);
+        POLYCULES = new Helix2PolyculeRegistry(
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
         address _POLYCULES = address(POLYCULES);
         // deploy PolyculeRegistrar
-        _POLY_ = new Helix2PolyculeRegistrar(_POLYCULES, _NAMES, _HELIX2);
+        _POLY_ = new Helix2PolyculeRegistrar(
+            _POLYCULES,
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
@@ -120,14 +136,14 @@ contract Helix2PolyculesTest is Test {
         PolyculeResolver_ = new PolyculeResolver(_HELIX2);
 
         // remaining values
-        namePrice = HELIX2_.getPrices()[0];
-        polyprice = HELIX2_.getPrices()[3];
+        namePrice = PriceOracle.getPrices()[0];
+        polyprice = PriceOracle.getPrices()[3];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_));
+        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
         HELIX2_.setRegistrar(3, address(_POLY_));
         HELIX2_.setRegistry(3, _POLYCULES);
-        POLYCULES.setConfig(address(HELIX2_));
+        POLYCULES.setConfig(address(HELIX2_), address(PriceOracle));
     }
 
     /// forge setup

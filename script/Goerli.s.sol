@@ -6,6 +6,8 @@ import "forge-std/console2.sol";
 import "test/GenAddr.sol";
 // Helix2 Manager Contract
 import "src/Helix2.sol";
+// Price Oracle
+import "src/Oracle/PriceOracle.sol";
 // Registrar
 import "src/Names/NameRegistrar.sol";
 import "src/Bonds/BondRegistrar.sol";
@@ -33,6 +35,7 @@ import "src/Molecules/iMoleculeResolver.sol";
 import "src/Polycules/iPolyculeResolver.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iENS.sol";
+import "src/Oracle/iPriceOracle.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
@@ -57,6 +60,8 @@ contract Helix2Deploy is Script {
     Helix2BondRegistrar public _BOND_;
     Helix2MoleculeRegistrar public _MOLY_;
     Helix2PolyculeRegistrar public _POLY_;
+    // Price Oracle
+    Helix2PriceOracle public PriceOracle;
 
     /// Constants
     address public deployer;
@@ -70,34 +75,59 @@ contract Helix2Deploy is Script {
         // deploy Helix2
         HELIX2_ = new HELIX2();
         address _HELIX2 = address(HELIX2_);
+        // deploy Price Oracle
+        PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2);
+        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
         address _NAMES = address(NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2);
+        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
 
         // BONDS -------------------------------------------------
         // deploy BondRegistry
-        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2);
+        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2, address(PriceOracle));
         address _BONDS = address(BONDS);
         // deploy BondRegistrar
-        _BOND_ = new Helix2BondRegistrar(_BONDS, _NAMES, _HELIX2);
+        _BOND_ = new Helix2BondRegistrar(
+            _BONDS,
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
 
         // MOLECULES ---------------------------------------------
         // deploy MoleculeRegistry
-        MOLECULES = new Helix2MoleculeRegistry(_NAMES, _HELIX2);
+        MOLECULES = new Helix2MoleculeRegistry(
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
         address _MOLECULES = address(MOLECULES);
         // deploy MoleculeRegistrar
-        _MOLY_ = new Helix2MoleculeRegistrar(_MOLECULES, _NAMES, _HELIX2);
+        _MOLY_ = new Helix2MoleculeRegistrar(
+            _MOLECULES,
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
 
         // POLYCULES ---------------------------------------------
         // deploy PolyculeRegistry
-        POLYCULES = new Helix2PolyculeRegistry(_NAMES, _HELIX2);
+        POLYCULES = new Helix2PolyculeRegistry(
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
         address _POLYCULES = address(POLYCULES);
         // deploy PolyculeRegistrar
-        _POLY_ = new Helix2PolyculeRegistrar(_POLYCULES, _NAMES, _HELIX2);
+        _POLY_ = new Helix2PolyculeRegistrar(
+            _POLYCULES,
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver

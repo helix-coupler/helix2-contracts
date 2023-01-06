@@ -19,7 +19,7 @@ abstract contract Base {
     address public Dev;
 
     /// @dev : Forbidden characters
-    string[4] public illegalBlocks = [".", "-", "", ""];
+    string[4] public illegalBlocks = [".", "-", "#", ""];
 
     /// @dev : Label sizes for each struct in order [<name>, <bond>, <molecule>, <polycule>]
     uint256[2][4] public sizes = [[3, 32], [3, 32], [3, 32], [3, 32]];
@@ -54,14 +54,6 @@ abstract contract Base {
         address(0), /// Bond Registry
         address(0), /// Molecule Registry
         address(0) /// Polycule Registry
-    ];
-
-    /// @dev : Helix2 base prices per second (Wei/second value)
-    uint256[4] public prices = [
-        0.0000000000002 ether, /// Name Base Price (= 200 Kwei/second)
-        0.0000000000002 ether, /// Bond Base Price (= 200 Kwei/second)
-        0.0000000000002 ether, /// Molecule Base Price (= 200 Kwei/second)
-        0.0000000000002 ether /// Polycule Base Price (= 200 Kwei/second)
     ];
 
     /// @dev : Pause/Resume contract
@@ -134,13 +126,6 @@ abstract contract Base {
      */
     function getLifespans() public view returns (uint256[4] memory) {
         return lifespans;
-    }
-
-    /**
-     * @dev returns Base Price list
-     */
-    function getPrices() public view returns (uint256[4] memory) {
-        return prices;
     }
 
     /**

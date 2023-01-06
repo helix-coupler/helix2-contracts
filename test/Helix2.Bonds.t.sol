@@ -6,6 +6,8 @@ import "forge-std/console2.sol";
 import "test/GenAddr.sol";
 // Helix2 Manager Contract
 import "src/Helix2.sol";
+// Price Oracle
+import "src/Oracle/PriceOracle.sol";
 // Registrar
 import "src/Names/NameRegistrar.sol";
 import "src/Bonds/BondRegistrar.sol";
@@ -23,6 +25,7 @@ import "src/Names/iNameResolver.sol";
 import "src/Bonds/iBondResolver.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iENS.sol";
+import "src/Oracle/iPriceOracle.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
@@ -41,6 +44,8 @@ contract Helix2BondsTest is Test {
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2BondRegistrar public _BOND_;
+    // Price Oracle
+    Helix2PriceOracle public PriceOracle;
 
     /// Constants
     address public deployer;
@@ -78,20 +83,27 @@ contract Helix2BondsTest is Test {
         // deploy Helix2
         HELIX2_ = new HELIX2();
         address _HELIX2 = address(HELIX2_);
+        // deploy Price Oracle
+        PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2);
+        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
         address _NAMES = address(NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2);
+        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
 
         // BONDS -------------------------------------------------
         // deploy BondRegistry
-        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2);
+        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2, address(PriceOracle));
         address _BONDS = address(BONDS);
         // deploy BondRegistrar
-        _BOND_ = new Helix2BondRegistrar(_BONDS, _NAMES, _HELIX2);
+        _BOND_ = new Helix2BondRegistrar(
+            _BONDS,
+            _NAMES,
+            _HELIX2,
+            address(PriceOracle)
+        );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
@@ -100,14 +112,14 @@ contract Helix2BondsTest is Test {
         BondResolver_ = new BondResolver(_HELIX2);
 
         // remaining values
-        namePrice = HELIX2_.getPrices()[0];
-        bondPrice = HELIX2_.getPrices()[1];
+        namePrice = PriceOracle.getPrices()[0];
+        bondPrice = PriceOracle.getPrices()[1];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_));
+        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
         HELIX2_.setRegistrar(1, address(_BOND_));
         HELIX2_.setRegistry(1, _BONDS);
-        BONDS.setConfig(address(HELIX2_));
+        BONDS.setConfig(address(HELIX2_), address(PriceOracle));
     }
 
     /// forge setup

@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Molecules/iMolecule.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -42,6 +43,9 @@ contract Helix2MoleculeRegistrar {
     bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
+    /// Price Oracle
+    iPriceOracle public PRICES;
+
     /// Interfaces
     iHELIX2 public HELIX2;
     iNAME public NAMES;
@@ -79,16 +83,22 @@ contract Helix2MoleculeRegistrar {
 
     /**
      * @dev Initialise a new HELIX2 Molecules Registrar
-     * @notice :
+     * @notice
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      * @param __registry : address of HELIX2 Molecule Registry
      */
-    constructor(address __registry, address _registry, address _helix2) {
+    constructor(
+        address __registry,
+        address _registry,
+        address _helix2,
+        address _priceOracle
+    ) {
         HELIX2 = iHELIX2(_helix2);
         NAMES = iNAME(_registry);
         MOLECULES = iMOLECULE(__registry);
-        basePrice = HELIX2.getPrices()[2];
+        PRICES = iPriceOracle(_priceOracle);
+        basePrice = PRICES.getPrices()[2];
         sizeLimit = HELIX2.getSizes()[2];
         defaultLifespan = HELIX2.getLifespans()[2];
         illegalBlocks = HELIX2.getIllegalBlocks();

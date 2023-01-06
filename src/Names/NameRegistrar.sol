@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Names/ERC721.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -32,17 +33,21 @@ contract Helix2NameRegistrar is ERC721 {
     bytes32 public roothash; // roothash
     string[4] public illegalBlocks; // illegal blocks
 
+    /// Price Oracle
+    iPriceOracle public PRICES;
+
     /**
      * @dev Initialise a new HELIX2 Names Registrar
-     * @notice :
+     * @notice
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      */
-    constructor(address _registry, address _helix2) {
+    constructor(address _registry, address _helix2, address _priceOracle) {
         NAMES = iNAME(_registry);
         HELIX2 = iHELIX2(_helix2);
         ENS = iENS(HELIX2.getENSRegistry());
-        basePrice = HELIX2.getPrices()[0];
+        PRICES = iPriceOracle(_priceOracle);
+        basePrice = PRICES.getPrices()[0];
         sizeLimit = HELIX2.getSizes()[0];
         defaultLifespan = HELIX2.getLifespans()[0];
         illegalBlocks = HELIX2.getIllegalBlocks();

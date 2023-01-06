@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Names/iERC721.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -25,6 +26,7 @@ contract Helix2NameRegistry {
     iHELIX2 public HELIX2;
     iNAME public _NAME_;
     iERC721 public ERC721;
+    iPriceOracle public PRICES;
 
     /// @dev : Helix2 Name events
     event NewDev(address Dev, address newDev);
@@ -74,7 +76,7 @@ contract Helix2NameRegistry {
 
     /**
      * @dev sets permissions for 0x0 and roothash
-     * @notice : consider changing msg.sender → address(this)
+     * @notice consider changing msg.sender → address(this)
      */
     function catalyse() internal onlyDev {
         // 0x0
@@ -96,14 +98,15 @@ contract Helix2NameRegistry {
 
     /**
      * @dev Initialise a new HELIX2 Names Registry
-     * @notice :
+     * @notice
      * @param _helix2 : address of HELIX2 Manager
      */
-    constructor(address _helix2) {
+    constructor(address _helix2, address _priceOracle) {
         Dev = msg.sender;
         HELIX2 = iHELIX2(_helix2);
         roothash = HELIX2.getRoothash()[0];
-        basePrice = HELIX2.getPrices()[0];
+        PRICES = iPriceOracle(_priceOracle);
+        basePrice = PRICES.getPrices()[0];
         /// give ownership of '0x0' and <roothash> to Dev
         catalyse();
     }
@@ -123,14 +126,16 @@ contract Helix2NameRegistry {
 
     /**
      * @dev sets new manager and config from therein
-     * @notice setConfig() must be called whenever a new manager is
-     * is deployed or whenever a config changes in the manager
+     * @notice setConfig() must be called whenever a new manager
+     * or Price Oracle is deployed or whenever a config changes in the manager
      * @param _helix2 : address of HELIX2 Manager
+     * @param _priceOracle : address of price oracle contract
      */
-    function setConfig(address _helix2) external onlyDev {
+    function setConfig(address _helix2, address _priceOracle) external onlyDev {
         HELIX2 = iHELIX2(_helix2);
+        PRICES = iPriceOracle(_priceOracle);
         roothash = HELIX2.getRoothash()[0];
-        basePrice = HELIX2.getPrices()[0];
+        basePrice = PRICES.getPrices()[0];
         Registrar = HELIX2.getRegistrar()[0];
         _NAME_ = iNAME(Registrar);
         ERC721 = iERC721(Registrar);

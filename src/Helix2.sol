@@ -23,8 +23,6 @@ contract HELIX2 is Base {
     event NewRegistry(uint256 index, address newReg);
     event NewRegistrars(address[4] newReg);
     event NewRegistrar(uint256 index, address newReg);
-    event NewPrices(uint256[4] newPrices);
-    event NewPrice(uint256 index, uint256 newPrice);
     event NewLives(uint256[4] newLives);
     event NewLife(uint256 index, uint256 newLife);
 
@@ -45,25 +43,6 @@ contract HELIX2 is Base {
     function setLife(uint256 index, uint256 newLife) external onlyDev {
         emit NewLife(index, newLife);
         lifespans[index] = newLife;
-    }
-
-    /**
-     * @dev sets new base price list
-     * @param newPrices : list of base prices
-     */
-    function setPrices(uint256[4] calldata newPrices) external onlyDev {
-        emit NewPrices(newPrices);
-        prices = newPrices;
-    }
-
-    /**
-     * @dev replace single base price value
-     * @param index : index to replace (starts from 0)
-     * @param newPrice : new base price for index
-     */
-    function setPrice(uint256 index, uint256 newPrice) external onlyDev {
-        emit NewPrice(index, newPrice);
-        prices[index] = newPrice;
     }
 
     /**

@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Bonds/iBond.sol";
 import "src/Interface/iHelix2.sol";
+import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
 
 /**
@@ -26,6 +27,7 @@ contract Helix2BondRegistry {
     /// Interfaces
     iHELIX2 public HELIX2;
     iNAME public NAMES;
+    iPriceOracle public PRICES;
 
     /// @dev : Helix2 Bond events
     event NewDev(address Dev, address newDev);
@@ -76,7 +78,7 @@ contract Helix2BondRegistry {
 
     /**
      * @dev sets permissions for 0x0 and roothash
-     * @notice : consider changing msg.sender → address(this)
+     * @notice consider changing msg.sender → address(this)
      */
     function catalyse() internal {
         // 0x0
@@ -106,16 +108,17 @@ contract Helix2BondRegistry {
 
     /**
      * @dev Initialise a new HELIX2 Bonds Registry
-     * @notice :
+     * @notice
      * @param _helix2 : address of HELIX2 Manager
      * @param _registry : address of HELIX2 Name Registry
      */
-    constructor(address _registry, address _helix2) {
+    constructor(address _registry, address _helix2, address _priceOracle) {
         Dev = msg.sender;
         HELIX2 = iHELIX2(_helix2);
         NAMES = iNAME(_registry);
         roothash = HELIX2.getRoothash()[1];
-        basePrice = HELIX2.getPrices()[1];
+        PRICES = iPriceOracle(_priceOracle);
+        basePrice = PRICES.getPrices()[1];
         /// give ownership of '0x0' and <roothash> to Dev
         catalyse();
     }
@@ -135,14 +138,16 @@ contract Helix2BondRegistry {
 
     /**
      * @dev sets new manager and config from therein
-     * @notice setConfig() must be called whenever a new manager is
-     * is deployed or whenever a config changes in the manager
+     * @notice setConfig() must be called whenever a new manager
+     * or Price Oracle is deployed or whenever a config changes in the manager
      * @param _helix2 : address of HELIX2 Manager
+     * @param _priceOracle : address of price oracle contract
      */
-    function setConfig(address _helix2) external onlyDev {
+    function setConfig(address _helix2, address _priceOracle) external onlyDev {
         HELIX2 = iHELIX2(_helix2);
+        PRICES = iPriceOracle(_priceOracle);
         roothash = HELIX2.getRoothash()[1];
-        basePrice = HELIX2.getPrices()[1];
+        basePrice = PRICES.getPrices()[1];
         Registrar = HELIX2.getRegistrar()[1];
     }
 

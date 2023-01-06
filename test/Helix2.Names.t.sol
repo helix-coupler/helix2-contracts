@@ -6,6 +6,8 @@ import "forge-std/console2.sol";
 import "test/GenAddr.sol";
 // Helix2 Manager Contract
 import "src/Helix2.sol";
+// Price Oracle
+import "src/Oracle/PriceOracle.sol";
 // Registrar
 import "src/Names/NameRegistrar.sol";
 // Registry
@@ -18,6 +20,7 @@ import "src/Names/iERC721.sol";
 import "src/Names/iNameResolver.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Interface/iENS.sol";
+import "src/Oracle/iPriceOracle.sol";
 
 /**
  * @author sshmatrix (BeenSick Labs)
@@ -33,6 +36,8 @@ contract Helix2NamesTest is Test {
     Helix2NameRegistry public NAMES;
     // Registrar
     Helix2NameRegistrar public _NAME_;
+    // Price Oracle
+    Helix2PriceOracle public PriceOracle;
     // ENS Registry
     iENS public ENS;
 
@@ -52,7 +57,7 @@ contract Helix2NamesTest is Test {
     address public faker = address(0xc0de4cafec0ca);
     uint256 public tokenID;
     string public ens = "00075";
-    string public _ens = string.concat(ens, '.eth');
+    string public _ens = string.concat(ens, ".eth");
 
     constructor() {
         deployer = address(this);
@@ -61,23 +66,25 @@ contract Helix2NamesTest is Test {
         // deploy Helix2
         HELIX2_ = new HELIX2();
         address _HELIX2 = address(HELIX2_);
+        // deploy Price Oracle
+        PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2);
+        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
         address _NAMES = address(NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2);
+        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
         NameResolver_ = new NameResolver(_HELIX2);
 
         // remaining values
-        basePrice = HELIX2_.getPrices()[0];
+        basePrice = PriceOracle.getPrices()[0];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_));
+        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
         roothash = HELIX2_.getRoothash()[0];
         ENS = iENS(HELIX2_.getENSRegistry());
     }
@@ -101,7 +108,32 @@ contract Helix2NamesTest is Test {
         assertEq(_NAME_.balanceOf(pill), 1);
     }
 
-    /// Register a name
+    /// Attempt to register a name for free
+    function testCannotRegisterNameWithBadPrice() public {
+        vm.expectRevert(abi.encodePacked("INSUFFICIENT_ETHER"));
+        // register test name
+        namehash = _NAME_.newName{value: 0}(label, pill, lifespan);
+    }
+
+    /// Attempt to register a name with bad size
+    function testCannotRegisterNameWithBadSize() public {
+        vm.expectRevert(abi.encodePacked("ILLEGAL_LABEL"));
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            "hi",
+            pill,
+            lifespan
+        );
+        vm.expectRevert(abi.encodePacked("ILLEGAL_LABEL"));
+        // register test name
+        namehash = _NAME_.newName{value: basePrice * lifespan}(
+            "hihihihihihihihihihihihihihihihihihihi",
+            pill,
+            lifespan
+        );
+    }
+
+    /// claim ENS name
     function testClaimENS() public {
         // calculate ENS node
         bytes32 node = keccak256(
@@ -111,7 +143,6 @@ contract Helix2NamesTest is Test {
             )
         );
         address mill = ENS.owner(node);
-        console.log(mill);
         vm.prank(mill);
         // register test name
         namehash = _NAME_.claimENS{value: basePrice * lifespan}(_ens, lifespan);
@@ -119,6 +150,17 @@ contract Helix2NamesTest is Test {
         bytes32 _namehash = keccak256(abi.encodePacked(node, roothash));
         assertEq(namehash, _namehash);
         assertEq(_NAME_.balanceOf(mill), 1);
+        assertEq(NAMES.label(namehash), _ens);
+    }
+
+    /// attempt to claim illegal ENS
+    function testCannotClainIllegalENS() public {
+        // calculate ENS node
+        vm.deal(pill, basePrice * lifespan);
+        vm.prank(pill);
+        vm.expectRevert(abi.encodePacked("NOT_ENS_OWNER"));
+        // register test name
+        _NAME_.claimENS{value: basePrice * lifespan}(_ens, lifespan);
     }
 
     /// Register a name, let it expire, and verify records
@@ -162,6 +204,7 @@ contract Helix2NamesTest is Test {
         );
         assertEq(namehash, _namehash);
         assertEq(NAMES.owner(namehash), pill);
+        assertEq(NAMES.label(namehash), label);
         assertEq(NAMES.controller(namehash), pill);
         assertEq(NAMES.resolver(namehash), defaultResolver);
         assertEq(NAMES.expiry(namehash), block.timestamp + lifespan);
