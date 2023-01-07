@@ -40,10 +40,6 @@ interface iMOLECULE {
 
     function setApprovalForAll(address controller, bool approved) external;
 
-    function setConfig(address helix2) external;
-
-    function toggleActive() external;
-
     // view functions
     function cation(bytes32 molyhash) external view returns (bytes32);
 

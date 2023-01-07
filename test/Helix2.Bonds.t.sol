@@ -14,6 +14,8 @@ import "src/Bonds/BondRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
 import "src/Bonds/BondRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Bonds/BondResolver.sol";
@@ -44,6 +46,8 @@ contract Helix2BondsTest is Test {
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2BondRegistrar public _BOND_;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
     // Price Oracle
     Helix2PriceOracle public PriceOracle;
 
@@ -82,41 +86,54 @@ contract Helix2BondsTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // BONDS -------------------------------------------------
         // deploy BondRegistry
-        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2, address(PriceOracle));
+        BONDS = new Helix2BondRegistry(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
         address _BONDS = address(BONDS);
         // deploy BondRegistrar
         _BOND_ = new Helix2BondRegistrar(
             _BONDS,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
         // deploy Bond Resolver
-        BondResolver_ = new BondResolver(_HELIX2);
+        BondResolver_ = new BondResolver(address(HELIX2_));
 
         // remaining values
         namePrice = PriceOracle.getPrices()[0];
         bondPrice = PriceOracle.getPrices()[1];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         HELIX2_.setRegistrar(1, address(_BOND_));
         HELIX2_.setRegistry(1, _BONDS);
         BONDS.setConfig(address(HELIX2_), address(PriceOracle));

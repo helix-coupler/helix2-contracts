@@ -90,7 +90,7 @@ contract Helix2PolyculeRegistry {
     mapping(address => mapping(address => bool)) Operators;
 
     /**
-     * @dev sets permissions for 0x0 and roothash
+     * @dev sets permissions for 0x0
      * @notice consider changing msg.sender → address(this)
      */
     function catalyse() internal {
@@ -104,19 +104,6 @@ contract Helix2PolyculeRegistry {
         Polycules[0x0]._expiry = theEnd;
         Polycules[0x0]._controller = msg.sender;
         Polycules[0x0]._resolver = msg.sender;
-        // root
-        bytes32[4] memory hashes = HELIX2.getRoothash();
-        for (uint i = 0; i < hashes.length; i++) {
-            Polycules[hashes[i]]._hooks[uint8(0)] = address(0x0);
-            Polycules[hashes[i]]._rules = [uint8(0)];
-            Polycules[hashes[i]]._cation = hashes[i];
-            Polycules[hashes[i]]._anion = [hashes[i]];
-            Polycules[hashes[i]]._alias = hashes[i];
-            Polycules[hashes[i]]._covalence = true;
-            Polycules[hashes[i]]._expiry = theEnd;
-            Polycules[hashes[i]]._controller = msg.sender;
-            Polycules[hashes[i]]._resolver = msg.sender;
-        }
     }
 
     /**
@@ -132,7 +119,7 @@ contract Helix2PolyculeRegistry {
         roothash = HELIX2.getRoothash()[3];
         PRICES = iPriceOracle(_priceOracle);
         basePrice = PRICES.getPrices()[3];
-        /// give ownership of '0x0' and <roothash> to Dev
+        /// give ownership of '0x0' to Dev
         catalyse();
         // Interface
         supportsInterface[type(iERC165).interfaceId] = true;
@@ -160,11 +147,13 @@ contract Helix2PolyculeRegistry {
      * @param _priceOracle : address of price oracle contract
      */
     function setConfig(address _helix2, address _priceOracle) external onlyDev {
-        HELIX2 = iHELIX2(_helix2);
+        if (_helix2 != address(0)) {
+            HELIX2 = iHELIX2(_helix2);
+            roothash = HELIX2.getRoothash()[3];
+            Registrar = HELIX2.getRegistrar()[3];
+        }
         PRICES = iPriceOracle(_priceOracle);
-        roothash = HELIX2.getRoothash()[3];
         basePrice = PRICES.getPrices()[3];
-        Registrar = HELIX2.getRegistrar()[3];
     }
 
     /**
@@ -631,9 +620,9 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev set operator for a polycule
-     * @param operator : new operator
-     * @param approved : state to set
+     * @dev sets Controller for all your tokens
+     * @param operator : operator address to be set as Controller
+     * @param approved : bool to set
      */
     function setApprovalForAll(address operator, bool approved) external {
         Operators[msg.sender][operator] = approved;

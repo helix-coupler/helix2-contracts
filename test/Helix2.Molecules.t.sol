@@ -14,6 +14,8 @@ import "src/Molecules/MoleculeRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
 import "src/Molecules/MoleculeRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Molecules/MoleculeResolver.sol";
@@ -41,6 +43,8 @@ contract Helix2MoleculesTest is Test {
     // Registry
     Helix2NameRegistry public NAMES;
     Helix2MoleculeRegistry public MOLECULES;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2MoleculeRegistrar public _MOLY_;
@@ -92,22 +96,27 @@ contract Helix2MoleculesTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // MOLECULES -------------------------------------------------
         // deploy MoleculeRegistry
         MOLECULES = new Helix2MoleculeRegistry(
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
         address _MOLECULES = address(MOLECULES);
@@ -115,22 +124,26 @@ contract Helix2MoleculesTest is Test {
         _MOLY_ = new Helix2MoleculeRegistrar(
             _MOLECULES,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
         // deploy Molecule Resolver
-        MoleculeResolver_ = new MoleculeResolver(_HELIX2);
+        MoleculeResolver_ = new MoleculeResolver(address(HELIX2_));
 
         // remaining values
         namePrice = PriceOracle.getPrices()[0];
         molyprice = PriceOracle.getPrices()[2];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         HELIX2_.setRegistrar(2, address(_MOLY_));
         HELIX2_.setRegistry(2, _MOLECULES);
         MOLECULES.setConfig(address(HELIX2_), address(PriceOracle));

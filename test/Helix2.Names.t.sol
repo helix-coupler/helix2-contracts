@@ -12,6 +12,8 @@ import "src/Oracle/PriceOracle.sol";
 import "src/Names/NameRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 // Interface
@@ -34,6 +36,8 @@ contract Helix2NamesTest is Test {
     NameResolver public NameResolver_;
     // Registry
     Helix2NameRegistry public NAMES;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
     // Registrar
     Helix2NameRegistrar public _NAME_;
     // Price Oracle
@@ -65,26 +69,35 @@ contract Helix2NamesTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
 
         // remaining values
         basePrice = PriceOracle.getPrices()[0];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         roothash = HELIX2_.getRoothash()[0];
         ENS = iENS(HELIX2_.getENSRegistry());
     }

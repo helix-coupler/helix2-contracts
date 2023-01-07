@@ -2,7 +2,7 @@
 pragma solidity >0.8.0 <0.9.0;
 
 /**
- * @dev Helix2 Names Interface
+ * @dev Helix2 Names Global Interface
  */
 interface iNAME {
     // write functions
@@ -11,6 +11,8 @@ interface iNAME {
         bytes32 namehash,
         address owner
     ) external;
+
+    function setLabel(bytes32 namehash, string calldata label) external;
 
     function setOwner(bytes32 namehash, address owner) external;
 
@@ -30,11 +32,11 @@ interface iNAME {
 
     function setResolver(bytes32 namehash, address resolver) external;
 
-    function setApprovalForAll(address controller, bool approved) external;
-
-    function setConfig(address helix2) external;
-
-    function toggleActive() external;
+    function setApprovalForAll(
+        address caller,
+        address controller,
+        bool approved
+    ) external;
 
     // view functions
     function owner(bytes32 namehash) external view returns (address);

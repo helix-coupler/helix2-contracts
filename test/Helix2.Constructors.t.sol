@@ -19,6 +19,8 @@ import "src/Names/NameRegistry.sol";
 import "src/Bonds/BondRegistry.sol";
 import "src/Molecules/MoleculeRegistry.sol";
 import "src/Polycules/PolyculeRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Bonds/BondResolver.sol";
@@ -61,6 +63,8 @@ contract Helix2ConstructorTest is Test {
     Helix2BondRegistrar public _BOND_;
     Helix2MoleculeRegistrar public _MOLY_;
     Helix2PolyculeRegistrar public _POLY_;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
 
     // Price Oracle
     Helix2PriceOracle public PriceOracle;
@@ -75,26 +79,40 @@ contract Helix2ConstructorTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
 
         // BONDS -------------------------------------------------
         // deploy BondRegistry
-        BONDS = new Helix2BondRegistry(_NAMES, _HELIX2, address(PriceOracle));
+        BONDS = new Helix2BondRegistry(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
         address _BONDS = address(BONDS);
         // deploy BondRegistrar
         _BOND_ = new Helix2BondRegistrar(
             _BONDS,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
@@ -102,7 +120,7 @@ contract Helix2ConstructorTest is Test {
         // deploy MoleculeRegistry
         MOLECULES = new Helix2MoleculeRegistry(
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
         address _MOLECULES = address(MOLECULES);
@@ -110,7 +128,7 @@ contract Helix2ConstructorTest is Test {
         _MOLY_ = new Helix2MoleculeRegistrar(
             _MOLECULES,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
@@ -118,7 +136,7 @@ contract Helix2ConstructorTest is Test {
         // deploy PolyculeRegistry
         POLYCULES = new Helix2PolyculeRegistry(
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
         address _POLYCULES = address(POLYCULES);
@@ -126,19 +144,19 @@ contract Helix2ConstructorTest is Test {
         _POLY_ = new Helix2PolyculeRegistrar(
             _POLYCULES,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
         // deploy Bond Resolver
-        BondResolver_ = new BondResolver(_HELIX2);
+        BondResolver_ = new BondResolver(address(HELIX2_));
         // deploy Molecule Resolver
-        MoleculeResolver_ = new MoleculeResolver(_HELIX2);
+        MoleculeResolver_ = new MoleculeResolver(address(HELIX2_));
         // deploy Polycule Resolver
-        PolyculeResolver_ = new PolyculeResolver(_HELIX2);
+        PolyculeResolver_ = new PolyculeResolver(address(HELIX2_));
     }
 
     /// forge setup
@@ -151,12 +169,6 @@ contract Helix2ConstructorTest is Test {
         assertEq(NAMES.controller(bytes32(0x0)), deployer);
         assertEq(NAMES.resolver(bytes32(0x0)), deployer);
         assertEq(NAMES.expiry(bytes32(0x0)), theEnd);
-        // roothash
-        bytes32 roothash = HELIX2_.getRoothash()[0];
-        assertEq(NAMES.owner(roothash), deployer);
-        assertEq(NAMES.controller(roothash), deployer);
-        assertEq(NAMES.resolver(roothash), deployer);
-        assertEq(NAMES.expiry(roothash), theEnd);
     }
 
     // Test Constructor Bond
@@ -175,22 +187,6 @@ contract Helix2ConstructorTest is Test {
         assertEq(BONDS.controller(bytes32(0x0)), deployer);
         assertEq(BONDS.resolver(bytes32(0x0)), deployer);
         assertEq(BONDS.expiry(bytes32(0x0)), theEnd);
-        // roothash
-        bytes32[4] memory hashes = HELIX2_.getRoothash();
-        for (uint i = 0; i < hashes.length; i++) {
-            (uint8[] memory _rules, address[] memory _hooks) = BONDS
-                .hooksWithRules(hashes[i]);
-            assertEq(_hooks.length, 1);
-            assertEq(_hooks[0], address(0x0));
-            assertEq(_rules[0], uint8(0x0));
-            assertEq(BONDS.cation(hashes[i]), hashes[i]);
-            assertEq(BONDS.anion(hashes[i]), hashes[i]);
-            assertEq(BONDS.alias_(hashes[i]), hashes[i]);
-            assertEq(BONDS.covalence(hashes[i]), true);
-            assertEq(BONDS.controller(hashes[i]), deployer);
-            assertEq(BONDS.resolver(hashes[i]), deployer);
-            assertEq(BONDS.expiry(hashes[i]), theEnd);
-        }
     }
 
     // Test Constructor Molecule
@@ -209,23 +205,6 @@ contract Helix2ConstructorTest is Test {
         assertEq(MOLECULES.controller(bytes32(0x0)), deployer);
         assertEq(MOLECULES.resolver(bytes32(0x0)), deployer);
         assertEq(MOLECULES.expiry(bytes32(0x0)), theEnd);
-        // roothash
-        bytes32[4] memory hashes = HELIX2_.getRoothash();
-        for (uint i = 0; i < hashes.length; i++) {
-            (uint8[] memory _rules, address[] memory _hooks) = MOLECULES
-                .hooksWithRules(hashes[i]);
-            assertEq(_hooks.length, 1);
-            assertEq(_hooks[0], address(0x0));
-            assertEq(_rules[0], uint8(0x0));
-            assertEq(MOLECULES.cation(hashes[i]), hashes[i]);
-            assertEq(MOLECULES.anion(hashes[i]).length, 1);
-            assertEq(MOLECULES.anion(hashes[i])[0], hashes[i]);
-            assertEq(MOLECULES.alias_(hashes[i]), hashes[i]);
-            assertEq(MOLECULES.covalence(hashes[i]), true);
-            assertEq(MOLECULES.controller(hashes[i]), deployer);
-            assertEq(MOLECULES.resolver(hashes[i]), deployer);
-            assertEq(MOLECULES.expiry(hashes[i]), theEnd);
-        }
     }
 
     // Test Constructor Polycule
@@ -244,22 +223,5 @@ contract Helix2ConstructorTest is Test {
         assertEq(POLYCULES.controller(bytes32(0x0)), deployer);
         assertEq(POLYCULES.resolver(bytes32(0x0)), deployer);
         assertEq(POLYCULES.expiry(bytes32(0x0)), theEnd);
-        // roothash
-        bytes32[4] memory hashes = HELIX2_.getRoothash();
-        for (uint i = 0; i < hashes.length; i++) {
-            (uint8[] memory _rules, address[] memory _hooks) = POLYCULES
-                .hooksWithRules(hashes[i]);
-            assertEq(_hooks.length, 1);
-            assertEq(_hooks[0], address(0x0));
-            assertEq(_rules[0], uint8(0x0));
-            assertEq(POLYCULES.cation(hashes[i]), hashes[i]);
-            assertEq(POLYCULES.anion(hashes[i]).length, 1);
-            assertEq(POLYCULES.anion(hashes[i])[0], hashes[i]);
-            assertEq(POLYCULES.alias_(hashes[i]), hashes[i]);
-            assertEq(POLYCULES.covalence(hashes[i]), true);
-            assertEq(POLYCULES.controller(hashes[i]), deployer);
-            assertEq(POLYCULES.resolver(hashes[i]), deployer);
-            assertEq(POLYCULES.expiry(hashes[i]), theEnd);
-        }
     }
 }

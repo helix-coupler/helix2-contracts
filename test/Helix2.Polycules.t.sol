@@ -14,6 +14,8 @@ import "src/Polycules/PolyculeRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
 import "src/Polycules/PolyculeRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Polycules/PolyculeResolver.sol";
@@ -41,6 +43,8 @@ contract Helix2PolyculesTest is Test {
     // Registry
     Helix2NameRegistry public NAMES;
     Helix2PolyculeRegistry public POLYCULES;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2PolyculeRegistrar public _POLY_;
@@ -102,22 +106,27 @@ contract Helix2PolyculesTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // POLYCULES -------------------------------------------------
         // deploy PolyculeRegistry
         POLYCULES = new Helix2PolyculeRegistry(
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
         address _POLYCULES = address(POLYCULES);
@@ -125,22 +134,26 @@ contract Helix2PolyculesTest is Test {
         _POLY_ = new Helix2PolyculeRegistrar(
             _POLYCULES,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
         // deploy Polycule Resolver
-        PolyculeResolver_ = new PolyculeResolver(_HELIX2);
+        PolyculeResolver_ = new PolyculeResolver(address(HELIX2_));
 
         // remaining values
         namePrice = PriceOracle.getPrices()[0];
         polyprice = PriceOracle.getPrices()[3];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         HELIX2_.setRegistrar(3, address(_POLY_));
         HELIX2_.setRegistry(3, _POLYCULES);
         POLYCULES.setConfig(address(HELIX2_), address(PriceOracle));
