@@ -39,7 +39,6 @@ contract Helix2NameRegistry {
     event NewOwner(bytes32 indexed namehash, address owner);
     event NewController(bytes32 indexed namehash, address controller);
     event NewExpiry(bytes32 indexed namehash, uint expiry);
-    event NewRecord(bytes32 indexed namehash, address resolver);
     event NewResolver(bytes32 indexed namehash, address resolver);
     event Transfer(
         address indexed from,
@@ -60,9 +59,6 @@ contract Helix2NameRegistry {
     uint256 public basePrice;
     address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
-
-    /// Operator Permissions
-    mapping(address => mapping(address => bool)) Operators;
 
     /**
      * @dev Initialise a new HELIX2 Names Registry
@@ -316,19 +312,6 @@ contract Helix2NameRegistry {
         );
         STORE.setExpiry(namehash, _expiry);
         emit NewExpiry(namehash, _expiry);
-    }
-
-    /**
-     * @dev set record for a name
-     * @param namehash : hash of name
-     * @param _resolver : new record
-     */
-    function setRecord(
-        bytes32 namehash,
-        address _resolver
-    ) external isAuthorised(namehash) {
-        STORE.setResolver(namehash, _resolver);
-        emit NewRecord(namehash, _resolver);
     }
 
     /**

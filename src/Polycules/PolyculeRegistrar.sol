@@ -142,41 +142,6 @@ contract Helix2PolyculeRegistrar {
     }
 
     /**
-     * @dev verify polycule has expired and can be registered
-     * @param _cation : cation of polycule
-     * @param _label : label of polycule
-     */
-    modifier isAvailable(bytes32 _cation, string memory _label) {
-        require(
-            !POLYCULES.recordExists(
-                keccak256(
-                    abi.encodePacked(
-                        _cation,
-                        roothash,
-                        keccak256(abi.encodePacked(_label))
-                    )
-                )
-            ),
-            "POLYCULE_EXISTS"
-        );
-        _;
-    }
-
-    /**
-     * @dev verify ownership of polycule
-     * @param polyhash : hash of polycule
-     */
-    modifier onlyCation(bytes32 polyhash) {
-        require(POLYCULES.recordExists(polyhash), "NO_RECORD");
-        address cation = NAMES.owner(POLYCULES.cation(polyhash));
-        require(
-            cation == msg.sender || Operators[cation][msg.sender],
-            "NOT_OWNER"
-        );
-        _;
-    }
-
-    /**
      * @dev sets Default Resolver
      * @param _resolver : resolver address
      */

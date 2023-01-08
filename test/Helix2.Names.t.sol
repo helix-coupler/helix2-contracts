@@ -198,13 +198,13 @@ contract Helix2NamesTest is Test {
         vm.prank(pill);
         NAMES.setController(namehash, taker);
         vm.prank(pill);
-        NAMES.setRecord(namehash, taker);
+        NAMES.setResolver(namehash, taker);
         vm.warp(block.timestamp + 200);
         assertEq(NAMES.recordExists(namehash), false);
     }
 
     /// Register a name and verify records
-    function testVerifyRecords() public {
+    function testVerifyResolvers() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -261,7 +261,7 @@ contract Helix2NamesTest is Test {
             lifespan
         );
         vm.prank(pill);
-        NAMES.setRecord(namehash, address(0));
+        NAMES.setResolver(namehash, address(0));
         vm.prank(pill);
         NAMES.setResolver(namehash, address(0));
         vm.prank(pill);
@@ -270,7 +270,7 @@ contract Helix2NamesTest is Test {
         vm.prank(taker);
         NAMES.setController(namehash, faker);
         vm.prank(faker);
-        NAMES.setRecord(namehash, address(0));
+        NAMES.setResolver(namehash, address(0));
         assertEq(NAMES.resolver(namehash), address(0));
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
@@ -344,7 +344,7 @@ contract Helix2NamesTest is Test {
         NAMES.setController(namehash, taker);
         vm.prank(taker);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        NAMES.setRecord(namehash, taker);
+        NAMES.setResolver(namehash, taker);
         uint256 _expiry = NAMES.expiry(namehash);
         vm.deal(taker, basePrice * 100);
         vm.prank(taker);

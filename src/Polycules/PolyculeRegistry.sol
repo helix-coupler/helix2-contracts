@@ -40,8 +40,6 @@ contract Helix2PolyculeRegistry {
     event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
     event RehookedConfig(bytes32 indexed polyhash, address config, uint8 rule);
     event UnhookedConfig(bytes32 indexed polyhash, uint8 rule);
-    event RehookedAnion(bytes32 indexed polyhash, bytes32 anion, uint8 rule);
-    event UnhookedAnion(bytes32 indexed polyhash, bytes32 anion);
     event UnhookedAll(bytes32 indexed polyhash);
     event NewCation(bytes32 indexed polyhash, bytes32 cation);
     event NewAnion(bytes32 indexed polyhash, bytes32 anion);
