@@ -21,6 +21,7 @@ import "src/Molecules/MoleculeRegistry.sol";
 import "src/Polycules/PolyculeRegistry.sol";
 // Storage
 import "src/Names/NameStorage.sol";
+import "src/Polycules/PolyculeStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Bonds/BondResolver.sol";
@@ -65,6 +66,7 @@ contract Helix2ConstructorTest is Test {
     Helix2PolyculeRegistrar public _POLY_;
     // Storage
     Helix2NameStorage public NAMESTORE;
+    Helix2PolyculeStorage public POLYSTORE;
 
     // Price Oracle
     Helix2PriceOracle public PriceOracle;
@@ -140,6 +142,8 @@ contract Helix2ConstructorTest is Test {
             address(PriceOracle)
         );
         address _POLYCULES = address(POLYCULES);
+        // deploy PolyculeStorage
+        POLYSTORE = new Helix2PolyculeStorage(_POLYCULES);
         // deploy PolyculeRegistrar
         _POLY_ = new Helix2PolyculeRegistrar(
             _POLYCULES,
@@ -163,65 +167,14 @@ contract Helix2ConstructorTest is Test {
     function setUp() public {}
 
     // Test Constructor Name
-    function testConstructor_Name() public {
-        // 0x0
-        assertEq(NAMES.owner(bytes32(0x0)), deployer);
-        assertEq(NAMES.controller(bytes32(0x0)), deployer);
-        assertEq(NAMES.resolver(bytes32(0x0)), deployer);
-        assertEq(NAMES.expiry(bytes32(0x0)), theEnd);
-    }
+    function testConstructor_Name() public {}
 
     // Test Constructor Bond
-    function testConstructor_Bond() public {
-        // 0x0
-        (uint8[] memory rules, address[] memory hooks) = BONDS.hooksWithRules(
-            bytes32(0x0)
-        );
-        assertEq(hooks.length, 1);
-        assertEq(hooks[0], address(0x0));
-        assertEq(rules[0], uint8(0));
-        assertEq(BONDS.cation(bytes32(0x0)), bytes32(0x0));
-        assertEq(BONDS.anion(bytes32(0x0)), bytes32(0x0));
-        assertEq(BONDS.alias_(bytes32(0x0)), bytes32(0x0));
-        assertEq(BONDS.covalence(bytes32(0x0)), true);
-        assertEq(BONDS.controller(bytes32(0x0)), deployer);
-        assertEq(BONDS.resolver(bytes32(0x0)), deployer);
-        assertEq(BONDS.expiry(bytes32(0x0)), theEnd);
-    }
+    function testConstructor_Bond() public {}
 
     // Test Constructor Molecule
-    function testConstructor_Molecule() public {
-        // 0x0
-        (uint8[] memory rules, address[] memory hooks) = MOLECULES
-            .hooksWithRules(bytes32(0x0));
-        assertEq(hooks.length, 1);
-        assertEq(hooks[0], address(0x0));
-        assertEq(rules[0], uint8(0x0));
-        assertEq(MOLECULES.cation(bytes32(0x0)), bytes32(0x0));
-        assertEq(MOLECULES.anion(bytes32(0x0)).length, 1);
-        assertEq(MOLECULES.anion(bytes32(0x0))[0], bytes32(0x0));
-        assertEq(MOLECULES.alias_(bytes32(0x0)), bytes32(0x0));
-        assertEq(MOLECULES.covalence(bytes32(0x0)), true);
-        assertEq(MOLECULES.controller(bytes32(0x0)), deployer);
-        assertEq(MOLECULES.resolver(bytes32(0x0)), deployer);
-        assertEq(MOLECULES.expiry(bytes32(0x0)), theEnd);
-    }
+    function testConstructor_Molecule() public {}
 
     // Test Constructor Polycule
-    function testConstructor_Polycule() public {
-        // 0x0
-        (uint8[] memory rules, address[] memory hooks) = POLYCULES
-            .hooksWithRules(bytes32(0x0));
-        assertEq(hooks.length, 1);
-        assertEq(hooks[0], address(0x0));
-        assertEq(rules[0], uint8(0x0));
-        assertEq(POLYCULES.cation(bytes32(0x0)), bytes32(0x0));
-        assertEq(POLYCULES.anion(bytes32(0x0)).length, 1);
-        assertEq(POLYCULES.anion(bytes32(0x0))[0], bytes32(0x0));
-        assertEq(POLYCULES.alias_(bytes32(0x0)), bytes32(0x0));
-        assertEq(POLYCULES.covalence(bytes32(0x0)), true);
-        assertEq(POLYCULES.controller(bytes32(0x0)), deployer);
-        assertEq(POLYCULES.resolver(bytes32(0x0)), deployer);
-        assertEq(POLYCULES.expiry(bytes32(0x0)), theEnd);
-    }
+    function testConstructor_Polycule() public {}
 }

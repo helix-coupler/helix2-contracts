@@ -4,6 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 import "src/Names/iName.sol";
 import "src/Names/iERC721.sol";
 import "src/Interface/iERC173.sol";
+import "src/Interface/iERC165.sol";
 import "src/Interface/iHelix2.sol";
 import "src/Oracle/iPriceOracle.sol";
 import "src/Utils/LibString.sol";
@@ -25,7 +26,7 @@ contract Helix2NameRegistry {
 
     /// Interfaces
     iHELIX2 public HELIX2;
-    iNAME public _NAME_;
+    iNAME public PARENT;
     iNAME public STORE;
     iERC721 public ERC721;
     iPriceOracle public PRICES;
@@ -45,22 +46,14 @@ contract Helix2NameRegistry {
         address indexed to,
         uint256 indexed tokenID
     );
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 indexed tokenID
-    );
-    event ApprovalForAll(
-        address indexed owner,
-        address indexed operator,
-        bool approved
-    );
 
     /// Dev
     address public Dev;
 
     /// @dev : Pause/Resume contract
     bool public active = true;
+    /// @dev : EIP-165
+    mapping(bytes4 => bool) public supportsInterface;
 
     /// Constants
     bytes32 public roothash;
@@ -68,29 +61,8 @@ contract Helix2NameRegistry {
     address public Registrar;
     uint256 public theEnd = 250_000_000_000_000_000; // roughly 80,000,000,000 years in the future
 
-    /// @dev : Helix2 Name struct
-    struct Name {
-        string _label; /// Label of Name
-        address _owner; /// Owner of Name
-        address _resolver; /// Resolver of Name
-        address _controller; /// Controller of Name
-        uint _expiry; /// Expiry of Name
-    }
-    mapping(bytes32 => Name) public Names;
+    /// Operator Permissions
     mapping(address => mapping(address => bool)) Operators;
-
-    /**
-     * @dev sets permissions for 0x0 upon setConfig()
-     * @notice consider changing msg.sender → address(this)
-     */
-    function catalyse() internal onlyDev {
-        // 0x0
-        STORE.setLabel(bytes32(0x0), ".");
-        STORE.setOwner(bytes32(0x0), msg.sender);
-        STORE.setExpiry(bytes32(0x0), theEnd);
-        STORE.setController(bytes32(0x0), msg.sender);
-        STORE.setResolver(bytes32(0x0), msg.sender);
-    }
 
     /**
      * @dev Initialise a new HELIX2 Names Registry
@@ -104,6 +76,9 @@ contract Helix2NameRegistry {
         roothash = HELIX2.getRoothash()[0];
         PRICES = iPriceOracle(_priceOracle);
         basePrice = PRICES.getPrices()[0];
+        // Interface
+        supportsInterface[type(iERC165).interfaceId] = true;
+        supportsInterface[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -136,12 +111,11 @@ contract Helix2NameRegistry {
             HELIX2 = iHELIX2(_helix2);
             roothash = HELIX2.getRoothash()[0];
             Registrar = HELIX2.getRegistrar()[0];
-            _NAME_ = iNAME(Registrar);
+            PARENT = iNAME(Registrar);
             ERC721 = iERC721(Registrar);
         }
         if (_store != address(0)) {
             STORE = iNAME(_store);
-            catalyse();
         }
         if (_priceOracle != address(0)) {
             PRICES = iPriceOracle(_priceOracle);
@@ -166,11 +140,14 @@ contract Helix2NameRegistry {
         Dev = newDev;
     }
 
-    /// @dev : Modifier to allow only Controller
-    modifier onlyController(bytes32 namehash) {
-        require(block.timestamp < STORE.expiry(namehash), "NAME_EXPIRED");
-        require(msg.sender == STORE.controller(namehash), "NOT_CONTROLLER");
-        _;
+    /**
+     * @dev sets supportInterface flag
+     * @param sig : bytes4 identifier
+     * @param value : boolean
+     */
+    function setInterface(bytes4 sig, bool value) external payable onlyDev {
+        require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
+        supportsInterface[sig] = value;
     }
 
     /// @dev : Modifier to allow Owner or Controller
@@ -178,9 +155,7 @@ contract Helix2NameRegistry {
         require(block.timestamp < STORE.expiry(namehash), "NAME_EXPIRED");
         address _owner = STORE.owner(namehash);
         require(
-            _owner == msg.sender ||
-                STORE.isApprovedForAll(_owner, msg.sender) ||
-                msg.sender == STORE.controller(namehash),
+            _owner == msg.sender || msg.sender == STORE.controller(namehash),
             "NOT_OWNER_OR_CONTROLLER"
         );
         _;
@@ -198,7 +173,6 @@ contract Helix2NameRegistry {
         require(
             msg.sender == Registrar ||
                 _owner == msg.sender ||
-                STORE.isApprovedForAll(_owner, msg.sender) ||
                 msg.sender == STORE.controller(namehash),
             "NOT_AUTHORISED"
         );
@@ -206,19 +180,10 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev check if name is available
+     * @dev check if name is not expired
      * @param namehash : hash of name
      */
-    modifier isAvailable(bytes32 namehash) {
-        require(block.timestamp >= STORE.expiry(namehash), "NAME_EXISTS");
-        _;
-    }
-
-    /**
-     * @dev check if name is already registered
-     * @param namehash : hash of name
-     */
-    modifier isOwned(bytes32 namehash) {
+    modifier canEmit(bytes32 namehash) {
         require(block.timestamp < STORE.expiry(namehash), "NAME_EXPIRED");
         _;
     }
@@ -227,13 +192,10 @@ contract Helix2NameRegistry {
      * @dev verify ownership of name
      * @param namehash : hash of name
      */
-    modifier onlyOwner(bytes32 namehash) {
+    modifier isOwner(bytes32 namehash) {
         require(block.timestamp < STORE.expiry(namehash), "NAME_EXPIRED");
         address _owner = STORE.owner(namehash);
-        require(
-            _owner == msg.sender || STORE.isApprovedForAll(_owner, msg.sender),
-            "NOT_OWNER"
-        );
+        require(_owner == msg.sender, "NOT_OWNER");
         _;
     }
 
@@ -263,12 +225,12 @@ contract Helix2NameRegistry {
     function setOwner(
         bytes32 namehash,
         address _owner
-    ) external onlyOwner(namehash) {
+    ) external isOwner(namehash) {
         require(_owner != address(0), "CANNOT_BURN");
-        address owner_ = STORE.owner(namehash);
-        _NAME_.setBalance(owner_, ERC721.balanceOf(owner_) - 1);
-        _NAME_.setBalance(_owner, ERC721.balanceOf(_owner) + 1);
-        emit Transfer(owner_, _owner, uint256(namehash));
+        address currentOwner = STORE.owner(namehash);
+        PARENT.setBalance(currentOwner, ERC721.balanceOf(currentOwner) - 1);
+        PARENT.setBalance(_owner, ERC721.balanceOf(_owner) + 1);
+        emit Transfer(currentOwner, _owner, uint256(namehash));
         STORE.setOwner(namehash, _owner);
         emit NewOwner(namehash, _owner);
     }
@@ -296,7 +258,6 @@ contract Helix2NameRegistry {
         bytes32 namehash,
         address _controller
     ) external isAuthorised(namehash) {
-        emit Approval(STORE.owner(namehash), _controller, uint256(namehash));
         STORE.setController(namehash, _controller);
         emit NewController(namehash, _controller);
     }
@@ -347,10 +308,12 @@ contract Helix2NameRegistry {
         bytes32 namehash,
         uint _expiry
     ) external payable isOwnerOrController(namehash) {
-        uint expiry_ = STORE.expiry(namehash);
-        require(_expiry > expiry_, "BAD_EXPIRY");
-        uint newDuration = _expiry - expiry_;
-        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
+        uint currentExpiry = STORE.expiry(namehash);
+        require(_expiry > currentExpiry, "BAD_EXPIRY");
+        require(
+            msg.value >= (_expiry - currentExpiry) * basePrice,
+            "INSUFFICIENT_ETHER"
+        );
         STORE.setExpiry(namehash, _expiry);
         emit NewExpiry(namehash, _expiry);
     }
@@ -369,16 +332,6 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev set operator for a name
-     * @param operator : new operator
-     * @param approved : state to set
-     */
-    function setApprovalForAll(address operator, bool approved) external {
-        STORE.setApprovalForAll(msg.sender, operator, approved);
-        emit ApprovalForAll(msg.sender, operator, approved);
-    }
-
-    /**
      * @dev return owner of a name
      * @param namehash hash of name to query
      * @return address of owner
@@ -386,7 +339,7 @@ contract Helix2NameRegistry {
     function owner(bytes32 namehash) public view returns (address) {
         address addr = STORE.owner(namehash);
         if (addr == address(this)) {
-            return address(0x0);
+            return address(0);
         }
         return addr;
     }
@@ -396,9 +349,10 @@ contract Helix2NameRegistry {
      * @param namehash hash of name to query
      * @return label of name
      */
-    function label(bytes32 namehash) public view returns (string memory) {
-        string memory _label = STORE.label(namehash);
-        return _label;
+    function label(
+        bytes32 namehash
+    ) public view canEmit(namehash) returns (string memory) {
+        return STORE.label(namehash);
     }
 
     /**
@@ -408,9 +362,8 @@ contract Helix2NameRegistry {
      */
     function controller(
         bytes32 namehash
-    ) public view isOwned(namehash) returns (address) {
-        address _controller = STORE.controller(namehash);
-        return _controller;
+    ) public view canEmit(namehash) returns (address) {
+        return STORE.controller(namehash);
     }
 
     /**
@@ -419,8 +372,7 @@ contract Helix2NameRegistry {
      * @return expiry
      */
     function expiry(bytes32 namehash) public view returns (uint) {
-        uint _expiry = STORE.expiry(namehash);
-        return _expiry;
+        return STORE.expiry(namehash);
     }
 
     /**
@@ -430,9 +382,8 @@ contract Helix2NameRegistry {
      */
     function resolver(
         bytes32 namehash
-    ) public view isOwned(namehash) returns (address) {
-        address _resolver = STORE.resolver(namehash);
-        return _resolver;
+    ) public view canEmit(namehash) returns (address) {
+        return STORE.resolver(namehash);
     }
 
     /**
@@ -442,26 +393,5 @@ contract Helix2NameRegistry {
      */
     function recordExists(bytes32 namehash) public view returns (bool) {
         return block.timestamp < STORE.expiry(namehash);
-    }
-
-    /**
-     * @dev check if an address is set as operator
-     * @param _owner owner of name to query
-     * @param operator operator to check
-     * @return true or false
-     */
-    function isApprovedForAll(
-        address _owner,
-        address operator
-    ) external view returns (bool) {
-        return STORE.isApprovedForAll(_owner, operator);
-    }
-
-    /**
-     * @dev withdraw ether to Dev, anyone can trigger
-     */
-    function withdrawEther() external {
-        (bool ok, ) = Dev.call{value: address(this).balance}("");
-        require(ok, "ETH_TRANSFER_FAILED");
     }
 }

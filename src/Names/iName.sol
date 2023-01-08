@@ -32,12 +32,6 @@ interface iNAME {
 
     function setResolver(bytes32 namehash, address resolver) external;
 
-    function setApprovalForAll(
-        address caller,
-        address controller,
-        bool approved
-    ) external;
-
     // view functions
     function owner(bytes32 namehash) external view returns (address);
 
@@ -50,9 +44,4 @@ interface iNAME {
     function resolver(bytes32 namehash) external view returns (address);
 
     function recordExists(bytes32 namehash) external view returns (bool);
-
-    function isApprovedForAll(
-        address owner,
-        address controller
-    ) external view returns (bool);
 }

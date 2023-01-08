@@ -34,7 +34,6 @@ contract Helix2NameStorage {
         uint _expiry; /// Expiry of Name
     }
     mapping(bytes32 => Name) public Names;
-    mapping(address => mapping(address => bool)) Operators;
 
     /**
      * @dev sets permissions for 0x0
@@ -50,7 +49,6 @@ contract Helix2NameStorage {
     constructor(address _registry) {
         Registry = _registry;
         Dev = msg.sender;
-        /// give ownership of '0x0' to Dev
         catalyse();
     }
 
@@ -63,15 +61,6 @@ contract Helix2NameStorage {
     /// @dev : Modifier to allow only parent registry
     modifier onlyRegistry() {
         require(msg.sender == Registry, "NOT_ALLOWED");
-        _;
-    }
-
-    /**
-     * @dev check if name is already registered
-     * @param namehash : hash of name
-     */
-    modifier isOwned(bytes32 namehash) {
-        require(block.timestamp < Names[namehash]._expiry, "NAME_EXPIRED");
         _;
     }
 
@@ -163,27 +152,12 @@ contract Helix2NameStorage {
     }
 
     /**
-     * @dev sets Controller for all your tokens
-     * @param caller : original caller
-     * @param operator : operator address to be set as Controller
-     * @param approved : bool to set
-     */
-    function setApprovalForAll(
-        address caller,
-        address operator,
-        bool approved
-    ) external onlyRegistry {
-        Operators[caller][operator] = approved;
-    }
-
-    /**
      * @dev return owner of a name
      * @param namehash hash of name to query
      * @return address of owner
      */
     function owner(bytes32 namehash) public view returns (address) {
-        address addr = Names[namehash]._owner;
-        return addr;
+        return Names[namehash]._owner;
     }
 
     /**
@@ -192,8 +166,7 @@ contract Helix2NameStorage {
      * @return label of name
      */
     function label(bytes32 namehash) public view returns (string memory) {
-        string memory _label = Names[namehash]._label;
-        return _label;
+        return Names[namehash]._label;
     }
 
     /**
@@ -201,11 +174,8 @@ contract Helix2NameStorage {
      * @param namehash hash of name to query
      * @return address of controller
      */
-    function controller(
-        bytes32 namehash
-    ) public view isOwned(namehash) returns (address) {
-        address _controller = Names[namehash]._controller;
-        return _controller;
+    function controller(bytes32 namehash) public view returns (address) {
+        return Names[namehash]._controller;
     }
 
     /**
@@ -214,8 +184,7 @@ contract Helix2NameStorage {
      * @return expiry
      */
     function expiry(bytes32 namehash) public view returns (uint) {
-        uint _expiry = Names[namehash]._expiry;
-        return _expiry;
+        return Names[namehash]._expiry;
     }
 
     /**
@@ -223,31 +192,7 @@ contract Helix2NameStorage {
      * @param namehash hash of name to query
      * @return address of resolver
      */
-    function resolver(
-        bytes32 namehash
-    ) public view isOwned(namehash) returns (address) {
-        address _resolver = Names[namehash]._resolver;
-        return _resolver;
-    }
-
-    /**
-     * @dev check if an address is set as operator
-     * @param _owner owner of name to query
-     * @param operator operator to check
-     * @return true or false
-     */
-    function isApprovedForAll(
-        address _owner,
-        address operator
-    ) external view returns (bool) {
-        return Operators[_owner][operator];
-    }
-
-    /**
-     * @dev withdraw ether to Dev, anyone can trigger
-     */
-    function withdrawEther() external {
-        (bool ok, ) = Dev.call{value: address(this).balance}("");
-        require(ok, "ETH_TRANSFER_FAILED");
+    function resolver(bytes32 namehash) public view returns (address) {
+        return Names[namehash]._resolver;
     }
 }
