@@ -3,6 +3,7 @@ pragma solidity >0.8.0 <0.9.0;
 
 /**
  * @dev Helix2 Names Global Interface
+ * @notice Global interface for Storage and Registry
  */
 interface iNAME {
     // write functions

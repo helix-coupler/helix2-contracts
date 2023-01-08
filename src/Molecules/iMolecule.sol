@@ -2,7 +2,8 @@
 pragma solidity >0.8.0 <0.9.0;
 
 /**
- * @dev Helix2 Molecules Interface
+ * @dev Helix2 Molecules Global Interface
+ * @notice Global interface for Storage and Registry
  */
 interface iMOLECULE {
     // write functions
@@ -18,7 +19,9 @@ interface iMOLECULE {
 
     function popAnion(bytes32 molyhash, bytes32 anion) external;
 
-    function setAlias(bytes32 molyhash, bytes32 _alias) external;
+    function popAnion(bytes32 molyhash, uint index) external;
+
+    function setLabel(bytes32 molyhash, bytes32 label) external;
 
     function setCovalence(bytes32 molyhash, bool covalence) external;
 
@@ -26,28 +29,24 @@ interface iMOLECULE {
 
     function renew(bytes32 molyhash, uint expiry) external;
 
-    function setRecord(bytes32 molyhash, address resolver) external;
-
     function setResolver(bytes32 molyhash, address resolver) external;
 
     function hook(bytes32 molyhash, address config, uint8 rule) external;
 
     function rehook(bytes32 molyhash, address config, uint8 rule) external;
 
-    function unhook(bytes32 molyhash, uint8 rule) external;
+    function unhook(bytes32 molyhash, uint8 rule, uint index) external;
 
     function unhookAll(bytes32 molyhash) external;
-
-    function setApprovalForAll(address controller, bool approved) external;
 
     // view functions
     function cation(bytes32 molyhash) external view returns (bytes32);
 
     function controller(bytes32 molyhash) external view returns (address);
 
-    function anion(bytes32 molyhash) external view returns (bytes32[] memory);
+    function anions(bytes32 molyhash) external view returns (bytes32[] memory);
 
-    function alias_(bytes32 molyhash) external view returns (bytes32);
+    function label(bytes32 molyhash) external view returns (bytes32);
 
     function covalence(bytes32 molyhash) external view returns (bool);
 
@@ -60,9 +59,4 @@ interface iMOLECULE {
     function resolver(bytes32 molyhash) external view returns (address);
 
     function recordExists(bytes32 molyhash) external view returns (bool);
-
-    function isApprovedForAll(
-        address cation,
-        address controller
-    ) external view returns (bool);
 }

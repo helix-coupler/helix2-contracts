@@ -2,7 +2,8 @@
 pragma solidity >0.8.0 <0.9.0;
 
 /**
- * @dev Helix2 Bonds Interface
+ * @dev Helix2 Bonds Global Interface
+ * @notice Global interface for Storage and Registry
  */
 interface iBOND {
     // write functions
@@ -14,7 +15,7 @@ interface iBOND {
 
     function setAnion(bytes32 bondhash, bytes32 anion) external;
 
-    function setAlias(bytes32 bondhash, bytes32 _alias) external;
+    function setLabel(bytes32 bondhash, bytes32 label) external;
 
     function setCovalence(bytes32 bondhash, bool covalence) external;
 
@@ -22,19 +23,15 @@ interface iBOND {
 
     function renew(bytes32 bondhash, uint expiry) external;
 
-    function setRecord(bytes32 bondhash, address resolver) external;
-
     function setResolver(bytes32 bondhash, address resolver) external;
 
     function hook(bytes32 bondhash, address config, uint8 rule) external;
 
     function rehook(bytes32 bondhash, address config, uint8 rule) external;
 
-    function unhook(bytes32 bondhash, uint8 rule) external;
+    function unhook(bytes32 bondhash, uint8 rule, uint index) external;
 
     function unhookAll(bytes32 bondhash) external;
-
-    function setApprovalForAll(address controller, bool approved) external;
 
     // view functions
     function cation(bytes32 bondhash) external view returns (bytes32);
@@ -43,7 +40,7 @@ interface iBOND {
 
     function anion(bytes32 bondhash) external view returns (bytes32);
 
-    function alias_(bytes32 bondhash) external view returns (bytes32);
+    function label(bytes32 bondhash) external view returns (bytes32);
 
     function covalence(bytes32 bondhash) external view returns (bool);
 
@@ -56,9 +53,4 @@ interface iBOND {
     function resolver(bytes32 bondhash) external view returns (address);
 
     function recordExists(bytes32 bondhash) external view returns (bool);
-
-    function isApprovedForAll(
-        address cation,
-        address controller
-    ) external view returns (bool);
 }

@@ -16,6 +16,7 @@ import "src/Names/NameRegistry.sol";
 import "src/Bonds/BondRegistry.sol";
 // Storage
 import "src/Names/NameStorage.sol";
+import "src/Bonds/BondStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Bonds/BondResolver.sol";
@@ -48,6 +49,7 @@ contract Helix2BondsTest is Test {
     Helix2BondRegistrar public _BOND_;
     // Storage
     Helix2NameStorage public NAMESTORE;
+    Helix2BondStorage public BONDSTORE;
     // Price Oracle
     Helix2PriceOracle public PriceOracle;
 
@@ -66,7 +68,7 @@ contract Helix2BondsTest is Test {
     string public crook = "virgil";
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
-    string public _alias = "virgin";
+    string public label = "virgin";
     uint256 public lifespan = 50;
     uint8[2] public rules = [uint8(uint256(404)), uint8(uint256(400))];
     address[2] public config = [
@@ -110,6 +112,8 @@ contract Helix2BondsTest is Test {
             address(PriceOracle)
         );
         address _BONDS = address(BONDS);
+        // deploy PolyculeStorage
+        BONDSTORE = new Helix2BondStorage(_BONDS);
         // deploy BondRegistrar
         _BOND_ = new Helix2BondRegistrar(
             _BONDS,
@@ -136,7 +140,11 @@ contract Helix2BondsTest is Test {
         );
         HELIX2_.setRegistrar(1, address(_BOND_));
         HELIX2_.setRegistry(1, _BONDS);
-        BONDS.setConfig(address(HELIX2_), address(PriceOracle));
+        BONDS.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(BONDSTORE)
+        );
     }
 
     /// forge setup
@@ -161,12 +169,12 @@ contract Helix2BondsTest is Test {
             abi.encodePacked(
                 cation,
                 roothash,
-                keccak256(abi.encodePacked(_alias))
+                keccak256(abi.encodePacked(label))
             )
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -191,7 +199,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -209,13 +217,13 @@ contract Helix2BondsTest is Test {
         vm.prank(pill);
         BONDS.setController(bondhash, taker);
         vm.prank(pill);
-        BONDS.setRecord(bondhash, taker);
+        BONDS.setResolver(bondhash, taker);
         vm.warp(block.timestamp + 200);
         assertEq(BONDS.recordExists(bondhash), false);
     }
 
     /// Register a bond and verify records
-    function testVerifyRecords() public {
+    function testVerifyResolvers() public {
         // register two names
         cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
@@ -229,7 +237,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -263,7 +271,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -294,7 +302,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -306,7 +314,7 @@ contract Helix2BondsTest is Test {
             lifespan + 1
         );
         vm.prank(pill);
-        BONDS.setRecord(bondhash, address(0));
+        BONDS.setResolver(bondhash, address(0));
         vm.prank(pill);
         BONDS.setCovalence(bondhash, false);
         vm.prank(pill);
@@ -316,7 +324,7 @@ contract Helix2BondsTest is Test {
         BONDS.setController(bondhash, taker);
         assertEq(BONDS.controller(bondhash), taker);
         vm.prank(taker);
-        BONDS.setRecord(bondhash, address(0));
+        BONDS.setResolver(bondhash, address(0));
         assertEq(BONDS.resolver(bondhash), address(0));
         vm.prank(taker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
@@ -338,7 +346,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -353,7 +361,7 @@ contract Helix2BondsTest is Test {
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
         BONDS.setCation(bondhash, fakehash);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        BONDS.setRecord(bondhash, address(0));
+        BONDS.setResolver(bondhash, address(0));
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
         BONDS.setController(bondhash, faker);
     }
@@ -373,7 +381,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -383,7 +391,7 @@ contract Helix2BondsTest is Test {
         assertEq(BONDS.recordExists(bondhash), false);
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -406,7 +414,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -448,7 +456,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -486,7 +494,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -508,10 +516,10 @@ contract Helix2BondsTest is Test {
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(faker);
         BONDS.hook(bondhash, config[1], rules[1]);
@@ -536,7 +544,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan
@@ -560,10 +568,10 @@ contract Helix2BondsTest is Test {
         vm.prank(pill);
         BONDS.setController(bondhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(faker);
         BONDS.hook(bondhash, config[1], rules[1]);
@@ -590,7 +598,7 @@ contract Helix2BondsTest is Test {
         );
         // register test bond linking two names
         bondhash = _BOND_.newBond{value: bondPrice * lifespan}(
-            _alias,
+            label,
             cation,
             anion,
             lifespan

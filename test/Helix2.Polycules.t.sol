@@ -648,10 +648,10 @@ contract Helix2PolyculesTest is Test {
         vm.prank(pill);
         POLYCULES.setController(polyhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("ANION_OR_HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("ANION_OR_RULE_EXISTS"));
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("ANION_OR_HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("ANION_OR_RULE_EXISTS"));
         POLYCULES.hook(anions[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         POLYCULES.hook(_anions_[1], polyhash, _config_[1], _rules_[1]);
@@ -714,10 +714,10 @@ contract Helix2PolyculesTest is Test {
         vm.prank(pill);
         POLYCULES.setController(polyhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("ANION_OR_HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("ANION_OR_RULE_EXISTS"));
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("ANION_OR_HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("ANION_OR_RULE_EXISTS"));
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         POLYCULES.rehook(polyhash, _config_[0], _rules_[0]);

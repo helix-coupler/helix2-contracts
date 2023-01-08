@@ -40,9 +40,9 @@ contract Helix2PolyculeStorage {
     mapping(bytes32 => Polycule) public Polycules;
 
     /**
-     * @dev Initialise a new HELIX2 Polycules Registry
+     * @dev Initialise a new HELIX2 Polycules Storage
      * @notice
-     * @param _registry : address of HELIX2 Name Registry
+     * @param _registry : address of HELIX2 Polycules Registry
      */
     constructor(address _registry) {
         Registry = _registry;
@@ -193,18 +193,6 @@ contract Helix2PolyculeStorage {
     }
 
     /**
-     * @dev set record for a polycule
-     * @param polyhash : hash of polycule
-     * @param _resolver : new record
-     */
-    function setRecord(
-        bytes32 polyhash,
-        address _resolver
-    ) external onlyRegistry {
-        Polycules[polyhash]._resolver = _resolver;
-    }
-
-    /**
      * @dev adds a new hook & rule and anion
      * @param _anion : anion to add hook for
      * @param polyhash : hash of the polycule
@@ -234,20 +222,6 @@ contract Helix2PolyculeStorage {
         uint8 rule
     ) external onlyRegistry {
         Polycules[polyhash]._hooks[rule] = config;
-    }
-
-    /**
-     * @dev rehooks a hook (and anion) to a new rule
-     * @param polyhash : hash of the polycule
-     * @param rule : rule for the new hook (and anion)
-     * @param index : index of anion
-     */
-    function rehook(
-        bytes32 polyhash,
-        uint8 rule,
-        uint index
-    ) external onlyRegistry {
-        Polycules[polyhash]._rules[index] = rule;
     }
 
     /**

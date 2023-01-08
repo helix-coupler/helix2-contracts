@@ -36,20 +36,13 @@ contract Helix2NameStorage {
     mapping(bytes32 => Name) public Names;
 
     /**
-     * @dev sets permissions for 0x0
-     * @notice
-     */
-    function catalyse() internal onlyDev {}
-
-    /**
      * @dev Initialise a new HELIX2 Names Storage
      * @notice
-     * @param _registry : address of HELIX2 Name Registry
+     * @param _registry : address of HELIX2 Names Registry
      */
     constructor(address _registry) {
         Registry = _registry;
         Dev = msg.sender;
-        catalyse();
     }
 
     /// @dev : Modifier to allow only dev

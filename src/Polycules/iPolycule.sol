@@ -2,7 +2,8 @@
 pragma solidity >0.8.0 <0.9.0;
 
 /**
- * @dev Helix2 Polycules Interface
+ * @dev Helix2 Polycules Global Interface
+ * @notice Global interface for Storage and Registry
  */
 interface iPOLYCULE {
     // write functions
@@ -48,10 +49,6 @@ interface iPOLYCULE {
     ) external;
 
     function rehook(bytes32 polyhash, address config, uint8 rule) external;
-
-    function rehook(bytes32 polyhash, uint8 rule, uint index) external;
-
-    function unhook(bytes32 polyhash, uint8 rule) external;
 
     function unhook(bytes32 polyhash, uint8 rule, uint index) external;
 

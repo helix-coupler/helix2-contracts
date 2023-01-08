@@ -38,8 +38,8 @@ contract Helix2PolyculeRegistry {
         address indexed newOwner
     );
     event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
-    event RehookedConfig(bytes32 indexed polyhash, address config, uint8 rule);
-    event UnhookedConfig(bytes32 indexed polyhash, uint8 rule);
+    event Rehooked(bytes32 indexed polyhash, address config, uint8 rule);
+    event Unhooked(bytes32 indexed polyhash, uint8 rule);
     event UnhookedAll(bytes32 indexed polyhash);
     event NewCation(bytes32 indexed polyhash, bytes32 cation);
     event NewAnion(bytes32 indexed polyhash, bytes32 anion);
@@ -206,11 +206,11 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev check if new anion is a duplicate
+     * @dev check if new anion and rule is a duplicate set
      * @param polyhash : hash of polycule
-     * @param _anion : anion to check
+     * @param _anion : anion and rule to check
      */
-    function isNotDuplicateAnionOrHook(
+    function isNotDuplicateAnionOrRule(
         bytes32 polyhash,
         bytes32 _anion,
         uint8 rule
@@ -221,7 +221,7 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev verify if each anion has a hook
+     * @dev verify if each anion has a rule (& hook)
      * @param _anions : array of anions
      * @param _rules : array of config addresses
      */
@@ -288,14 +288,14 @@ contract Helix2PolyculeRegistry {
         uint8 rule
     ) external isCationOrController(polyhash) {
         require(
-            isNotDuplicateAnionOrHook(polyhash, _anion, rule),
-            "ANION_OR_HOOK_EXISTS"
+            isNotDuplicateAnionOrRule(polyhash, _anion, rule),
+            "ANION_OR_RULE_EXISTS"
         );
         (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
             polyhash
         );
         uint index = rule.findIn(_rules);
-        require(_hooks[index] != config, "RULE_EXISTS");
+        require(_hooks[index] != config, "HOOK_EXISTS");
         STORE.addAnionWithConfig(polyhash, _anion, config, rule);
         emit NewAnion(polyhash, _anion);
         emit Hooked(polyhash, config, rule);
@@ -324,7 +324,6 @@ contract Helix2PolyculeRegistry {
                     _hooks[i],
                     _rules[i]
                 );
-                STORE.setCovalence(polyhash, false);
             }
         }
         emit NewAnions(polyhash, _anions);
@@ -429,8 +428,8 @@ contract Helix2PolyculeRegistry {
         uint8 rule
     ) external isCationOrController(polyhash) {
         require(
-            isNotDuplicateAnionOrHook(polyhash, _anion, rule),
-            "ANION_OR_HOOK_EXISTS"
+            isNotDuplicateAnionOrRule(polyhash, _anion, rule),
+            "ANION_OR_RULE_EXISTS"
         );
         STORE.hook(_anion, polyhash, config, rule);
         emit Hooked(polyhash, config, rule);
@@ -454,7 +453,7 @@ contract Helix2PolyculeRegistry {
             uint index = rule.findIn(_rules);
             require(_hooks[index] != config, "HOOK_EXISTS");
             STORE.rehook(polyhash, config, rule);
-            emit RehookedConfig(polyhash, config, rule);
+            emit Rehooked(polyhash, config, rule);
         } else {
             revert BAD_RULE();
         }
@@ -473,7 +472,7 @@ contract Helix2PolyculeRegistry {
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             STORE.unhook(polyhash, rule, index);
-            emit UnhookedConfig(polyhash, rule);
+            emit Unhooked(polyhash, rule);
         } else {
             revert BAD_HOOK();
         }

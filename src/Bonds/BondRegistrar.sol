@@ -30,7 +30,7 @@ contract Helix2BondRegistrar {
     string public constant symbol = "HBS";
 
     /// @dev : Helix2 Bond events
-    event NewBond(string _alias, bytes32 indexed bondhash, bytes32 cation);
+    event NewBond(string label, bytes32 indexed bondhash, bytes32 cation);
     event OwnershipTransferred(
         address indexed previousOwner,
         address indexed newOwner
@@ -117,50 +117,15 @@ contract Helix2BondRegistrar {
     }
 
     /**
-     * @dev verify alias has legal form
-     * @param _alias : alias of bond
+     * @dev verify label has legal form
+     * @param label : label of bond
      */
-    modifier isLegal(string memory _alias) {
+    modifier isLegal(string memory label) {
         require(
-            _alias.strlen() > sizeLimit[0] && _alias.strlen() < sizeLimit[1],
+            label.strlen() > sizeLimit[0] && label.strlen() < sizeLimit[1],
             "ILLEGAL_LABEL"
-        ); /// check for undersized or oversized alias
-        require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
-        _;
-    }
-
-    /**
-     * @dev verify bond has expired and can be registered
-     * @param _cation : cation of bond
-     * @param _alias : alias of bond
-     */
-    modifier isAvailable(bytes32 _cation, string memory _alias) {
-        require(
-            !BONDS.recordExists(
-                keccak256(
-                    abi.encodePacked(
-                        _cation,
-                        roothash,
-                        keccak256(abi.encodePacked(_alias))
-                    )
-                )
-            ),
-            "BOND_EXISTS"
-        );
-        _;
-    }
-
-    /**
-     * @dev verify ownership of bond
-     * @param bondhash : hash of bond
-     */
-    modifier onlyCation(bytes32 bondhash) {
-        require(BONDS.recordExists(bondhash), "NO_RECORD");
-        address cation = NAMES.owner(BONDS.cation(bondhash));
-        require(
-            cation == msg.sender || Operators[cation][msg.sender],
-            "NOT_OWNER"
-        );
+        ); /// check for undersized or oversized label
+        require(!label.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -182,24 +147,24 @@ contract Helix2BondRegistrar {
 
     /**
      * @dev registers a new bond
-     * @param _alias : alias for the bond
+     * @param label : label for the bond
      * @param cation : cation to set for new bond
      * @param anion : anion to set for new bond
      * @param lifespan : duration of registration
      * @return hash of new bond
      */
     function newBond(
-        string memory _alias,
+        string memory label,
         bytes32 cation,
         bytes32 anion,
         uint lifespan
-    ) external payable isLegal(_alias) returns (bytes32) {
+    ) external payable isLegal(label) returns (bytes32) {
         address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
-        bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 labelhash = keccak256(abi.encodePacked(label));
         bytes32 bondhash = keccak256(
-            abi.encodePacked(cation, roothash, aliashash)
+            abi.encodePacked(cation, roothash, labelhash)
         );
         /// @notice : availability is checked inline (not as modifier) to avoid deep stack
         require(!BONDS.recordExists(bondhash), "BOND_EXISTS");
@@ -208,10 +173,10 @@ contract Helix2BondRegistrar {
         BONDS.setExpiry(bondhash, block.timestamp + lifespan); /// set new expiry
         BONDS.setController(bondhash, _cation); /// set new controller
         BONDS.setResolver(bondhash, defaultResolver); /// set new resolver
-        BONDS.setAlias(bondhash, aliashash); /// set new alias
+        BONDS.setLabel(bondhash, labelhash); /// set new label
         BONDS.setCovalence(bondhash, false); /// set new covalence flag
         BONDS.unhookAll(bondhash); /// reset hooks
-        emit NewBond(_alias, bondhash, cation);
+        emit NewBond(label, bondhash, cation);
         return bondhash;
     }
 }

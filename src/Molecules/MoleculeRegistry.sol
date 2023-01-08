@@ -14,7 +14,7 @@ import "src/Utils/LibString.sol";
  * @notice GitHub: https://github.com/helix-coupler/helix2-contracts
  * @notice README: https://github.com/helix-coupler/resources
  * @dev testnet v0.0.1
- * @title Helix2 Molecule Base
+ * @title Helix2 Molecule Registry
  */
 contract Helix2MoleculeRegistry {
     using LibString for bytes32[];
@@ -29,6 +29,7 @@ contract Helix2MoleculeRegistry {
     /// Interfaces
     iHELIX2 public HELIX2;
     iNAME public NAMES;
+    iMOLECULE public STORE;
     iPriceOracle public PRICES;
 
     /// @dev : Helix2 Molecule events
@@ -36,9 +37,9 @@ contract Helix2MoleculeRegistry {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event Hooked(bytes32 indexed bondhash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed bondhash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed bondhash, uint8 rule);
+    event Hooked(bytes32 indexed molyhash, address config, uint8 rule);
+    event Rehooked(bytes32 indexed molyhash, address config, uint8 rule);
+    event Unhooked(bytes32 indexed molyhash, uint8 rule);
     event UnhookedAll(bytes32 indexed molyhash);
     event NewCation(bytes32 indexed molyhash, bytes32 cation);
     event NewAnion(bytes32 indexed molyhash, bytes32 anion);
@@ -46,16 +47,11 @@ contract Helix2MoleculeRegistry {
     event PopAnion(bytes32 indexed molyhash, bytes32 anion);
     event NewController(bytes32 indexed molyhash, address controller);
     event NewExpiry(bytes32 indexed molyhash, uint expiry);
-    event NewRecord(bytes32 indexed molyhash, address resolver);
     event NewCovalence(bytes32 indexed molyhash, bool covalence);
     event NewResolver(bytes32 indexed molyhash, address resolver);
-    event ApprovalForAll(
-        address indexed cation,
-        address indexed operator,
-        bool approved
-    );
 
     error BAD_ANION();
+    error BAD_RULE();
     error BAD_HOOK();
 
     /// Dev
@@ -78,7 +74,7 @@ contract Helix2MoleculeRegistry {
         mapping(uint8 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Molecule (= Owner)
         bytes32[] _anion; /// Targets of Molecule
-        bytes32 _alias; /// Hash of Molecule
+        bytes32 _label; /// Hash of Molecule
         address _resolver; /// Resolver of Molecule
         address _controller; /// Controller of Molecule
         bool _covalence; /// Mutuality Flag
@@ -86,23 +82,6 @@ contract Helix2MoleculeRegistry {
     }
     mapping(bytes32 => Molecule) public Molecules;
     mapping(address => mapping(address => bool)) Operators;
-
-    /**
-     * @dev sets permissions for 0x0
-     * @notice consider changing msg.sender → address(this)
-     */
-    function catalyse() internal {
-        // 0x0
-        Molecules[0x0]._hooks[uint8(0)] = address(0x0);
-        Molecules[0x0]._rules = [uint8(0)];
-        Molecules[0x0]._cation = bytes32(0x0);
-        Molecules[0x0]._anion = [bytes32(0x0)];
-        Molecules[0x0]._alias = bytes32(0x0);
-        Molecules[0x0]._covalence = true;
-        Molecules[0x0]._expiry = theEnd;
-        Molecules[0x0]._controller = msg.sender;
-        Molecules[0x0]._resolver = msg.sender;
-    }
 
     /**
      * @dev Initialise a new HELIX2 Molecules Registry
@@ -117,8 +96,6 @@ contract Helix2MoleculeRegistry {
         roothash = HELIX2.getRoothash()[2];
         PRICES = iPriceOracle(_priceOracle);
         basePrice = PRICES.getPrices()[2];
-        /// give ownership of '0x0' to Dev
-        catalyse();
         // Interface
         supportsInterface[type(iERC165).interfaceId] = true;
         supportsInterface[type(iERC173).interfaceId] = true;
@@ -143,15 +120,25 @@ contract Helix2MoleculeRegistry {
      * or Price Oracle is deployed or whenever a config changes in the manager
      * @param _helix2 : address of HELIX2 Manager
      * @param _priceOracle : address of price oracle contract
+     * @param _store : address of HELIX2 Polycule Storage
      */
-    function setConfig(address _helix2, address _priceOracle) external onlyDev {
+    function setConfig(
+        address _helix2,
+        address _priceOracle,
+        address _store
+    ) external onlyDev {
         if (_helix2 != address(0)) {
             HELIX2 = iHELIX2(_helix2);
             roothash = HELIX2.getRoothash()[2];
             Registrar = HELIX2.getRegistrar()[2];
         }
-        PRICES = iPriceOracle(_priceOracle);
-        basePrice = PRICES.getPrices()[2];
+        if (_store != address(0)) {
+            STORE = iMOLECULE(_store);
+        }
+        if (_priceOracle != address(0)) {
+            PRICES = iPriceOracle(_priceOracle);
+            basePrice = PRICES.getPrices()[2];
+        }
     }
 
     /**
@@ -181,31 +168,13 @@ contract Helix2MoleculeRegistry {
         supportsInterface[sig] = value;
     }
 
-    /// @dev : Modifier to allow only Controller
-    modifier onlyController(bytes32 molyhash) {
-        require(
-            block.timestamp < Molecules[molyhash]._expiry,
-            "MOLECULE_EXPIRED"
-        );
-        require(
-            msg.sender == Molecules[molyhash]._controller,
-            "NOT_CONTROLLER"
-        );
-        _;
-    }
-
     /// @dev : Modifier to allow Cation or Controller
     modifier isCationOrController(bytes32 molyhash) {
+        require(block.timestamp < STORE.expiry(molyhash), "MOLECULE_EXPIRED");
+        bytes32 _cation = STORE.cation(molyhash);
+        address _owner = NAMES.owner(_cation);
         require(
-            block.timestamp < Molecules[molyhash]._expiry,
-            "MOLECULE_EXPIRED"
-        );
-        bytes32 __cation = Molecules[molyhash]._cation;
-        address _cation = NAMES.owner(__cation);
-        require(
-            _cation == msg.sender ||
-                Operators[_cation][msg.sender] ||
-                msg.sender == Molecules[molyhash]._controller,
+            _owner == msg.sender || msg.sender == STORE.controller(molyhash),
             "NOT_OWNER_OR_CONTROLLER"
         );
         _;
@@ -219,52 +188,36 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Modifier to allow Owner, Controller or Registrar
     modifier isAuthorised(bytes32 molyhash) {
-        bytes32 __cation = Molecules[molyhash]._cation;
-        address _cation = NAMES.owner(__cation);
+        bytes32 _cation = STORE.cation(molyhash);
+        address _owner = NAMES.owner(_cation);
         require(
             msg.sender == Registrar ||
-                _cation == msg.sender ||
-                Operators[_cation][msg.sender] ||
-                msg.sender == Molecules[molyhash]._controller,
+                _owner == msg.sender ||
+                msg.sender == STORE.controller(molyhash),
             "NOT_AUTHORISED"
         );
         _;
     }
 
     /**
-     * @dev check if molecule is available
-     * @param molyhash : hash of molecule
+     * @dev check if polycule is not expired
+     * and can emit records
+     * @param molyhash : hash of polycule
      */
-    modifier isAvailable(bytes32 molyhash) {
-        require(
-            block.timestamp >= Molecules[molyhash]._expiry,
-            "MOLECULE_EXISTS"
-        );
+    modifier canEmit(bytes32 molyhash) {
+        require(block.timestamp < STORE.expiry(molyhash), "MOLECULE_EXPIRED");
         _;
     }
 
     /**
-     * @dev verify molecule is not expired
+     * @dev verify ownership of molecule
      * @param molyhash : hash of molecule
      */
-    modifier isOwned(bytes32 molyhash) {
-        require(
-            block.timestamp < Molecules[molyhash]._expiry,
-            "MOLECULE_EXPIRED"
-        );
+    modifier isCation(bytes32 molyhash) {
+        require(block.timestamp < STORE.expiry(molyhash), "MOLECULE_EXPIRED");
+        address _owner = NAMES.owner(STORE.cation(molyhash));
+        require(_owner == msg.sender, "NOT_OWNER");
         _;
-    }
-
-    /**
-     * @dev check if new config is a duplicate
-     * @param molyhash : hash of molecule
-     * @param rule : rule to check
-     */
-    function isNotDuplicateHook(
-        bytes32 molyhash,
-        uint8 rule
-    ) public view returns (bool) {
-        return !rule.existsIn(Molecules[molyhash]._rules);
     }
 
     /**
@@ -276,25 +229,20 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         bytes32 _anion
     ) public view returns (bool) {
-        return !_anion.existsIn(Molecules[molyhash]._anion);
+        return !_anion.existsIn(STORE.anions(molyhash));
     }
 
     /**
-     * @dev verify ownership of molecule
+     * @dev check if new config is a duplicate
      * @param molyhash : hash of molecule
+     * @param rule : rule to check
      */
-    modifier onlyCation(bytes32 molyhash) {
-        require(
-            block.timestamp < Molecules[molyhash]._expiry,
-            "MOLECULE_EXPIRED"
-        );
-        bytes32 __cation = Molecules[molyhash]._cation;
-        address _cation = NAMES.owner(__cation);
-        require(
-            _cation == msg.sender || Operators[_cation][msg.sender],
-            "NOT_OWNER"
-        );
-        _;
+    function isNotDuplicateRule(
+        bytes32 molyhash,
+        uint8 rule
+    ) public view returns (bool) {
+        (uint8[] memory _rules, ) = STORE.hooksWithRules(molyhash);
+        return !rule.existsIn(_rules);
     }
 
     /**
@@ -304,7 +252,7 @@ contract Helix2MoleculeRegistry {
      */
     function register(bytes32 molyhash, bytes32 _cation) external isRegistrar {
         require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
-        Molecules[molyhash]._cation = _cation;
+        STORE.setCation(molyhash, _cation);
         emit NewCation(molyhash, _cation);
     }
 
@@ -316,9 +264,9 @@ contract Helix2MoleculeRegistry {
     function setCation(
         bytes32 molyhash,
         bytes32 _cation
-    ) external onlyCation(molyhash) {
+    ) external isCation(molyhash) {
         require(NAMES.owner(_cation) != address(0), "CANNOT_BURN");
-        Molecules[molyhash]._cation = _cation;
+        STORE.setCation(molyhash, _cation);
         emit NewCation(molyhash, _cation);
     }
 
@@ -331,7 +279,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         address _controller
     ) external isAuthorised(molyhash) {
-        Molecules[molyhash]._controller = _controller;
+        STORE.setController(molyhash, _controller);
         emit NewController(molyhash, _controller);
     }
 
@@ -345,7 +293,7 @@ contract Helix2MoleculeRegistry {
         bytes32 _anion
     ) external isCationOrController(molyhash) {
         require(isNotDuplicateAnion(molyhash, _anion), "ANION_EXISTS");
-        Molecules[molyhash]._anion.push(_anion);
+        STORE.addAnion(molyhash, _anion);
         emit NewAnion(molyhash, _anion);
     }
 
@@ -353,46 +301,47 @@ contract Helix2MoleculeRegistry {
      * @dev adds new array of anions to the molecule
      * @notice will skip pre-existing anions
      * @param molyhash : hash of target molecule
-     * @param _anion : array of new anions
+     * @param _anions : array of new anions
      */
     function setAnions(
         bytes32 molyhash,
-        bytes32[] memory _anion
+        bytes32[] memory _anions
     ) external isAuthorised(molyhash) {
-        for (uint i = 0; i < _anion.length; i++) {
-            if (!_anion[i].existsIn(Molecules[molyhash]._anion)) {
-                Molecules[molyhash]._anion.push(_anion[i]);
+        bytes32[] memory _anions_ = STORE.anions(molyhash);
+        for (uint i = 0; i < _anions.length; i++) {
+            if (!_anions[i].existsIn(_anions_)) {
+                STORE.addAnion(molyhash, _anions[i]);
             }
         }
-        emit NewAnions(molyhash, _anion);
+        emit NewAnions(molyhash, _anions);
     }
 
     /**
      * @dev pops an anion from the molecule
      * @param molyhash : hash of target molecule
-     * @param __anion : hash of anion to remove
+     * @param _anion : hash of anion to remove
      */
     function popAnion(
         bytes32 molyhash,
-        bytes32 __anion
+        bytes32 _anion
     ) external isCationOrController(molyhash) {
-        bytes32[] memory _anion = Molecules[molyhash]._anion;
-        if (__anion.existsIn(_anion)) {
-            uint index = __anion.findIn(_anion);
-            delete Molecules[molyhash]._anion[index];
-            emit PopAnion(molyhash, __anion);
+        bytes32[] memory _anions = STORE.anions(molyhash);
+        if (_anion.existsIn(_anions)) {
+            uint index = _anion.findIn(_anions);
+            STORE.popAnion(molyhash, index);
+            emit PopAnion(molyhash, _anion);
         } else {
             revert BAD_ANION();
         }
     }
 
     /**
-     * @dev set new alias for molecule
+     * @dev set new label for molecule
      * @param molyhash : hash of molecule
-     * @param _alias : bash of alias
+     * @param _label : bash of label
      */
-    function setAlias(bytes32 molyhash, bytes32 _alias) external isRegistrar {
-        Molecules[molyhash]._alias = _alias;
+    function setLabel(bytes32 molyhash, bytes32 _label) external isRegistrar {
+        STORE.setLabel(molyhash, _label);
     }
 
     /**
@@ -404,7 +353,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         bool _covalence
     ) external isAuthorised(molyhash) {
-        Molecules[molyhash]._covalence = _covalence;
+        STORE.setCovalence(molyhash, _covalence);
         emit NewCovalence(molyhash, _covalence);
     }
 
@@ -417,7 +366,7 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         address _resolver
     ) external isAuthorised(molyhash) {
-        Molecules[molyhash]._resolver = _resolver;
+        STORE.setResolver(molyhash, _resolver);
         emit NewResolver(molyhash, _resolver);
     }
 
@@ -427,8 +376,8 @@ contract Helix2MoleculeRegistry {
      * @param _expiry : new expiry
      */
     function setExpiry(bytes32 molyhash, uint _expiry) external isRegistrar {
-        require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
-        Molecules[molyhash]._expiry = _expiry;
+        require(_expiry > STORE.expiry(molyhash), "BAD_EXPIRY");
+        STORE.setExpiry(molyhash, _expiry);
         emit NewExpiry(molyhash, _expiry);
     }
 
@@ -441,24 +390,14 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         uint _expiry
     ) external payable isCationOrController(molyhash) {
-        require(_expiry > Molecules[molyhash]._expiry, "BAD_EXPIRY");
-        uint newDuration = _expiry - Molecules[molyhash]._expiry;
-        require(msg.value >= newDuration * basePrice, "INSUFFICIENT_ETHER");
-        Molecules[molyhash]._expiry = _expiry;
+        uint currentExpiry = STORE.expiry(molyhash);
+        require(_expiry > currentExpiry, "BAD_EXPIRY");
+        require(
+            msg.value >= (_expiry - currentExpiry) * basePrice,
+            "INSUFFICIENT_ETHER"
+        );
+        STORE.setExpiry(molyhash, _expiry);
         emit NewExpiry(molyhash, _expiry);
-    }
-
-    /**
-     * @dev set record for a molecule
-     * @param molyhash : hash of molecule
-     * @param _resolver : new record
-     */
-    function setRecord(
-        bytes32 molyhash,
-        address _resolver
-    ) external isAuthorised(molyhash) {
-        Molecules[molyhash]._resolver = _resolver;
-        emit NewRecord(molyhash, _resolver);
     }
 
     /**
@@ -472,9 +411,8 @@ contract Helix2MoleculeRegistry {
         address config,
         uint8 rule
     ) external isCationOrController(molyhash) {
-        require(isNotDuplicateHook(molyhash, rule), "HOOK_EXISTS");
-        Molecules[molyhash]._rules.push(rule);
-        Molecules[molyhash]._hooks[rule] = config;
+        require(isNotDuplicateRule(molyhash, rule), "RULE_EXISTS");
+        STORE.hook(molyhash, config, rule);
         emit Hooked(molyhash, config, rule);
     }
 
@@ -489,9 +427,17 @@ contract Helix2MoleculeRegistry {
         address config,
         uint8 rule
     ) external isCationOrController(molyhash) {
-        require(Molecules[molyhash]._hooks[rule] != config, "RULE_EXISTS");
-        Molecules[molyhash]._hooks[rule] = config;
-        emit Rehooked(molyhash, config, rule);
+        (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
+            molyhash
+        );
+        if (rule.existsIn(_rules)) {
+            uint index = rule.findIn(_rules);
+            require(_hooks[index] != config, "RULE_EXISTS");
+            STORE.rehook(molyhash, config, rule);
+            emit Rehooked(molyhash, config, rule);
+        } else {
+            revert BAD_RULE();
+        }
     }
 
     /**
@@ -503,12 +449,11 @@ contract Helix2MoleculeRegistry {
         bytes32 molyhash,
         uint8 rule
     ) external isCationOrController(molyhash) {
-        uint8[] memory _rules = Molecules[molyhash]._rules;
+        (uint8[] memory _rules, ) = STORE.hooksWithRules(molyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
-            Molecules[molyhash]._hooks[rule] = address(0);
+            STORE.unhook(molyhash, rule, index);
             emit Unhooked(molyhash, rule);
-            delete Molecules[molyhash]._rules[index];
         } else {
             revert BAD_HOOK();
         }
@@ -519,23 +464,8 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of the molecule
      */
     function unhookAll(bytes32 molyhash) external isAuthorised(molyhash) {
-        uint8[] memory _rules = Molecules[molyhash]._rules;
-        for (uint i = 0; i < _rules.length; i++) {
-            Molecules[molyhash]._hooks[_rules[i]] = address(0);
-            emit Unhooked(molyhash, _rules[i]);
-        }
-        delete Molecules[molyhash]._rules;
+        STORE.unhookAll(molyhash);
         emit UnhookedAll(molyhash);
-    }
-
-    /**
-     * @dev sets Controller for all your tokens
-     * @param operator : operator address to be set as Controller
-     * @param approved : bool to set
-     */
-    function setApprovalForAll(address operator, bool approved) external {
-        Operators[msg.sender][operator] = approved;
-        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -545,13 +475,13 @@ contract Helix2MoleculeRegistry {
      */
     function cation(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (bytes32) {
-        bytes32 __cation = Molecules[molyhash]._cation;
-        address _cation = NAMES.owner(__cation);
-        if (_cation == address(this)) {
-            return roothash;
+    ) public view canEmit(molyhash) returns (bytes32) {
+        bytes32 _cation = STORE.cation(molyhash);
+        address _owner = NAMES.owner(_cation);
+        if (_owner == address(this)) {
+            return bytes32(0);
         }
-        return __cation;
+        return _cation;
     }
 
     /**
@@ -561,9 +491,8 @@ contract Helix2MoleculeRegistry {
      */
     function controller(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (address) {
-        address _controller = Molecules[molyhash]._controller;
-        return _controller;
+    ) public view canEmit(molyhash) returns (address) {
+        return STORE.controller(molyhash);
     }
 
     /**
@@ -573,21 +502,19 @@ contract Helix2MoleculeRegistry {
      */
     function covalence(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (bool) {
-        bool _covalence = Molecules[molyhash]._covalence;
-        return _covalence;
+    ) public view canEmit(molyhash) returns (bool) {
+        return STORE.covalence(molyhash);
     }
 
     /**
-     * @dev shows alias of a molecule
+     * @dev shows label of a molecule
      * @param molyhash : hash of molecule to query
-     * @return alias of the molecule
+     * @return label of the molecule
      */
-    function alias_(
+    function label(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (bytes32) {
-        bytes32 _alias = Molecules[molyhash]._alias;
-        return _alias;
+    ) public view canEmit(molyhash) returns (bytes32) {
+        return STORE.label(molyhash);
     }
 
     /**
@@ -601,14 +528,10 @@ contract Helix2MoleculeRegistry {
     )
         public
         view
-        isOwned(molyhash)
+        canEmit(molyhash)
         returns (uint8[] memory _rules, address[] memory _hooks)
     {
-        _rules = Molecules[molyhash]._rules;
-        _hooks = new address[](_rules.length);
-        for (uint i = 0; i < _rules.length; i++) {
-            _hooks[i] = Molecules[molyhash]._hooks[_rules[i]];
-        }
+        (_rules, _hooks) = STORE.hooksWithRules(molyhash);
     }
 
     /**
@@ -616,11 +539,10 @@ contract Helix2MoleculeRegistry {
      * @param molyhash : hash of molecule to query
      * @return array of anions
      */
-    function anion(
+    function anions(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (bytes32[] memory) {
-        bytes32[] memory _anion = Molecules[molyhash]._anion;
-        return _anion;
+    ) public view canEmit(molyhash) returns (bytes32[] memory) {
+        return STORE.anions(molyhash);
     }
 
     /**
@@ -629,8 +551,7 @@ contract Helix2MoleculeRegistry {
      * @return expiry
      */
     function expiry(bytes32 molyhash) public view returns (uint) {
-        uint _expiry = Molecules[molyhash]._expiry;
-        return _expiry;
+        return STORE.expiry(molyhash);
     }
 
     /**
@@ -640,9 +561,8 @@ contract Helix2MoleculeRegistry {
      */
     function resolver(
         bytes32 molyhash
-    ) public view isOwned(molyhash) returns (address) {
-        address _resolver = Molecules[molyhash]._resolver;
-        return _resolver;
+    ) public view canEmit(molyhash) returns (address) {
+        return STORE.resolver(molyhash);
     }
 
     /**
@@ -651,28 +571,6 @@ contract Helix2MoleculeRegistry {
      * @return true or false
      */
     function recordExists(bytes32 molyhash) public view returns (bool) {
-        return block.timestamp < Molecules[molyhash]._expiry;
-    }
-
-    /**
-     * @dev check if an address is set as operator
-     * @param _cation cation of molecule to query
-     * @param operator operator to check
-     * @return true or false
-     */
-    function isApprovedForAll(
-        bytes32 _cation,
-        address operator
-    ) external view returns (bool) {
-        address __cation = NAMES.owner(_cation);
-        return Operators[__cation][operator];
-    }
-
-    /**
-     * @dev withdraw ether to Dev, anyone can trigger
-     */
-    function withdrawEther() external {
-        (bool ok, ) = Dev.call{value: address(this).balance}("");
-        require(ok, "ETH_TRANSFER_FAILED");
+        return block.timestamp < STORE.expiry(molyhash);
     }
 }
