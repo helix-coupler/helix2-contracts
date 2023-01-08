@@ -215,9 +215,9 @@ contract Helix2PolyculeRegistry {
         bytes32 _anion,
         uint8 rule
     ) internal view returns (bool) {
+        (uint8[] memory _rules, ) = STORE.hooksWithRules(polyhash);
         return
-            !_anion.existsIn(STORE.anions(polyhash)) &&
-            !rule.existsIn(STORE.rules(polyhash));
+            !_anion.existsIn(STORE.anions(polyhash)) && !rule.existsIn(_rules);
     }
 
     /**
@@ -469,7 +469,7 @@ contract Helix2PolyculeRegistry {
         bytes32 polyhash,
         uint8 rule
     ) external isCationOrController(polyhash) {
-        uint8[] memory _rules = STORE.rules(polyhash);
+        (uint8[] memory _rules, ) = STORE.hooksWithRules(polyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             STORE.unhook(polyhash, rule, index);

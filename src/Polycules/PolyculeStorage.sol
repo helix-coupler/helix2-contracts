@@ -317,31 +317,6 @@ contract Helix2PolyculeStorage {
     }
 
     /**
-     * @dev return hooks of a polycule
-     * @param polyhash : hash of polycule to query
-     * @return _hooks
-     */
-    function hooks(bytes32 polyhash) public view returns (address[] memory) {
-        uint _len = Polycules[polyhash]._rules.length;
-        address[] memory _hooks = new address[](_len);
-        for (uint i = 0; i < _len; i++) {
-            _hooks[i] = Polycules[polyhash]._hooks[
-                Polycules[polyhash]._rules[i]
-            ];
-        }
-        return _hooks;
-    }
-
-    /**
-     * @dev return rules of a polycule
-     * @param polyhash : hash of polycule to query
-     * @return _rules
-     */
-    function rules(bytes32 polyhash) public view returns (uint8[] memory) {
-        return Polycules[polyhash]._rules;
-    }
-
-    /**
      * @dev return hooks & rules of a polycule
      * @param polyhash : hash of polycule to query
      * @return _rules

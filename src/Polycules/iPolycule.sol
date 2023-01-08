@@ -70,10 +70,6 @@ interface iPOLYCULE {
 
     function expiry(bytes32 polyhash) external view returns (uint);
 
-    function hooks(bytes32 polyhash) external view returns (address[] memory);
-
-    function rules(bytes32 polyhash) external view returns (uint8[] memory);
-
     function hooksWithRules(
         bytes32 polyhash
     ) external view returns (uint8[] memory, address[] memory);
