@@ -14,6 +14,9 @@ import "src/Molecules/MoleculeRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
 import "src/Molecules/MoleculeRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
+import "src/Molecules/MoleculeStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 import "src/Molecules/MoleculeResolver.sol";
@@ -41,6 +44,9 @@ contract Helix2MoleculesTest is Test {
     // Registry
     Helix2NameRegistry public NAMES;
     Helix2MoleculeRegistry public MOLECULES;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
+    Helix2MoleculeStorage public MOLYSTORE;
     // Registrar
     Helix2NameRegistrar public _NAME_;
     Helix2MoleculeRegistrar public _MOLY_;
@@ -71,7 +77,7 @@ contract Helix2MoleculesTest is Test {
     string[2] public _crook_ = ["virgil___", "virgil____"];
     address public faker = address(0xc0de4d1ccc555);
     string public brown = "nick";
-    string public _alias = "virgin";
+    string public label = "virgin";
     uint256 public lifespan = 50;
     uint8[2] public rules = [uint8(uint256(404)), uint8(uint256(400))];
     address[2] public config = [
@@ -79,8 +85,8 @@ contract Helix2MoleculesTest is Test {
         address(0x0101010101011)
     ];
     bytes32 public cation;
-    bytes32[] public anion;
-    bytes32[] public _anion_;
+    bytes32[] public anions;
+    bytes32[] public _anions_;
     bytes32 public molyhash;
     bytes32 public fakehash;
     bytes32 public jokehash;
@@ -92,48 +98,63 @@ contract Helix2MoleculesTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // MOLECULES -------------------------------------------------
         // deploy MoleculeRegistry
         MOLECULES = new Helix2MoleculeRegistry(
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
         address _MOLECULES = address(MOLECULES);
+        // deploy MoleculeStorage
+        MOLYSTORE = new Helix2MoleculeStorage(_MOLECULES);
         // deploy MoleculeRegistrar
         _MOLY_ = new Helix2MoleculeRegistrar(
             _MOLECULES,
             _NAMES,
-            _HELIX2,
+            address(HELIX2_),
             address(PriceOracle)
         );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
         // deploy Molecule Resolver
-        MoleculeResolver_ = new MoleculeResolver(_HELIX2);
+        MoleculeResolver_ = new MoleculeResolver(address(HELIX2_));
 
         // remaining values
         namePrice = PriceOracle.getPrices()[0];
         molyprice = PriceOracle.getPrices()[2];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         HELIX2_.setRegistrar(2, address(_MOLY_));
         HELIX2_.setRegistry(2, _MOLECULES);
-        MOLECULES.setConfig(address(HELIX2_), address(PriceOracle));
+        MOLECULES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(MOLYSTORE)
+        );
     }
 
     /// forge setup
@@ -148,7 +169,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -162,19 +183,19 @@ contract Helix2MoleculesTest is Test {
             abi.encodePacked(
                 cation,
                 roothash,
-                keccak256(abi.encodePacked(_alias))
+                keccak256(abi.encodePacked(label))
             )
         );
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         assertEq(molyhash, _molyhash);
-        bytes32[] memory taker_ = MOLECULES.anion(molyhash);
-        assertEq(taker.length, anion.length);
+        bytes32[] memory taker_ = MOLECULES.anions(molyhash);
+        assertEq(taker.length, anions.length);
         assertEq(taker.length, taker_.length);
     }
 
@@ -187,7 +208,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -197,9 +218,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         vm.warp(block.timestamp + 10);
@@ -215,13 +236,13 @@ contract Helix2MoleculesTest is Test {
         vm.prank(pill);
         MOLECULES.setController(molyhash, faker);
         vm.prank(pill);
-        MOLECULES.setRecord(molyhash, faker);
+        MOLECULES.setResolver(molyhash, faker);
         vm.warp(block.timestamp + 200);
         assertEq(MOLECULES.recordExists(molyhash), false);
     }
 
     /// Register a molecule and verify records
-    function testVerifyRecords() public {
+    function testVerifyResolvers() public {
         // register (1 + n) names
         cation = _NAME_.newName{value: namePrice * lifespan}(
             black,
@@ -229,7 +250,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -239,21 +260,21 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         assertEq(NAMES.owner(MOLECULES.cation(molyhash)), pill);
-        bytes32[] memory taker_ = MOLECULES.anion(molyhash);
-        assertEq(taker.length, anion.length);
+        bytes32[] memory taker_ = MOLECULES.anions(molyhash);
+        assertEq(taker.length, anions.length);
         assertEq(taker.length, taker_.length);
         for (uint i = 0; i < crook.length; i++) {
             assertEq(NAMES.owner(taker_[i]), taker[i]);
         }
         assertEq(MOLECULES.cation(molyhash), cation);
         for (uint i = 0; i < crook.length; i++) {
-            assertEq(taker_[i], anion[i]);
+            assertEq(taker_[i], anions[i]);
         }
         assertEq(MOLECULES.controller(molyhash), pill);
         assertEq(MOLECULES.resolver(molyhash), defaultResolver);
@@ -273,7 +294,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -283,9 +304,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -308,7 +329,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -318,9 +339,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -330,14 +351,14 @@ contract Helix2MoleculesTest is Test {
             lifespan + 1
         );
         vm.prank(pill);
-        MOLECULES.setRecord(molyhash, address(0));
+        MOLECULES.setResolver(molyhash, address(0));
         vm.prank(pill);
         MOLECULES.setCovalence(molyhash, false);
         vm.prank(pill);
         MOLECULES.setController(molyhash, faker);
         assertEq(MOLECULES.controller(molyhash), faker);
         vm.prank(faker);
-        MOLECULES.setRecord(molyhash, address(0));
+        MOLECULES.setResolver(molyhash, address(0));
         assertEq(MOLECULES.resolver(molyhash), address(0));
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
@@ -353,7 +374,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -363,9 +384,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -378,7 +399,7 @@ contract Helix2MoleculesTest is Test {
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
         MOLECULES.setCation(molyhash, fakehash);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        MOLECULES.setRecord(molyhash, address(0));
+        MOLECULES.setResolver(molyhash, address(0));
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
         MOLECULES.setController(molyhash, faker);
     }
@@ -392,7 +413,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -402,9 +423,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         assertEq(MOLECULES.recordExists(molyhash), true);
@@ -412,9 +433,9 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.recordExists(molyhash), false);
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         assertEq(MOLECULES.recordExists(molyhash), true);
@@ -429,7 +450,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -439,9 +460,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         assertEq(MOLECULES.recordExists(molyhash), true);
@@ -484,7 +505,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -493,7 +514,7 @@ contract Helix2MoleculesTest is Test {
             );
         }
         for (uint i = 0; i < _crook_.length; i++) {
-            _anion_.push(
+            _anions_.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     _crook_[i],
                     _taker_[i],
@@ -503,9 +524,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -517,18 +538,18 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.recordExists(molyhash), true);
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER_OR_CONTROLLER"));
-        MOLECULES.addAnion(molyhash, _anion_[0]);
+        MOLECULES.addAnion(molyhash, _anions_[0]);
         vm.prank(pill);
-        MOLECULES.addAnion(molyhash, _anion_[0]);
-        assertEq(MOLECULES.anion(molyhash).length, anion.length + 1);
+        MOLECULES.addAnion(molyhash, _anions_[0]);
+        assertEq(MOLECULES.anions(molyhash).length, anions.length + 1);
         vm.prank(pill);
-        MOLECULES.popAnion(molyhash, _anion_[0]);
-        assertEq(MOLECULES.anion(molyhash).length, anion.length + 1);
+        MOLECULES.popAnion(molyhash, _anions_[0]);
+        assertEq(MOLECULES.anions(molyhash).length, anions.length + 1);
         vm.prank(pill);
-        MOLECULES.setAnions(molyhash, _anion_);
+        MOLECULES.setAnions(molyhash, _anions_);
         assertEq(
-            MOLECULES.anion(molyhash).length,
-            anion.length + _anion_.length + 1
+            MOLECULES.anions(molyhash).length,
+            anions.length + _anions_.length + 1
         );
     }
 
@@ -541,7 +562,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -551,9 +572,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -572,10 +593,10 @@ contract Helix2MoleculesTest is Test {
         vm.prank(pill);
         MOLECULES.setController(molyhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         MOLECULES.hook(molyhash, config[0], rules[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         MOLECULES.hook(molyhash, config[1], rules[0]);
         vm.prank(faker);
         MOLECULES.hook(molyhash, config[1], rules[1]);
@@ -594,7 +615,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -604,9 +625,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to
@@ -627,10 +648,10 @@ contract Helix2MoleculesTest is Test {
         vm.prank(pill);
         MOLECULES.setController(molyhash, faker);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         MOLECULES.hook(molyhash, config[0], rules[0]);
         vm.prank(faker);
-        vm.expectRevert(abi.encodePacked("HOOK_EXISTS"));
+        vm.expectRevert(abi.encodePacked("RULE_EXISTS"));
         MOLECULES.hook(molyhash, config[1], rules[0]);
         vm.prank(faker);
         MOLECULES.hook(molyhash, config[1], rules[1]);
@@ -651,7 +672,7 @@ contract Helix2MoleculesTest is Test {
             lifespan
         );
         for (uint i = 0; i < crook.length; i++) {
-            anion.push(
+            anions.push(
                 _NAME_.newName{value: namePrice * lifespan}(
                     crook[i],
                     taker[i],
@@ -661,9 +682,9 @@ contract Helix2MoleculesTest is Test {
         }
         // register test molecule linking (1 + n) names
         molyhash = _MOLY_.newMolecule{value: molyprice * lifespan}(
-            _alias,
+            label,
             cation,
-            anion,
+            anions,
             lifespan
         );
         // register name to transfer to

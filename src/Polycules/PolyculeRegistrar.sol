@@ -32,7 +32,7 @@ contract Helix2PolyculeRegistrar {
     string public constant symbol = "HPS";
 
     /// @dev : Helix2 Polycule events
-    event NewPolycule(string _alias, bytes32 indexed polyhash, bytes32 cation);
+    event NewPolycule(string _label, bytes32 indexed polyhash, bytes32 cation);
     event OwnershipTransferred(
         address indexed previousOwner,
         address indexed newOwner
@@ -119,15 +119,15 @@ contract Helix2PolyculeRegistrar {
     }
 
     /**
-     * @dev verify alias has legal form
-     * @param _alias : alias of polycule
+     * @dev verify label has legal form
+     * @param _label : label of polycule
      */
-    modifier isLegal(string memory _alias) {
+    modifier isLegal(string memory _label) {
         require(
-            _alias.strlen() > sizeLimit[0] && _alias.strlen() < sizeLimit[1],
+            _label.strlen() > sizeLimit[0] && _label.strlen() < sizeLimit[1],
             "ILLEGAL_LABEL"
-        ); /// check for undersized or oversized alias
-        require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
+        ); /// check for undersized or oversized label
+        require(!_label.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -138,41 +138,6 @@ contract Helix2PolyculeRegistrar {
      */
     modifier isLegalMap(bytes32[] memory _anion, address[] memory _config) {
         require(_anion.length == _config.length, "BAD_MAP");
-        _;
-    }
-
-    /**
-     * @dev verify polycule has expired and can be registered
-     * @param _cation : cation of polycule
-     * @param _alias : alias of polycule
-     */
-    modifier isAvailable(bytes32 _cation, string memory _alias) {
-        require(
-            !POLYCULES.recordExists(
-                keccak256(
-                    abi.encodePacked(
-                        _cation,
-                        roothash,
-                        keccak256(abi.encodePacked(_alias))
-                    )
-                )
-            ),
-            "POLYCULE_EXISTS"
-        );
-        _;
-    }
-
-    /**
-     * @dev verify ownership of polycule
-     * @param polyhash : hash of polycule
-     */
-    modifier onlyCation(bytes32 polyhash) {
-        require(POLYCULES.recordExists(polyhash), "NO_RECORD");
-        address cation = NAMES.owner(POLYCULES.cation(polyhash));
-        require(
-            cation == msg.sender || Operators[cation][msg.sender],
-            "NOT_OWNER"
-        );
         _;
     }
 
@@ -194,7 +159,7 @@ contract Helix2PolyculeRegistrar {
 
     /**
      * @dev registers a new polycule
-     * @param _alias : alias of polycule without suffix
+     * @param _label : label of polycule without suffix
      * @param cation : cation to set for new polycule
      * @param anion : array of target anions
      * @param lifespan : duration of registration
@@ -203,7 +168,7 @@ contract Helix2PolyculeRegistrar {
      * @return hash of new polycule
      */
     function newPolycule(
-        string memory _alias,
+        string memory _label,
         bytes32 cation,
         bytes32[] memory anion,
         uint lifespan,
@@ -212,16 +177,16 @@ contract Helix2PolyculeRegistrar {
     )
         external
         payable
-        isLegal(_alias)
+        isLegal(_label)
         isLegalMap(anion, config)
         returns (bytes32)
     {
         address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
-        bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 labelhash = keccak256(abi.encodePacked(_label));
         bytes32 polyhash = keccak256(
-            abi.encodePacked(cation, roothash, aliashash)
+            abi.encodePacked(cation, roothash, labelhash)
         );
         /// @notice : availability is checked inline (not as modifier) to avoid deep stack
         require(!POLYCULES.recordExists(polyhash), "POLYCULE_EXISTS");
@@ -230,8 +195,8 @@ contract Helix2PolyculeRegistrar {
         POLYCULES.setExpiry(polyhash, block.timestamp + lifespan); /// set new expiry
         POLYCULES.setController(polyhash, _cation); /// set new controller
         POLYCULES.setResolver(polyhash, defaultResolver); /// set new resolver
-        POLYCULES.setAlias(polyhash, aliashash); /// set new alias
-        emit NewPolycule(_alias, polyhash, cation);
+        POLYCULES.setLabel(polyhash, labelhash); /// set new label
+        emit NewPolycule(_label, polyhash, cation);
         return polyhash;
     }
 }

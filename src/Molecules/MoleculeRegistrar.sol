@@ -32,7 +32,7 @@ contract Helix2MoleculeRegistrar {
     string public constant symbol = "HMS";
 
     /// @dev : Helix2 Molecule events
-    event NewMolecule(string _alias, bytes32 indexed molyhash, bytes32 cation);
+    event NewMolecule(string label, bytes32 indexed molyhash, bytes32 cation);
     event OwnershipTransferred(
         address indexed previousOwner,
         address indexed newOwner
@@ -119,50 +119,15 @@ contract Helix2MoleculeRegistrar {
     }
 
     /**
-     * @dev verify alias has legal form
-     * @param _alias : alias of molecule
+     * @dev verify label has legal form
+     * @param label : label of molecule
      */
-    modifier isLegal(string memory _alias) {
+    modifier isLegal(string memory label) {
         require(
-            _alias.strlen() > sizeLimit[0] && _alias.strlen() < sizeLimit[1],
+            label.strlen() > sizeLimit[0] && label.strlen() < sizeLimit[1],
             "ILLEGAL_LABEL"
-        ); /// check for undersized or oversized alias
-        require(!_alias.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
-        _;
-    }
-
-    /**
-     * @dev verify molecule has expired and can be registered
-     * @param _cation : cation of molecule
-     * @param _alias : alias of molecule
-     */
-    modifier isAvailable(bytes32 _cation, string memory _alias) {
-        require(
-            !MOLECULES.recordExists(
-                keccak256(
-                    abi.encodePacked(
-                        _cation,
-                        roothash,
-                        keccak256(abi.encodePacked(_alias))
-                    )
-                )
-            ),
-            "MOLECULE_EXISTS"
-        );
-        _;
-    }
-
-    /**
-     * @dev verify ownership of molecule
-     * @param molyhash : hash of molecule
-     */
-    modifier onlyCation(bytes32 molyhash) {
-        require(MOLECULES.recordExists(molyhash), "NO_RECORD");
-        address cation = NAMES.owner(MOLECULES.cation(molyhash));
-        require(
-            cation == msg.sender || Operators[cation][msg.sender],
-            "NOT_OWNER"
-        );
+        ); /// check for undersized or oversized label
+        require(!label.existsIn(illegalBlocks), "ILLEGAL_CHARS"); /// check for forbidden characters
         _;
     }
 
@@ -184,36 +149,36 @@ contract Helix2MoleculeRegistrar {
 
     /**
      * @dev registers a new molecule
-     * @param _alias : alias of molecule without suffix
+     * @param label : label of molecule without suffix
      * @param cation : cation to set for new molecule
-     * @param anion : array of target anions
+     * @param anions : array of target anions
      * @param lifespan : duration of registration
      * @return hash of new molecule
      */
     function newMolecule(
-        string memory _alias,
+        string memory label,
         bytes32 cation,
-        bytes32[] memory anion,
+        bytes32[] memory anions,
         uint lifespan
-    ) external payable isLegal(_alias) returns (bytes32) {
+    ) external payable isLegal(label) returns (bytes32) {
         address _cation = NAMES.owner(cation);
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");
-        bytes32 aliashash = keccak256(abi.encodePacked(_alias));
+        bytes32 labelhash = keccak256(abi.encodePacked(label));
         bytes32 molyhash = keccak256(
-            abi.encodePacked(cation, roothash, aliashash)
+            abi.encodePacked(cation, roothash, labelhash)
         );
         /// @notice : availability is checked inline (not as modifier) to avoid deep stack
         require(!MOLECULES.recordExists(molyhash), "MOLECULE_EXISTS");
         MOLECULES.register(molyhash, cation); /// set new cation (= from)
-        MOLECULES.setAnions(molyhash, anion); /// set anions (= to)
+        MOLECULES.setAnions(molyhash, anions); /// set anions (= to)
         MOLECULES.setExpiry(molyhash, block.timestamp + lifespan); /// set new expiry
         MOLECULES.setController(molyhash, _cation); /// set new controller
         MOLECULES.setResolver(molyhash, defaultResolver); /// set new resolver
-        MOLECULES.setAlias(molyhash, aliashash); /// set new alias
+        MOLECULES.setLabel(molyhash, labelhash); /// set new label
         MOLECULES.setCovalence(molyhash, false); /// set new covalence flag
         MOLECULES.unhookAll(molyhash); /// reset hooks
-        emit NewMolecule(_alias, molyhash, cation);
+        emit NewMolecule(label, molyhash, cation);
         return molyhash;
     }
 }

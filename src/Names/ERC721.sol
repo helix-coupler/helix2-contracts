@@ -88,7 +88,7 @@ abstract contract ERC721 is BaseRegistrar {
     }
 
     /**
-     * @dev sets Controller (for an owner)
+     * @dev sets Controller for all your tokens
      * @param operator : operator address to be set as Controller
      * @param flag : bool to set
      */

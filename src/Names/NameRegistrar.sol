@@ -69,40 +69,6 @@ contract Helix2NameRegistrar is ERC721 {
     }
 
     /**
-     * @dev verify name has expired and can be registered
-     * @param label : label of name
-     */
-    modifier isAvailable(string memory label) {
-        /// @notice : availability is checked inline (not as modifier) to avoid deep stack
-        require(
-            !NAMES.recordExists(
-                keccak256(
-                    abi.encodePacked(
-                        roothash,
-                        keccak256(abi.encodePacked(label))
-                    )
-                )
-            ),
-            "NAME_EXISTS"
-        );
-        _;
-    }
-
-    /**
-     * @dev verify ownership of name
-     * @param namehash : hash of name
-     */
-    modifier onlyOwner(bytes32 namehash) {
-        require(NAMES.recordExists(namehash), "NO_RECORD");
-        address owner = NAMES.owner(namehash);
-        require(
-            owner == msg.sender || Operators[owner][msg.sender],
-            "NOT_OWNER"
-        );
-        _;
-    }
-
-    /**
      * @dev sets Default Resolver
      * @param _resolver : resolver address
      */
@@ -165,7 +131,7 @@ contract Helix2NameRegistrar is ERC721 {
      * @param _ens : ENS domain to hash
      * @return _namehash : hash of ENS domain
      */
-    function hashENS(
+    function ensHash(
         bytes calldata _ens
     ) public pure returns (bytes32 _namehash) {
         uint i = _ens.length;
@@ -199,7 +165,7 @@ contract Helix2NameRegistrar is ERC721 {
         string calldata ens,
         uint lifespan
     ) external payable returns (bytes32) {
-        bytes32 node = hashENS(bytes(ens));
+        bytes32 node = ensHash(bytes(ens));
         require(msg.sender == ENS.owner(node), "NOT_ENS_OWNER");
         require(lifespan >= defaultLifespan, "LIFESPAN_TOO_SHORT");
         require(msg.value >= basePrice * lifespan, "INSUFFICIENT_ETHER");

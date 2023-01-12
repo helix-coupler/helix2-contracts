@@ -12,6 +12,8 @@ import "src/Oracle/PriceOracle.sol";
 import "src/Names/NameRegistrar.sol";
 // Registry
 import "src/Names/NameRegistry.sol";
+// Storage
+import "src/Names/NameStorage.sol";
 // Resolver
 import "src/Names/NameResolver.sol";
 // Interface
@@ -34,6 +36,8 @@ contract Helix2NamesTest is Test {
     NameResolver public NameResolver_;
     // Registry
     Helix2NameRegistry public NAMES;
+    // Storage
+    Helix2NameStorage public NAMESTORE;
     // Registrar
     Helix2NameRegistrar public _NAME_;
     // Price Oracle
@@ -65,26 +69,35 @@ contract Helix2NamesTest is Test {
         // HELIX2 ------------------------------------------------
         // deploy Helix2
         HELIX2_ = new HELIX2();
-        address _HELIX2 = address(HELIX2_);
         // deploy Price Oracle
         PriceOracle = new Helix2PriceOracle();
 
         // NAMES -------------------------------------------------
         // deploy NameRegistry
-        NAMES = new Helix2NameRegistry(_HELIX2, address(PriceOracle));
+        NAMES = new Helix2NameRegistry(address(HELIX2_), address(PriceOracle));
         address _NAMES = address(NAMES);
+        // deploy NameStorage
+        NAMESTORE = new Helix2NameStorage(_NAMES);
         // deploy NameRegistrar
-        _NAME_ = new Helix2NameRegistrar(_NAMES, _HELIX2, address(PriceOracle));
+        _NAME_ = new Helix2NameRegistrar(
+            _NAMES,
+            address(HELIX2_),
+            address(PriceOracle)
+        );
 
         // RESOLVERS ---------------------------------------------
         // deploy Name Resolver
-        NameResolver_ = new NameResolver(_HELIX2);
+        NameResolver_ = new NameResolver(address(HELIX2_));
 
         // remaining values
         basePrice = PriceOracle.getPrices()[0];
         HELIX2_.setRegistrar(0, address(_NAME_));
         HELIX2_.setRegistry(0, _NAMES);
-        NAMES.setConfig(address(HELIX2_), address(PriceOracle));
+        NAMES.setConfig(
+            address(HELIX2_),
+            address(PriceOracle),
+            address(NAMESTORE)
+        );
         roothash = HELIX2_.getRoothash()[0];
         ENS = iENS(HELIX2_.getENSRegistry());
     }
@@ -185,13 +198,13 @@ contract Helix2NamesTest is Test {
         vm.prank(pill);
         NAMES.setController(namehash, taker);
         vm.prank(pill);
-        NAMES.setRecord(namehash, taker);
+        NAMES.setResolver(namehash, taker);
         vm.warp(block.timestamp + 200);
         assertEq(NAMES.recordExists(namehash), false);
     }
 
     /// Register a name and verify records
-    function testVerifyRecords() public {
+    function testVerifyResolvers() public {
         // register test name
         namehash = _NAME_.newName{value: basePrice * lifespan}(
             label,
@@ -248,7 +261,7 @@ contract Helix2NamesTest is Test {
             lifespan
         );
         vm.prank(pill);
-        NAMES.setRecord(namehash, address(0));
+        NAMES.setResolver(namehash, address(0));
         vm.prank(pill);
         NAMES.setResolver(namehash, address(0));
         vm.prank(pill);
@@ -257,7 +270,7 @@ contract Helix2NamesTest is Test {
         vm.prank(taker);
         NAMES.setController(namehash, faker);
         vm.prank(faker);
-        NAMES.setRecord(namehash, address(0));
+        NAMES.setResolver(namehash, address(0));
         assertEq(NAMES.resolver(namehash), address(0));
         vm.prank(faker);
         vm.expectRevert(abi.encodePacked("NOT_OWNER"));
@@ -331,7 +344,7 @@ contract Helix2NamesTest is Test {
         NAMES.setController(namehash, taker);
         vm.prank(taker);
         vm.expectRevert(abi.encodePacked("NOT_AUTHORISED"));
-        NAMES.setRecord(namehash, taker);
+        NAMES.setResolver(namehash, taker);
         uint256 _expiry = NAMES.expiry(namehash);
         vm.deal(taker, basePrice * 100);
         vm.prank(taker);
