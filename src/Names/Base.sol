@@ -86,8 +86,27 @@ abstract contract BaseRegistrar {
      * @param sig : bytes4 identifier
      * @param value : boolean
      */
-    function setInterface(bytes4 sig, bool value) external payable onlyDev {
+    function setInterface(bytes4 sig, bool value) external onlyDev {
         require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
         supportsInterface[sig] = value;
+    }
+
+    /**
+     * @dev withdraw ether to Dev, anyone can trigger
+     */
+    function withdrawEther() external {
+        (bool ok, ) = Dev.call{value: address(this).balance}("");
+        require(ok, "ETH_TRANSFER_FAILED");
+    }
+
+    /// @notice re-entrancy guard
+    /// @dev : revert on fallback
+    fallback() external payable {
+        revert();
+    }
+
+    /// @dev : revert on receive
+    receive() external payable {
+        revert();
     }
 }

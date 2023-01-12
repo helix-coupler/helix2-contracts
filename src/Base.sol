@@ -64,13 +64,13 @@ abstract contract Base {
     /// @dev : Pause/Resume contract
     bool public active = true;
     /// @dev : EIP-165
-    mapping(bytes4 => bool) public supportsInterface;
+    mapping(bytes4 => bool) public supportedInterfaces;
 
     constructor() {
         Dev = msg.sender;
         // Interface
-        supportsInterface[type(iERC165).interfaceId] = true;
-        supportsInterface[type(iERC173).interfaceId] = true;
+        supportedInterfaces[type(iERC165).interfaceId] = true;
+        supportedInterfaces[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -89,8 +89,8 @@ abstract contract Base {
     }
 
     /**
-     * @dev get owner of contract
-     * @return address of controlling dev or multi-sig wallet
+     * @dev returns owner of contract
+     * @notice EIP-173
      */
     function owner() external view returns (address) {
         return Dev;
@@ -98,6 +98,7 @@ abstract contract Base {
 
     /**
      * @dev transfer contract ownership to new Dev
+     * @notice EIP-173
      * @param newDev : new Dev
      */
     function transferOwnership(address newDev) external onlyDev {
@@ -106,21 +107,23 @@ abstract contract Base {
     }
 
     /**
+     * @dev check if an interface is supported
+     * @notice EIP-165
+     * @param sig : bytes4 identifier
+     */
+    function supportsInterface(bytes4 sig) external view returns (bool) {
+        return supportedInterfaces[sig];
+    }
+
+    /**
      * @dev sets supportInterface flag
+     * @notice EIP-165
      * @param sig : bytes4 identifier
      * @param value : boolean
      */
     function setInterface(bytes4 sig, bool value) external payable onlyDev {
         require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
-        supportsInterface[sig] = value;
-    }
-
-    /**
-     * @dev withdraw ether to Dev, anyone can trigger
-     */
-    function withdrawEther() external payable {
-        (bool ok, ) = Dev.call{value: address(this).balance}("");
-        require(ok, "ETH_TRANSFER_FAILED");
+        supportedInterfaces[sig] = value;
     }
 
     /**
@@ -170,22 +173,5 @@ abstract contract Base {
      */
     function getENSRegistry() public view returns (address) {
         return ensRegistry;
-    }
-
-    /**
-     * @dev returns Dev address
-     */
-    function isDev() public view returns (address) {
-        return Dev;
-    }
-
-    /// @dev : revert on fallback
-    fallback() external payable {
-        revert();
-    }
-
-    /// @dev : revert on receive
-    receive() external payable {
-        revert();
     }
 }
