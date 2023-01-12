@@ -52,7 +52,7 @@ contract Helix2NameRegistry {
     /// @dev : Pause/Resume contract
     bool public active = true;
     /// @dev : EIP-165
-    mapping(bytes4 => bool) public supportsInterface;
+    mapping(bytes4 => bool) public supportedInterfaces;
 
     /// Constants
     bytes32 public roothash;
@@ -73,8 +73,8 @@ contract Helix2NameRegistry {
         PRICES = iPriceOracle(_priceOracle);
         basePrice = PRICES.getPrices()[0];
         // Interface
-        supportsInterface[type(iERC165).interfaceId] = true;
-        supportsInterface[type(iERC173).interfaceId] = true;
+        supportedInterfaces[type(iERC165).interfaceId] = true;
+        supportedInterfaces[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow only dev
@@ -120,8 +120,8 @@ contract Helix2NameRegistry {
     }
 
     /**
-     * @dev get owner of contract
-     * @return address of controlling dev or multi-sig wallet
+     * @dev returns owner of contract
+     * @notice EIP-173
      */
     function owner() external view returns (address) {
         return Dev;
@@ -129,6 +129,7 @@ contract Helix2NameRegistry {
 
     /**
      * @dev transfer contract ownership to new Dev
+     * @notice EIP-173
      * @param newDev : new Dev
      */
     function transferOwnership(address newDev) external onlyDev {
@@ -137,13 +138,23 @@ contract Helix2NameRegistry {
     }
 
     /**
+     * @dev check if an interface is supported
+     * @notice EIP-165
+     * @param sig : bytes4 identifier
+     */
+    function supportsInterface(bytes4 sig) external view returns (bool) {
+        return supportedInterfaces[sig];
+    }
+
+    /**
      * @dev sets supportInterface flag
+     * @notice EIP-165
      * @param sig : bytes4 identifier
      * @param value : boolean
      */
     function setInterface(bytes4 sig, bool value) external payable onlyDev {
         require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
-        supportsInterface[sig] = value;
+        supportedInterfaces[sig] = value;
     }
 
     /// @dev : Modifier to allow Owner or Controller
@@ -376,5 +387,16 @@ contract Helix2NameRegistry {
      */
     function recordExists(bytes32 namehash) public view returns (bool) {
         return block.timestamp < STORE.expiry(namehash);
+    }
+
+    /// @notice re-entrancy guard
+    /// @dev : revert on fallback
+    fallback() external payable {
+        revert();
+    }
+
+    /// @dev : revert on receive
+    receive() external payable {
+        revert();
     }
 }

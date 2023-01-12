@@ -60,7 +60,7 @@ contract Helix2PolyculeRegistry {
     /// @dev : Pause/Resume contract
     bool public active = true;
     /// @dev : EIP-165
-    mapping(bytes4 => bool) public supportsInterface;
+    mapping(bytes4 => bool) public supportedInterfaces;
 
     /// @dev : Polycule roothash
     bytes32 public roothash;
@@ -82,8 +82,8 @@ contract Helix2PolyculeRegistry {
         PRICES = iPriceOracle(_priceOracle);
         basePrice = PRICES.getPrices()[3];
         // Interface
-        supportsInterface[type(iERC165).interfaceId] = true;
-        supportsInterface[type(iERC173).interfaceId] = true;
+        supportedInterfaces[type(iERC165).interfaceId] = true;
+        supportedInterfaces[type(iERC173).interfaceId] = true;
     }
 
     /// @dev : Modifier to allow Dev
@@ -127,8 +127,8 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
-     * @dev get owner of contract
-     * @return address of controlling dev or multi-sig wallet
+     * @dev returns owner of contract
+     * @notice EIP-173
      */
     function owner() external view returns (address) {
         return Dev;
@@ -136,6 +136,7 @@ contract Helix2PolyculeRegistry {
 
     /**
      * @dev transfer contract ownership to new Dev
+     * @notice EIP-173
      * @param newDev : new Dev
      */
     function transferOwnership(address newDev) external onlyDev {
@@ -144,13 +145,23 @@ contract Helix2PolyculeRegistry {
     }
 
     /**
+     * @dev check if an interface is supported
+     * @notice EIP-165
+     * @param sig : bytes4 identifier
+     */
+    function supportsInterface(bytes4 sig) external view returns (bool) {
+        return supportedInterfaces[sig];
+    }
+
+    /**
      * @dev sets supportInterface flag
+     * @notice EIP-165
      * @param sig : bytes4 identifier
      * @param value : boolean
      */
     function setInterface(bytes4 sig, bool value) external payable onlyDev {
         require(sig != 0xffffffff, "INVALID_INTERFACE_SELECTOR");
-        supportsInterface[sig] = value;
+        supportedInterfaces[sig] = value;
     }
 
     /// @dev : Modifier to allow Cation or Controller
