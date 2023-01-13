@@ -135,7 +135,7 @@ abstract contract StateAddWriteFacet is StateAddViewFacet {
 abstract contract StateCacheBug is StateDeployDiamond {
     ViewFacet viewFacet;
 
-    bytes4 ownerSel = hex"8da5cb5b";
+    bytes4 ercSelector = hex"8da5cb5b";
     bytes4[] selectors;
 
     function setUp() public virtual override {
@@ -172,7 +172,7 @@ abstract contract StateCacheBug is StateDeployDiamond {
 
         // Remove selectors from diamond
         bytes4[] memory newSelectors = new bytes4[](3);
-        newSelectors[0] = ownerSel;
+        newSelectors[0] = ercSelector;
         newSelectors[1] = selectors[5];
         newSelectors[2] = selectors[10];
 

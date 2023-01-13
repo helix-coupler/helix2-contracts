@@ -11,8 +11,6 @@ error CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet(
 
 // test proper deployment of diamond
 contract TestDeployDiamond is StateDeployDiamond {
-    // TEST CASES
-
     function test1HasThreeFacets() public {
         assertEq(facetAddressList.length, 3);
     }
@@ -207,7 +205,7 @@ contract TestCacheBug is StateCacheBug {
         assertTrue(containsElement(fromLoupeSelectors, selectors[8]));
         assertTrue(containsElement(fromLoupeSelectors, selectors[9]));
 
-        assertFalse(containsElement(fromLoupeSelectors, ownerSel));
+        assertFalse(containsElement(fromLoupeSelectors, ercSelector));
         assertFalse(containsElement(fromLoupeSelectors, selectors[10]));
         assertFalse(containsElement(fromLoupeSelectors, selectors[5]));
     }
