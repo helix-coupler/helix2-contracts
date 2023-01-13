@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "test/GenAddr.sol";
 // Helix2 Manager Contract
-import "src/Helix2.sol";
+import "src/Classic/Helix2.sol";
 // Price Oracle
 import "src/Oracle/PriceOracle.sol";
 // Registrar

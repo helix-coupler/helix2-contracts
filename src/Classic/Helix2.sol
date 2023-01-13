@@ -2,7 +2,7 @@
 pragma solidity >0.8.0 <0.9.0;
 
 /// @dev : ERC Compatible Base
-import "src/Base.sol";
+import "src/Classic/Base.sol";
 import "src/Interface/iHelix2.sol";
 
 /**
