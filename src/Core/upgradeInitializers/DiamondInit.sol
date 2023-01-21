@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {iDiamondLoupe} from "../interfaces/iDiamondLoupe.sol";
 import {iDiamondCut} from "../interfaces/iDiamondCut.sol";
-import {iERC173} from "../interfaces/iERC173.sol";
-import {iERC165} from "../interfaces/iERC165.sol";
-import {iHELIX2} from "../interfaces/iHelix2.sol";
+import {iERC173} from "../../Interface/iERC173.sol";
+import {iERC165} from "../../Interface/iERC165.sol";
+import {iFacets} from "../interfaces/iFacets.sol";
 
 /**
  * @dev EIP-2535 Diamond Init
@@ -19,7 +19,7 @@ contract DiamondInit {
         ds.supportedInterfaces[type(iDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(iDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(iERC173).interfaceId] = true;
-        ds.supportedInterfaces[type(iHELIX2).interfaceId] = true;
+        ds.supportedInterfaces[type(iFacets).interfaceId] = true;
         /// @dev : set custom variables here
         // Helix2 Core Variables
         ds.illegalBlocks = [".", "-", "#", ""];

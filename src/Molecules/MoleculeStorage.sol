@@ -27,8 +27,8 @@ contract Helix2MoleculeStorage {
 
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
-        uint8[] _rules; /// Rules
-        mapping(uint8 => address) _hooks; /// Rules → Hooks
+        uint256[] _rules; /// Rules
+        mapping(uint256 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Molecule (= Owner)
         bytes32[] _anions; /// Targets of Molecule
         bytes32 _label; /// Hash of Molecule
@@ -188,7 +188,7 @@ contract Helix2MoleculeStorage {
     function hook(
         bytes32 molyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Molecules[molyhash]._rules.push(rule);
         Molecules[molyhash]._hooks[rule] = config;
@@ -203,7 +203,7 @@ contract Helix2MoleculeStorage {
     function rehook(
         bytes32 molyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Molecules[molyhash]._hooks[rule] = config;
     }
@@ -216,7 +216,7 @@ contract Helix2MoleculeStorage {
      */
     function unhook(
         bytes32 molyhash,
-        uint8 rule,
+        uint256 rule,
         uint index
     ) external onlyRegistry {
         Molecules[molyhash]._hooks[rule] = address(0);
@@ -280,7 +280,7 @@ contract Helix2MoleculeStorage {
      */
     function hooksWithRules(
         bytes32 molyhash
-    ) public view returns (uint8[] memory _rules, address[] memory _hooks) {
+    ) public view returns (uint256[] memory _rules, address[] memory _hooks) {
         _rules = Molecules[molyhash]._rules;
         _hooks = new address[](_rules.length);
         for (uint i = 0; i < _rules.length; i++) {

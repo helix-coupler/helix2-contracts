@@ -17,14 +17,14 @@ interface iPOLYCULE {
         bytes32 polyhash,
         bytes32 anion,
         address config,
-        uint8 rule
+        uint256 rule
     ) external;
 
     function setAnions(
         bytes32 polyhash,
         bytes32[] memory anions,
         address[] memory config,
-        uint8[] memory rules
+        uint256[] memory rules
     ) external;
 
     function popAnion(bytes32 polyhash, bytes32 anion) external;
@@ -45,12 +45,12 @@ interface iPOLYCULE {
         bytes32 anion,
         bytes32 polyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external;
 
-    function rehook(bytes32 polyhash, address config, uint8 rule) external;
+    function rehook(bytes32 polyhash, address config, uint256 rule) external;
 
-    function unhook(bytes32 polyhash, uint8 rule, uint index) external;
+    function unhook(bytes32 polyhash, uint256 rule, uint index) external;
 
     function unhookAll(bytes32 polyhash) external;
 
@@ -69,7 +69,7 @@ interface iPOLYCULE {
 
     function hooksWithRules(
         bytes32 polyhash
-    ) external view returns (uint8[] memory, address[] memory);
+    ) external view returns (uint256[] memory, address[] memory);
 
     function resolver(bytes32 polyhash) external view returns (address);
 

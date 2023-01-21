@@ -23,8 +23,8 @@ contract Helix2PolyculeRegistry {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
-    using LibString for uint8[];
-    using LibString for uint8;
+    using LibString for uint256[];
+    using LibString for uint256;
 
     /// Interfaces
     iHELIX2 public HELIX2;
@@ -37,9 +37,9 @@ contract Helix2PolyculeRegistry {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event Hooked(bytes32 indexed polyhash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed polyhash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed polyhash, uint8 rule);
+    event Hooked(bytes32 indexed polyhash, address config, uint256 rule);
+    event Rehooked(bytes32 indexed polyhash, address config, uint256 rule);
+    event Unhooked(bytes32 indexed polyhash, uint256 rule);
     event UnhookedAll(bytes32 indexed polyhash);
     event NewCation(bytes32 indexed polyhash, bytes32 cation);
     event NewAnion(bytes32 indexed polyhash, bytes32 anion);
@@ -224,9 +224,9 @@ contract Helix2PolyculeRegistry {
     function isNotDuplicateAnionOrRule(
         bytes32 polyhash,
         bytes32 _anion,
-        uint8 rule
+        uint256 rule
     ) internal view returns (bool) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(polyhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(polyhash);
         return
             !_anion.existsIn(STORE.anions(polyhash)) && !rule.existsIn(_rules);
     }
@@ -238,7 +238,7 @@ contract Helix2PolyculeRegistry {
      */
     function isLegalMap(
         bytes32[] memory _anions,
-        uint8[] memory _rules
+        uint256[] memory _rules
     ) internal pure returns (bool) {
         if (_anions.length == _rules.length) {
             return true;
@@ -296,15 +296,14 @@ contract Helix2PolyculeRegistry {
         bytes32 polyhash,
         bytes32 _anion,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(polyhash) {
         require(
             isNotDuplicateAnionOrRule(polyhash, _anion, rule),
             "ANION_OR_RULE_EXISTS"
         );
-        (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
-            polyhash
-        );
+        (uint256[] memory _rules, address[] memory _hooks) = STORE
+            .hooksWithRules(polyhash);
         uint index = rule.findIn(_rules);
         require(_hooks[index] != config, "HOOK_EXISTS");
         STORE.addAnionWithConfig(polyhash, _anion, config, rule);
@@ -324,7 +323,7 @@ contract Helix2PolyculeRegistry {
         bytes32 polyhash,
         bytes32[] memory _anions,
         address[] memory _hooks,
-        uint8[] memory _rules
+        uint256[] memory _rules
     ) external isAuthorised(polyhash) {
         require(isLegalMap(_anions, _rules), "BAD_MAP");
         for (uint i = 0; i < _anions.length; i++) {
@@ -436,7 +435,7 @@ contract Helix2PolyculeRegistry {
         bytes32 _anion,
         bytes32 polyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(polyhash) {
         require(
             isNotDuplicateAnionOrRule(polyhash, _anion, rule),
@@ -455,11 +454,10 @@ contract Helix2PolyculeRegistry {
     function rehook(
         bytes32 polyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(polyhash) {
-        (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
-            polyhash
-        );
+        (uint256[] memory _rules, address[] memory _hooks) = STORE
+            .hooksWithRules(polyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             require(_hooks[index] != config, "HOOK_EXISTS");
@@ -477,9 +475,9 @@ contract Helix2PolyculeRegistry {
      */
     function unhook(
         bytes32 polyhash,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(polyhash) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(polyhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(polyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             STORE.unhook(polyhash, rule, index);
@@ -561,7 +559,7 @@ contract Helix2PolyculeRegistry {
         public
         view
         canEmit(polyhash)
-        returns (uint8[] memory _rules, address[] memory _hooks)
+        returns (uint256[] memory _rules, address[] memory _hooks)
     {
         (_rules, _hooks) = STORE.hooksWithRules(polyhash);
     }

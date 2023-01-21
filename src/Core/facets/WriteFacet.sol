@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import "../interfaces/iHelix2.sol";
+import "../interfaces/iFacets.sol";
 
 /**
  * @dev Helix2 Core View Facet

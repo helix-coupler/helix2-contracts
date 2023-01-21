@@ -27,8 +27,8 @@ contract Helix2BondStorage {
 
     /// @dev : Helix2 Bond struct
     struct Bond {
-        uint8[] _rules; /// Rules
-        mapping(uint8 => address) _hooks; /// Rules → Hooks
+        uint256[] _rules; /// Rules
+        mapping(uint256 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Bond (= Owner)
         bytes32 _anion; /// Target of Bond
         bytes32 _label; /// Hash of Bond
@@ -179,7 +179,7 @@ contract Helix2BondStorage {
     function hook(
         bytes32 bondhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Bonds[bondhash]._rules.push(rule);
         Bonds[bondhash]._hooks[rule] = config;
@@ -194,7 +194,7 @@ contract Helix2BondStorage {
     function rehook(
         bytes32 bondhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Bonds[bondhash]._hooks[rule] = config;
     }
@@ -207,7 +207,7 @@ contract Helix2BondStorage {
      */
     function unhook(
         bytes32 bondhash,
-        uint8 rule,
+        uint256 rule,
         uint index
     ) external onlyRegistry {
         Bonds[bondhash]._hooks[rule] = address(0);
@@ -269,7 +269,7 @@ contract Helix2BondStorage {
      */
     function hooksWithRules(
         bytes32 bondhash
-    ) public view returns (uint8[] memory _rules, address[] memory _hooks) {
+    ) public view returns (uint256[] memory _rules, address[] memory _hooks) {
         _rules = Bonds[bondhash]._rules;
         _hooks = new address[](_rules.length);
         for (uint i = 0; i < _rules.length; i++) {

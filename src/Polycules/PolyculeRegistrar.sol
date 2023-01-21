@@ -173,7 +173,7 @@ contract Helix2PolyculeRegistrar {
         bytes32[] memory anion,
         uint lifespan,
         address[] memory config,
-        uint8[] memory rules
+        uint256[] memory rules
     )
         external
         payable

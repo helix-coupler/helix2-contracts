@@ -70,7 +70,7 @@ contract Helix2BondsTest is Test {
     string public brown = "nick";
     string public label = "virgin";
     uint256 public lifespan = 50;
-    uint8[2] public rules = [uint8(uint256(404)), uint8(uint256(400))];
+    uint256[2] public rules = [uint256(uint256(404)), uint256(uint256(400))];
     address[2] public config = [
         address(0x0101010101010),
         address(0x0101010101011)
@@ -249,9 +249,8 @@ contract Helix2BondsTest is Test {
         assertEq(BONDS.controller(bondhash), pill);
         assertEq(BONDS.resolver(bondhash), defaultResolver);
         assertEq(BONDS.expiry(bondhash), block.timestamp + lifespan);
-        (uint8[] memory rules_, address[] memory hooks_) = BONDS.hooksWithRules(
-            bondhash
-        );
+        (uint256[] memory rules_, address[] memory hooks_) = BONDS
+            .hooksWithRules(bondhash);
         assertEq(hooks_.length, 0);
         assertEq(rules_.length, 0);
     }
@@ -508,9 +507,8 @@ contract Helix2BondsTest is Test {
         assertEq(BONDS.recordExists(bondhash), true);
         vm.prank(pill);
         BONDS.hook(bondhash, config[0], rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = BONDS.hooksWithRules(
-            bondhash
-        );
+        (uint256[] memory rules_, address[] memory hooks_) = BONDS
+            .hooksWithRules(bondhash);
         assertEq(rules[0], rules_[0]);
         assertEq(config[0], hooks_[0]);
         vm.prank(pill);
@@ -523,7 +521,7 @@ contract Helix2BondsTest is Test {
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(faker);
         BONDS.hook(bondhash, config[1], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = BONDS
+        (uint256[] memory rules__, address[] memory hooks__) = BONDS
             .hooksWithRules(bondhash);
         assertEq(config[1], hooks__[1]);
         assertEq(rules[1], rules__[1]);
@@ -560,9 +558,8 @@ contract Helix2BondsTest is Test {
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(pill);
         BONDS.rehook(bondhash, config[1], rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = BONDS.hooksWithRules(
-            bondhash
-        );
+        (uint256[] memory rules_, address[] memory hooks_) = BONDS
+            .hooksWithRules(bondhash);
         assertEq(rules[0], rules_[0]);
         assertEq(config[1], hooks_[0]);
         vm.prank(pill);
@@ -577,7 +574,7 @@ contract Helix2BondsTest is Test {
         BONDS.hook(bondhash, config[1], rules[1]);
         vm.prank(faker);
         BONDS.rehook(bondhash, config[0], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = BONDS
+        (uint256[] memory rules__, address[] memory hooks__) = BONDS
             .hooksWithRules(bondhash);
         assertEq(config[0], hooks__[1]);
         assertEq(rules[1], rules__[1]);
@@ -614,9 +611,8 @@ contract Helix2BondsTest is Test {
         BONDS.hook(bondhash, config[0], rules[0]);
         vm.prank(pill);
         BONDS.unhook(bondhash, rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = BONDS.hooksWithRules(
-            bondhash
-        );
+        (uint256[] memory rules_, address[] memory hooks_) = BONDS
+            .hooksWithRules(bondhash);
         assertEq(hooks_.length, 1);
         assertEq(rules_.length, 1);
         vm.prank(pill);
@@ -628,7 +624,7 @@ contract Helix2BondsTest is Test {
         BONDS.unhook(bondhash, rules[0]);
         vm.prank(faker);
         BONDS.hook(bondhash, config[1], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = BONDS
+        (uint256[] memory rules__, address[] memory hooks__) = BONDS
             .hooksWithRules(bondhash);
         assertEq(config[1], hooks__[1]);
         assertEq(rules[1], rules__[1]);

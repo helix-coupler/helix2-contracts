@@ -79,12 +79,12 @@ contract Helix2PolyculesTest is Test {
     string public brown = "nick";
     string public _label = "virgin";
     uint256 public lifespan = 50;
-    uint8[] public rules = [
-        uint8(uint256(404)),
-        uint8(uint256(400)),
-        uint8(uint256(500))
+    uint256[] public rules = [
+        uint256(uint256(404)),
+        uint256(uint256(400)),
+        uint256(uint256(500))
     ];
-    uint8[] public _rules_ = [uint8(uint256(504)), uint8(uint256(401))];
+    uint256[] public _rules_ = [uint256(uint256(504)), uint256(uint256(401))];
     address[] public config = [
         address(0x0101010101010),
         address(0x0101010101011),
@@ -209,7 +209,7 @@ contract Helix2PolyculesTest is Test {
         bytes32[] memory taker_ = POLYCULES.anions(polyhash);
         assertEq(taker.length, anions.length);
         assertEq(taker.length, taker_.length);
-        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
+        (uint256[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(taker.length, hooks__.length);
         assertEq(taker.length, rules__.length);
@@ -299,7 +299,7 @@ contract Helix2PolyculesTest is Test {
         assertEq(POLYCULES.controller(polyhash), pill);
         assertEq(POLYCULES.resolver(polyhash), defaultResolver);
         assertEq(POLYCULES.expiry(polyhash), block.timestamp + lifespan);
-        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
+        (uint256[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(hooks_.length, config.length);
         assertEq(rules_.length, rules.length);
@@ -641,7 +641,7 @@ contract Helix2PolyculesTest is Test {
         assertEq(POLYCULES.recordExists(polyhash), true);
         vm.prank(pill);
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
+        (uint256[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[0], hooks_[config.length]);
         assertEq(_rules_[0], rules_[rules.length]);
@@ -655,7 +655,7 @@ contract Helix2PolyculesTest is Test {
         POLYCULES.hook(anions[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         POLYCULES.hook(_anions_[1], polyhash, _config_[1], _rules_[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
+        (uint256[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[1], hooks__[config.length + 1]);
         assertEq(_rules_[1], rules__[rules.length + 1]);
@@ -707,7 +707,7 @@ contract Helix2PolyculesTest is Test {
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(pill);
         POLYCULES.rehook(polyhash, _config_[1], _rules_[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
+        (uint256[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[1], hooks_[anions.length]);
         assertEq(_rules_[0], rules_[anions.length]);
@@ -721,7 +721,7 @@ contract Helix2PolyculesTest is Test {
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(faker);
         POLYCULES.rehook(polyhash, _config_[0], _rules_[0]);
-        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
+        (uint256[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[0], hooks__[anions.length]);
         assertEq(_rules_[0], rules__[anions.length]);
@@ -773,7 +773,7 @@ contract Helix2PolyculesTest is Test {
         POLYCULES.hook(_anions_[0], polyhash, _config_[0], _rules_[0]);
         vm.prank(pill);
         POLYCULES.unhook(polyhash, _rules_[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = POLYCULES
+        (uint256[] memory rules_, address[] memory hooks_) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(hooks_.length, anions.length + 1);
         assertEq(rules_.length, anions.length + 1);
@@ -786,7 +786,7 @@ contract Helix2PolyculesTest is Test {
         POLYCULES.unhook(polyhash, _rules_[0]);
         vm.prank(faker);
         POLYCULES.hook(_anions_[0], polyhash, _config_[1], _rules_[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = POLYCULES
+        (uint256[] memory rules__, address[] memory hooks__) = POLYCULES
             .hooksWithRules(polyhash);
         assertEq(_config_[1], hooks__[anions.length + 1]);
         assertEq(_rules_[1], rules__[anions.length + 1]);

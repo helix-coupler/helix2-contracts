@@ -27,8 +27,8 @@ contract Helix2PolyculeStorage {
 
     /// @dev : Helix2 POLYCULE struct
     struct Polycule {
-        uint8[] _rules; /// Rules
-        mapping(uint8 => address) _hooks; /// Rules → Hooks
+        uint256[] _rules; /// Rules
+        mapping(uint256 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Polycule (= Owner)
         bytes32[] _anions; /// Targets of Polycule
         bytes32 _label; /// Hash of Polycule
@@ -129,7 +129,7 @@ contract Helix2PolyculeStorage {
         bytes32 polyhash,
         bytes32 _anion,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Polycules[polyhash]._anions.push(_anion);
         Polycules[polyhash]._rules.push(rule);
@@ -203,7 +203,7 @@ contract Helix2PolyculeStorage {
         bytes32 _anion,
         bytes32 polyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Polycules[polyhash]._rules.push(rule);
         Polycules[polyhash]._hooks[rule] = config;
@@ -219,7 +219,7 @@ contract Helix2PolyculeStorage {
     function rehook(
         bytes32 polyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external onlyRegistry {
         Polycules[polyhash]._hooks[rule] = config;
     }
@@ -232,7 +232,7 @@ contract Helix2PolyculeStorage {
      */
     function unhook(
         bytes32 polyhash,
-        uint8 rule,
+        uint256 rule,
         uint index
     ) external onlyRegistry {
         Polycules[polyhash]._hooks[rule] = address(0);
@@ -298,7 +298,7 @@ contract Helix2PolyculeStorage {
      */
     function hooksWithRules(
         bytes32 polyhash
-    ) public view returns (uint8[] memory _rules, address[] memory _hooks) {
+    ) public view returns (uint256[] memory _rules, address[] memory _hooks) {
         _rules = Polycules[polyhash]._rules;
         _hooks = new address[](_rules.length);
         for (uint i = 0; i < _rules.length; i++) {

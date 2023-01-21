@@ -3,7 +3,7 @@ pragma solidity >0.8.0 <0.9.0;
 
 library LibString {
     bytes16 private constant _SYMBOLS = "0123456789abcdef";
-    uint8 private constant _ADDRESS_LENGTH = 20;
+    uint256 private constant _ADDRESS_LENGTH = 20;
 
     /**
      * @dev returns the length of a given string
@@ -250,14 +250,14 @@ library LibString {
     }
 
     /**
-     * @dev check if a value exists in a dynamic memory array of uint8
-     * @param array : array of uint8 to search in
+     * @dev check if a value exists in a dynamic memory array of uint256
+     * @param array : array of uint256 to search in
      * @param value : value to search
      * @return true or false
      */
     function existsIn(
-        uint8 value,
-        uint8[] memory array
+        uint256 value,
+        uint256[] memory array
     ) internal pure returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {
@@ -286,14 +286,14 @@ library LibString {
     }
 
     /**
-     * @dev find an element in a dynamic memory array of uint8
-     * @param array : array of uint8 to search in
+     * @dev find an element in a dynamic memory array of uint256
+     * @param array : array of uint256 to search in
      * @param value : value to search
      * @return index
      */
     function findIn(
-        uint8 value,
-        uint8[] memory array
+        uint256 value,
+        uint256[] memory array
     ) internal pure returns (uint) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == value) {

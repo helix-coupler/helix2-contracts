@@ -23,8 +23,8 @@ contract Helix2BondRegistry {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
-    using LibString for uint8[];
-    using LibString for uint8;
+    using LibString for uint256[];
+    using LibString for uint256;
 
     /// Interfaces
     iHELIX2 public HELIX2;
@@ -37,9 +37,9 @@ contract Helix2BondRegistry {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event Hooked(bytes32 indexed bondhash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed bondhash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed bondhash, uint8 rule);
+    event Hooked(bytes32 indexed bondhash, address config, uint256 rule);
+    event Rehooked(bytes32 indexed bondhash, address config, uint256 rule);
+    event Unhooked(bytes32 indexed bondhash, uint256 rule);
     event UnhookedAll(bytes32 indexed bondhash);
     event NewCation(bytes32 indexed bondhash, bytes32 cation);
     event NewAnion(bytes32 indexed bondhash, bytes32 anion);
@@ -67,8 +67,8 @@ contract Helix2BondRegistry {
 
     /// @dev : Helix2 Bond struct
     struct Bond {
-        uint8[] _rules; /// Rules
-        mapping(uint8 => address) _hooks; /// Rules → Hooks
+        uint256[] _rules; /// Rules
+        mapping(uint256 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Bond (= Owner)
         bytes32 _anion; /// Target of Bond
         bytes32 _label; /// Hash of Bond
@@ -247,9 +247,9 @@ contract Helix2BondRegistry {
      */
     function isNotDuplicateRule(
         bytes32 bondhash,
-        uint8 rule
+        uint256 rule
     ) public view returns (bool) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(bondhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(bondhash);
         return !rule.existsIn(_rules);
     }
 
@@ -378,7 +378,7 @@ contract Helix2BondRegistry {
     function hook(
         bytes32 bondhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(bondhash) {
         require(isNotDuplicateRule(bondhash, rule), "RULE_EXISTS");
         STORE.hook(bondhash, config, rule);
@@ -394,11 +394,10 @@ contract Helix2BondRegistry {
     function rehook(
         bytes32 bondhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(bondhash) {
-        (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
-            bondhash
-        );
+        (uint256[] memory _rules, address[] memory _hooks) = STORE
+            .hooksWithRules(bondhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             require(_hooks[index] != config, "RULE_EXISTS");
@@ -416,9 +415,9 @@ contract Helix2BondRegistry {
      */
     function unhook(
         bytes32 bondhash,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(bondhash) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(bondhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(bondhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             STORE.unhook(bondhash, rule, index);
@@ -509,7 +508,7 @@ contract Helix2BondRegistry {
         public
         view
         canEmit(bondhash)
-        returns (uint8[] memory _rules, address[] memory _hooks)
+        returns (uint256[] memory _rules, address[] memory _hooks)
     {
         (_rules, _hooks) = STORE.hooksWithRules(bondhash);
     }

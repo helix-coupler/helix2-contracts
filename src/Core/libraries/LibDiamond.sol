@@ -10,7 +10,7 @@ error NotContractOwner(address _user, address _contractOwner);
 error NoSelectorsProvidedForFacetForCut(address _facetAddress);
 error CannotAddSelectorsToZeroAddress(bytes4[] _selectors);
 error NoBytecodeAtAddress(address _contractAddress, string _message);
-error IncorrectFacetCutAction(uint8 _action);
+error IncorrectFacetCutAction(uint256 _action);
 error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
 error CannotReplaceFunctionsFromFacetWithZeroAddress(bytes4[] _selectors);
 error CannotReplaceImmutableFunction(bytes4 _selector);
@@ -246,7 +246,7 @@ library LibDiamond {
             } else if (action == iDiamond.FacetCutAction.Remove) {
                 removeFunctions(facetAddress, functionSelectors);
             } else {
-                revert IncorrectFacetCutAction(uint8(action));
+                revert IncorrectFacetCutAction(uint256(action));
             }
         }
         emit DiamondCut(_diamondCut, _init, _calldata);

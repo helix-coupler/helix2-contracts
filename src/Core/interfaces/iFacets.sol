@@ -4,7 +4,7 @@ pragma solidity >0.8.0 <0.9.0;
 /**
  * @dev Helix2 Interface
  */
-interface iHELIX2 {
+interface iFacets {
     // view functions
     function getRegistrar() external view returns (address[4] memory);
 

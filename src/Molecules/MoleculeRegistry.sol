@@ -23,8 +23,8 @@ contract Helix2MoleculeRegistry {
     using LibString for address;
     using LibString for string[];
     using LibString for string;
-    using LibString for uint8[];
-    using LibString for uint8;
+    using LibString for uint256[];
+    using LibString for uint256;
 
     /// Interfaces
     iHELIX2 public HELIX2;
@@ -37,9 +37,9 @@ contract Helix2MoleculeRegistry {
         address indexed previousOwner,
         address indexed newOwner
     );
-    event Hooked(bytes32 indexed molyhash, address config, uint8 rule);
-    event Rehooked(bytes32 indexed molyhash, address config, uint8 rule);
-    event Unhooked(bytes32 indexed molyhash, uint8 rule);
+    event Hooked(bytes32 indexed molyhash, address config, uint256 rule);
+    event Rehooked(bytes32 indexed molyhash, address config, uint256 rule);
+    event Unhooked(bytes32 indexed molyhash, uint256 rule);
     event UnhookedAll(bytes32 indexed molyhash);
     event NewCation(bytes32 indexed molyhash, bytes32 cation);
     event NewAnion(bytes32 indexed molyhash, bytes32 anion);
@@ -70,8 +70,8 @@ contract Helix2MoleculeRegistry {
 
     /// @dev : Helix2 MOLECULE struct
     struct Molecule {
-        uint8[] _rules; /// Rules
-        mapping(uint8 => address) _hooks; /// Rules → Hooks
+        uint256[] _rules; /// Rules
+        mapping(uint256 => address) _hooks; /// Rules → Hooks
         bytes32 _cation; /// Source of Molecule (= Owner)
         bytes32[] _anion; /// Targets of Molecule
         bytes32 _label; /// Hash of Molecule
@@ -250,9 +250,9 @@ contract Helix2MoleculeRegistry {
      */
     function isNotDuplicateRule(
         bytes32 molyhash,
-        uint8 rule
+        uint256 rule
     ) public view returns (bool) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(molyhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(molyhash);
         return !rule.existsIn(_rules);
     }
 
@@ -420,7 +420,7 @@ contract Helix2MoleculeRegistry {
     function hook(
         bytes32 molyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(molyhash) {
         require(isNotDuplicateRule(molyhash, rule), "RULE_EXISTS");
         STORE.hook(molyhash, config, rule);
@@ -436,11 +436,10 @@ contract Helix2MoleculeRegistry {
     function rehook(
         bytes32 molyhash,
         address config,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(molyhash) {
-        (uint8[] memory _rules, address[] memory _hooks) = STORE.hooksWithRules(
-            molyhash
-        );
+        (uint256[] memory _rules, address[] memory _hooks) = STORE
+            .hooksWithRules(molyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             require(_hooks[index] != config, "RULE_EXISTS");
@@ -458,9 +457,9 @@ contract Helix2MoleculeRegistry {
      */
     function unhook(
         bytes32 molyhash,
-        uint8 rule
+        uint256 rule
     ) external isCationOrController(molyhash) {
-        (uint8[] memory _rules, ) = STORE.hooksWithRules(molyhash);
+        (uint256[] memory _rules, ) = STORE.hooksWithRules(molyhash);
         if (rule.existsIn(_rules)) {
             uint index = rule.findIn(_rules);
             STORE.unhook(molyhash, rule, index);
@@ -540,7 +539,7 @@ contract Helix2MoleculeRegistry {
         public
         view
         canEmit(molyhash)
-        returns (uint8[] memory _rules, address[] memory _hooks)
+        returns (uint256[] memory _rules, address[] memory _hooks)
     {
         (_rules, _hooks) = STORE.hooksWithRules(molyhash);
     }

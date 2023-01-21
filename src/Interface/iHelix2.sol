@@ -6,8 +6,6 @@ pragma solidity >0.8.0 <0.9.0;
  */
 interface iHELIX2 {
     // view functions
-    function isDev() external view returns (address);
-
     function getRegistrar() external view returns (address[4] memory);
 
     function getRegistry() external view returns (address[4] memory);
@@ -36,4 +34,7 @@ interface iHELIX2 {
     function setRegistrar(uint256 index, address newReg) external;
 
     function setENSRegistry(address newReg) external;
+
+    // resolver functions
+    function Dev() external view returns (address);
 }

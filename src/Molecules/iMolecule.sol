@@ -31,11 +31,11 @@ interface iMOLECULE {
 
     function setResolver(bytes32 molyhash, address resolver) external;
 
-    function hook(bytes32 molyhash, address config, uint8 rule) external;
+    function hook(bytes32 molyhash, address config, uint256 rule) external;
 
-    function rehook(bytes32 molyhash, address config, uint8 rule) external;
+    function rehook(bytes32 molyhash, address config, uint256 rule) external;
 
-    function unhook(bytes32 molyhash, uint8 rule, uint index) external;
+    function unhook(bytes32 molyhash, uint256 rule, uint index) external;
 
     function unhookAll(bytes32 molyhash) external;
 
@@ -54,7 +54,7 @@ interface iMOLECULE {
 
     function hooksWithRules(
         bytes32 molyhash
-    ) external view returns (uint8[] memory, address[] memory);
+    ) external view returns (uint256[] memory, address[] memory);
 
     function resolver(bytes32 molyhash) external view returns (address);
 

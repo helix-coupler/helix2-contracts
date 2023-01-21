@@ -18,8 +18,8 @@ abstract contract BondResolverBase {
 
     /// @dev : Modifier to allow only dev
     modifier onlyDev() {
-        if (msg.sender != HELIX2.isDev()) {
-            revert OnlyDev(HELIX2.isDev(), msg.sender);
+        if (msg.sender != HELIX2.Dev()) {
+            revert OnlyDev(HELIX2.Dev(), msg.sender);
         }
         _;
     }
@@ -44,7 +44,7 @@ abstract contract BondResolverBase {
      * @dev : withdraw ether only to Dev (or multi-sig)
      */
     function withdrawEther() external {
-        (bool ok, ) = HELIX2.isDev().call{value: address(this).balance}("");
+        (bool ok, ) = HELIX2.Dev().call{value: address(this).balance}("");
         require(ok, "ETH_TRANSFER_FAILED");
     }
 

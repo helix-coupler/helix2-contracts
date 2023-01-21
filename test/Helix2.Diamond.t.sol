@@ -9,7 +9,9 @@ error CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet(
     bytes4 _selector
 );
 
-// test proper deployment of diamond
+/**
+ * @dev test proper deployment of diamond
+ */
 contract TestDeployDiamond is StateDeployDiamond {
     function test1HasThreeFacets() public {
         assertEq(facetAddressList.length, 3);
@@ -38,6 +40,9 @@ contract TestDeployDiamond is StateDeployDiamond {
     }
 }
 
+/**
+ * @dev test add view facet
+ */
 contract TestAddViewFacet is StateAddViewFacet {
     function test4AddViewFacetFunctions() public {
         // check if functions added to diamond
@@ -80,6 +85,9 @@ contract TestAddViewFacet is StateAddViewFacet {
     }
 }
 
+/**
+ * @dev test add write facet
+ */
 contract TestAddWriteFacet is StateAddWriteFacet {
     function test7AddWriteFacetFunctions() public {
         // check if functions added to diamond
@@ -189,6 +197,9 @@ contract TestAddWriteFacet is StateAddWriteFacet {
     }
 }
 
+/**
+ * @dev test cache _bug
+ */
 contract TestCacheBug is StateCacheBug {
     function testNoCacheBug() public {
         bytes4[] memory fromLoupeSelectors = iLoupe.facetFunctionSelectors(

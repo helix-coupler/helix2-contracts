@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {iERC173} from "../interfaces/iERC173.sol";
-import {iERC165} from "../interfaces/iERC165.sol";
+import {iERC173} from "../../Interface/iERC173.sol";
+import {iERC165} from "../../Interface/iERC165.sol";
 
 /**
  * @dev ERC-165, ERC-173 Facet

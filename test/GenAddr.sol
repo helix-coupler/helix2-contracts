@@ -9,7 +9,7 @@ library GenAddr {
     /// @return Address of contract deployed at nonce
     function genAddr(
         address deployer,
-        uint256 nonce
+        uint8 nonce
     ) internal pure returns (address) {
         bytes memory _hash;
         if (nonce == 0x00) {

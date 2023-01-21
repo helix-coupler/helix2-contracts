@@ -79,7 +79,7 @@ contract Helix2MoleculesTest is Test {
     string public brown = "nick";
     string public label = "virgin";
     uint256 public lifespan = 50;
-    uint8[2] public rules = [uint8(uint256(404)), uint8(uint256(400))];
+    uint256[2] public rules = [uint256(uint256(404)), uint256(uint256(400))];
     address[2] public config = [
         address(0x0101010101010),
         address(0x0101010101011)
@@ -279,7 +279,7 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.controller(molyhash), pill);
         assertEq(MOLECULES.resolver(molyhash), defaultResolver);
         assertEq(MOLECULES.expiry(molyhash), block.timestamp + lifespan);
-        (uint8[] memory rules_, address[] memory hooks_) = MOLECULES
+        (uint256[] memory rules_, address[] memory hooks_) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(hooks_.length, 0);
         assertEq(rules_.length, 0);
@@ -586,7 +586,7 @@ contract Helix2MoleculesTest is Test {
         assertEq(MOLECULES.recordExists(molyhash), true);
         vm.prank(pill);
         MOLECULES.hook(molyhash, config[0], rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = MOLECULES
+        (uint256[] memory rules_, address[] memory hooks_) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(config[0], hooks_[0]);
         assertEq(rules[0], rules_[0]);
@@ -600,7 +600,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, config[1], rules[0]);
         vm.prank(faker);
         MOLECULES.hook(molyhash, config[1], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = MOLECULES
+        (uint256[] memory rules__, address[] memory hooks__) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(config[1], hooks__[1]);
         assertEq(rules[1], rules__[1]);
@@ -641,7 +641,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, config[0], rules[0]);
         vm.prank(pill);
         MOLECULES.rehook(molyhash, config[1], rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = MOLECULES
+        (uint256[] memory rules_, address[] memory hooks_) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(config[1], hooks_[0]);
         assertEq(rules[0], rules_[0]);
@@ -657,7 +657,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, config[1], rules[1]);
         vm.prank(faker);
         MOLECULES.rehook(molyhash, config[0], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = MOLECULES
+        (uint256[] memory rules__, address[] memory hooks__) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(config[0], hooks__[1]);
         assertEq(rules[1], rules__[1]);
@@ -698,7 +698,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.hook(molyhash, config[0], rules[0]);
         vm.prank(pill);
         MOLECULES.unhook(molyhash, rules[0]);
-        (uint8[] memory rules_, address[] memory hooks_) = MOLECULES
+        (uint256[] memory rules_, address[] memory hooks_) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(hooks_.length, 1);
         assertEq(rules_.length, 1);
@@ -711,7 +711,7 @@ contract Helix2MoleculesTest is Test {
         MOLECULES.unhook(molyhash, rules[0]);
         vm.prank(faker);
         MOLECULES.hook(molyhash, config[1], rules[1]);
-        (uint8[] memory rules__, address[] memory hooks__) = MOLECULES
+        (uint256[] memory rules__, address[] memory hooks__) = MOLECULES
             .hooksWithRules(molyhash);
         assertEq(config[1], hooks__[1]);
         assertEq(rules[1], rules__[1]);
